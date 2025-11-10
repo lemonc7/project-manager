@@ -9,11 +9,16 @@ import (
 )
 
 type Querier interface {
+	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (Employee, error)
 	CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error)
+	DeleteEmployee(ctx context.Context, id int32) error
 	DeleteTeam(ctx context.Context, id int32) error
+	GetEmployeeByID(ctx context.Context, id int32) (GetEmployeeByIDRow, error)
 	GetTeamByID(ctx context.Context, id int32) (Team, error)
 	IsTeamExists(ctx context.Context, name string) (bool, error)
+	ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 	ListTeams(ctx context.Context) ([]Team, error)
+	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error)
 	UpdateTeam(ctx context.Context, arg UpdateTeamParams) (Team, error)
 }
 
