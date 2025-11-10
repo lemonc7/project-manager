@@ -22,7 +22,7 @@ db_create:
 # migrate_create name=xxx
 migrate_create:
 	@if [ -z "$(name)" ]; then \
-		echo "❌ Error: 请使用 make migrate_create name=your_migration_name"; \
+		echo "❌ Error: please use make migrate_create name=your_migration_name"; \
 		exit 1; \
 	fi
 	@echo "📂 Creating migration: $(name)"

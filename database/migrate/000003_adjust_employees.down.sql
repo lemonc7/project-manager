@@ -1,0 +1,15 @@
+-- 回滚 teams 表
+ALTER TABLE teams
+  DROP CONSTRAINT IF EXISTS unique_teams_name;
+
+ALTER TABLE teams
+  ALTER COLUMN description TYPE VARCHAR(255),
+  ALTER COLUMN description DROP NOT NULL,
+  ALTER COLUMN description DROP DEFAULT,
+  ALTER COLUMN name TYPE VARCHAR(255),
+  ALTER COLUMN name DROP NOT NULL;
+
+-- 回滚 employees 表
+ALTER TABLE employees
+  ALTER COLUMN name TYPE VARCHAR(255),
+  ALTER COLUMN name DROP NOT NULL;
