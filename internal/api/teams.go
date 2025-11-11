@@ -105,6 +105,6 @@ func (t *TeamHandler) ListTeams(c echo.Context) error {
 
 	// 返回响应
 	return c.JSON(http.StatusOK, echo.Map{
-		"teams": teams,
+		"data": teams,
 	})
 }

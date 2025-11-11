@@ -71,20 +71,6 @@ func (q *Queries) GetTeamByID(ctx context.Context, id int32) (Team, error) {
 	return i, err
 }
 
-const isTeamExists = `-- name: IsTeamExists :one
-SELECT EXISTS(
-  SELECT 1 FROM teams 
-  WHERE name = $1
-)
-`
-
-func (q *Queries) IsTeamExists(ctx context.Context, name string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, isTeamExists, name)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
-}
-
 const listTeams = `-- name: ListTeams :many
 SELECT
   id,

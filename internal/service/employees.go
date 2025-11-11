@@ -48,7 +48,7 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEm
 	// 更新数据
 	_, err = e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       req.ID,
-		Name:     req.NewName,
+		Name:     req.Name,
 		TeamID:   teamID,
 		IsActive: req.IsActive,
 	})

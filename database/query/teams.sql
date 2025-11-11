@@ -38,9 +38,3 @@ RETURNING *;
 -- name: DeleteTeam :exec
 DELETE FROM teams
 WHERE id = $1;
-
--- name: IsTeamExists :one
-SELECT EXISTS(
-  SELECT 1 FROM teams 
-  WHERE name = $1
-);

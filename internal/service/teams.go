@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
@@ -13,17 +12,8 @@ type TeamService struct {
 }
 
 func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamRequest) error {
-	// 判断小组名是否存在
-	exist, err := t.querier.IsTeamExists(ctx, req.Name)
-	if err != nil {
-		return err
-	}
-	if exist {
-		return fmt.Errorf("小组已存在")
-	}
-
 	// 插入数据
-	_, err = t.querier.CreateTeam(ctx, repo.CreateTeamParams{
+	_, err := t.querier.CreateTeam(ctx, repo.CreateTeamParams{
 		Name:        req.Name,
 		Description: req.Description,
 	})
@@ -36,26 +26,16 @@ func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamReques
 }
 
 func (t *TeamService) UpdateTeam(ctx context.Context, req model.UpdateTeamRequest) error {
-	// 判断小组名是否存在
-	team, err := t.querier.GetTeamByID(ctx, req.ID)
+	// 判断小组是否存在
+	_, err := t.querier.GetTeamByID(ctx, req.ID)
 	if err != nil {
 		return err
-	}
-
-	if req.NewName != team.Name {
-		exist, err := t.querier.IsTeamExists(ctx, req.NewName)
-		if err != nil {
-			return err
-		}
-		if exist {
-			return fmt.Errorf("小组名已被占用")
-		}
 	}
 
 	// 更新数据
 	_, err = t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
 		ID:          req.ID,
-		Name:        req.NewName,
+		Name:        req.Name,
 		Description: req.Description,
 	})
 

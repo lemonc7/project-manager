@@ -42,3 +42,7 @@ migrate_down:
 migrate_drop:
 	@echo "💥 Dropping all tables and the schema_migrations table..."
 	migrate -path=${MIGRATE_PATH} -database=${DB_URL} drop
+
+version:
+	@echo "🏷️ Current migration version:"
+	migrate -path=${MIGRATE_PATH} -database=${DB_URL} version

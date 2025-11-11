@@ -6,8 +6,103 @@ package repo
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 )
+
+type ProcessStatus string
+
+const (
+	ProcessStatusValue0 ProcessStatus = "等待"
+	ProcessStatusValue1 ProcessStatus = "进行"
+	ProcessStatusValue2 ProcessStatus = "完成"
+	ProcessStatusValue3 ProcessStatus = "返工"
+	ProcessStatusValue4 ProcessStatus = "终止"
+	ProcessStatusValue5 ProcessStatus = "取消"
+	ProcessStatusValue6 ProcessStatus = "暂停"
+)
+
+func (e *ProcessStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProcessStatus(s)
+	case string:
+		*e = ProcessStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProcessStatus: %T", src)
+	}
+	return nil
+}
+
+type NullProcessStatus struct {
+	ProcessStatus ProcessStatus `json:"process_status"`
+	Valid         bool          `json:"valid"` // Valid is true if ProcessStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullProcessStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ProcessStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ProcessStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullProcessStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ProcessStatus), nil
+}
+
+type ProjectStatus string
+
+const (
+	ProjectStatusValue0 ProjectStatus = "排单"
+	ProjectStatusValue1 ProjectStatus = "进行"
+	ProjectStatusValue2 ProjectStatus = "暂停"
+	ProjectStatusValue3 ProjectStatus = "完成"
+	ProjectStatusValue4 ProjectStatus = "终止"
+	ProjectStatusValue5 ProjectStatus = "归档"
+)
+
+func (e *ProjectStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProjectStatus(s)
+	case string:
+		*e = ProjectStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProjectStatus: %T", src)
+	}
+	return nil
+}
+
+type NullProjectStatus struct {
+	ProjectStatus ProjectStatus `json:"project_status"`
+	Valid         bool          `json:"valid"` // Valid is true if ProjectStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullProjectStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ProjectStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ProjectStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullProjectStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ProjectStatus), nil
+}
 
 type Employee struct {
 	ID        int32         `json:"id"`
@@ -16,6 +111,32 @@ type Employee struct {
 	CreatedAt time.Time     `json:"created_at"`
 	UpdatedAt time.Time     `json:"updated_at"`
 	IsActive  bool          `json:"is_active"`
+}
+
+type Process struct {
+	ID          int32         `json:"id"`
+	ProjectID   int32         `json:"project_id"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Status      ProcessStatus `json:"status"`
+	EmployeeID  sql.NullInt32 `json:"employee_id"`
+	Sequence    int32         `json:"sequence"`
+	StartTime   sql.NullTime  `json:"start_time"`
+	EndTime     sql.NullTime  `json:"end_time"`
+	CreatedAt   time.Time     `json:"created_at"`
+	UpdatedAt   time.Time     `json:"updated_at"`
+}
+
+type Project struct {
+	ID          int32         `json:"id"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Status      ProjectStatus `json:"status"`
+	ManagerID   sql.NullInt32 `json:"manager_id"`
+	StartTime   sql.NullTime  `json:"start_time"`
+	Duration    int32         `json:"duration"`
+	CreatedAt   time.Time     `json:"created_at"`
+	UpdatedAt   time.Time     `json:"updated_at"`
 }
 
 type Team struct {

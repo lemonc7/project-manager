@@ -105,6 +105,6 @@ func (e *EmployeeHandler) ListEmployees(c echo.Context) error {
 
 	// 返回响应
 	return c.JSON(http.StatusOK, echo.Map{
-		"employees": employees,
+		"data": employees,
 	})
 }
