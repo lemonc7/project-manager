@@ -9,18 +9,6 @@ SELECT
 FROM employees e
 LEFT JOIN teams t ON e.team_id = t.id;
 
--- name: GetEmployeeByID :one
-SELECT
-  e.id,
-  e.name AS employee_name,
-  t.name AS team_name,
-  e.is_active,
-  e.created_at,
-  e.updated_at
-FROM employees e
-LEFT JOIN teams t ON e.team_id = t.id
-WHERE e.id = $1;
-
 -- name: CreateEmployee :one
 INSERT INTO employees (
   name,

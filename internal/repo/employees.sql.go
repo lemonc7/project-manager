@@ -50,42 +50,6 @@ func (q *Queries) DeleteEmployee(ctx context.Context, id int32) error {
 	return err
 }
 
-const getEmployeeByID = `-- name: GetEmployeeByID :one
-SELECT
-  e.id,
-  e.name AS employee_name,
-  t.name AS team_name,
-  e.is_active,
-  e.created_at,
-  e.updated_at
-FROM employees e
-LEFT JOIN teams t ON e.team_id = t.id
-WHERE e.id = $1
-`
-
-type GetEmployeeByIDRow struct {
-	ID           int32          `json:"id"`
-	EmployeeName string         `json:"employee_name"`
-	TeamName     sql.NullString `json:"team_name"`
-	IsActive     bool           `json:"is_active"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
-}
-
-func (q *Queries) GetEmployeeByID(ctx context.Context, id int32) (GetEmployeeByIDRow, error) {
-	row := q.db.QueryRowContext(ctx, getEmployeeByID, id)
-	var i GetEmployeeByIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.EmployeeName,
-		&i.TeamName,
-		&i.IsActive,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const listEmployees = `-- name: ListEmployees :many
 SELECT
   e.id,

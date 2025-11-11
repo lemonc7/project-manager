@@ -13,7 +13,6 @@ type EmployeeService struct {
 }
 
 func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error {
-	// 判断TeamID
 	var teamID sql.NullInt32
 	if req.TeamID != nil {
 		teamID.Valid = true
@@ -34,11 +33,6 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 }
 
 func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEmployeeRequest) error {
-	// 判断员工是否存在
-	_, err := e.querier.GetEmployeeByID(ctx, req.ID)
-	if err != nil {
-		return err
-	}
 	var teamID sql.NullInt32
 	if req.TeamID != nil {
 		teamID.Valid = true
@@ -46,7 +40,7 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEm
 	}
 
 	// 更新数据
-	_, err = e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
+	_, err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       req.ID,
 		Name:     req.Name,
 		TeamID:   teamID,
@@ -61,12 +55,6 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEm
 }
 
 func (e *EmployeeService) DeleteEmployee(ctx context.Context, req model.DeleteEmployeeRequest) error {
-	// 检查用户是否存在
-	_, err := e.querier.GetEmployeeByID(ctx, req.ID)
-	if err != nil {
-		return err
-	}
-
 	// 删除数据
 	if err := e.querier.DeleteEmployee(ctx, req.ID); err != nil {
 		return err

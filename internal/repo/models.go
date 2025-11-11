@@ -15,12 +15,13 @@ type ProcessStatus string
 
 const (
 	ProcessStatusValue0 ProcessStatus = "等待"
-	ProcessStatusValue1 ProcessStatus = "进行"
-	ProcessStatusValue2 ProcessStatus = "完成"
-	ProcessStatusValue3 ProcessStatus = "返工"
-	ProcessStatusValue4 ProcessStatus = "终止"
-	ProcessStatusValue5 ProcessStatus = "取消"
-	ProcessStatusValue6 ProcessStatus = "暂停"
+	ProcessStatusValue1 ProcessStatus = "准备"
+	ProcessStatusValue2 ProcessStatus = "进行"
+	ProcessStatusValue3 ProcessStatus = "完成"
+	ProcessStatusValue4 ProcessStatus = "返工"
+	ProcessStatusValue5 ProcessStatus = "终止"
+	ProcessStatusValue6 ProcessStatus = "取消"
+	ProcessStatusValue7 ProcessStatus = "暂停"
 )
 
 func (e *ProcessStatus) Scan(src interface{}) error {
@@ -125,6 +126,7 @@ type Process struct {
 	EndTime     sql.NullTime  `json:"end_time"`
 	CreatedAt   time.Time     `json:"created_at"`
 	UpdatedAt   time.Time     `json:"updated_at"`
+	Remark      string        `json:"remark"`
 }
 
 type Project struct {
@@ -137,6 +139,7 @@ type Project struct {
 	Duration    int32         `json:"duration"`
 	CreatedAt   time.Time     `json:"created_at"`
 	UpdatedAt   time.Time     `json:"updated_at"`
+	Remark      string        `json:"remark"`
 }
 
 type Team struct {

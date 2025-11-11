@@ -8,16 +8,6 @@ SELECT
 FROM teams
 ORDER BY name;
 
--- name: GetTeamByID :one
-SELECT
-  id,
-  name,
-  description,
-  created_at,
-  updated_at
-FROM teams
-WHERE id = $1;
-
 -- name: CreateTeam :one
 INSERT INTO teams (
   name,

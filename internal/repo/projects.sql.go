@@ -20,7 +20,7 @@ INSERT INTO projects (
   $1,
   $2,
   $3
-) RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at
+) RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at, remark
 `
 
 type CreateProjectParams struct {
@@ -42,6 +42,7 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (P
 		&i.Duration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Remark,
 	)
 	return i, err
 }
@@ -56,7 +57,7 @@ func (q *Queries) DeleteProject(ctx context.Context, id int32) error {
 	return err
 }
 
-const getProjectByID = `-- name: GetProjectByID :one
+const listProjectsFiltered = `-- name: ListProjectsFiltered :many
 SELECT
   p.id,
   p.name AS project_name,
@@ -69,10 +70,33 @@ SELECT
   p.updated_at
 FROM projects p
 LEFT JOIN employees e ON p.manager_id = e.id
-WHERE p.id = $1
+WHERE 
+  p.status = COALESCE(NULLIF($1::text, '')::project_status, p.status)
+  AND p.manager_id = COALESCE($2, p.manager_id)
+  AND p.start_time >= COALESCE($3, p.start_time)
+  AND p.start_time <= COALESCE($4, p.start_time)
+ORDER BY
+  CASE p.status
+    WHEN '进行' THEN 1
+    WHEN '排单' THEN 2
+    WHEN '暂停' THEN 3
+    WHEN '完成' THEN 4
+    WHEN '终止' THEN 5
+    WHEN '归档' THEN 6
+    ELSE 7
+  END,
+  (p.start_time + (p.duration || 'days')::interval) NULLS LAST,
+  p.id
 `
 
-type GetProjectByIDRow struct {
+type ListProjectsFilteredParams struct {
+	Column1     string        `json:"column_1"`
+	ManagerID   sql.NullInt32 `json:"manager_id"`
+	StartTime   sql.NullTime  `json:"start_time"`
+	StartTime_2 sql.NullTime  `json:"start_time_2"`
+}
+
+type ListProjectsFilteredRow struct {
 	ID          int32          `json:"id"`
 	ProjectName string         `json:"project_name"`
 	ManagerName sql.NullString `json:"manager_name"`
@@ -84,59 +108,20 @@ type GetProjectByIDRow struct {
 	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
-func (q *Queries) GetProjectByID(ctx context.Context, id int32) (GetProjectByIDRow, error) {
-	row := q.db.QueryRowContext(ctx, getProjectByID, id)
-	var i GetProjectByIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.ProjectName,
-		&i.ManagerName,
-		&i.Description,
-		&i.Status,
-		&i.StartTime,
-		&i.Duration,
-		&i.CreatedAt,
-		&i.UpdatedAt,
+func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error) {
+	rows, err := q.db.QueryContext(ctx, listProjectsFiltered,
+		arg.Column1,
+		arg.ManagerID,
+		arg.StartTime,
+		arg.StartTime_2,
 	)
-	return i, err
-}
-
-const listProjects = `-- name: ListProjects :many
-SELECT
-  p.id,
-  p.name AS project_name,
-  e.name AS manager_name,
-  p.description,
-  p.status,
-  p.start_time,
-  p.duration,
-  p.created_at,
-  p.updated_at
-FROM projects p
-LEFT JOIN employees e ON p.manager_id = e.id
-`
-
-type ListProjectsRow struct {
-	ID          int32          `json:"id"`
-	ProjectName string         `json:"project_name"`
-	ManagerName sql.NullString `json:"manager_name"`
-	Description string         `json:"description"`
-	Status      ProjectStatus  `json:"status"`
-	StartTime   sql.NullTime   `json:"start_time"`
-	Duration    int32          `json:"duration"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-}
-
-func (q *Queries) ListProjects(ctx context.Context) ([]ListProjectsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listProjects)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListProjectsRow
+	var items []ListProjectsFilteredRow
 	for rows.Next() {
-		var i ListProjectsRow
+		var i ListProjectsFilteredRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProjectName,
@@ -171,7 +156,7 @@ SET
   start_time = $6,
   duration = $7
 WHERE id = $1
-RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at
+RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at, remark
 `
 
 type UpdateProjectParams struct {
@@ -205,6 +190,7 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (P
 		&i.Duration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Remark,
 	)
 	return i, err
 }

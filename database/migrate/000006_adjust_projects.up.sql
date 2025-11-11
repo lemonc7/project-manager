@@ -1,0 +1,4 @@
+ALTER TYPE process_status ADD VALUE '准备' AFTER '等待';
+
+ALTER TABLE projects ADD COLUMN remark TEXT NOT NULL DEFAULT '';
+ALTER TABLE processes ADD COLUMN remark TEXT NOT NULL DEFAULT '';

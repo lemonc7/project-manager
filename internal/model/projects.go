@@ -26,4 +26,9 @@ type DeleteProjectRequest struct {
 	ID int32 `json:"id" validate:"required"`
 }
 
-
+type ListProjectsRequest struct {
+	Status    *repo.ProcessStatus `json:"status"`
+	ManagerID *int32              `json:"manager_id"`
+	StartTime *time.Time          `json:"start_time"`
+	EndTime   *time.Time          `json:"end_time"`
+}

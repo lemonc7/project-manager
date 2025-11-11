@@ -26,14 +26,8 @@ func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamReques
 }
 
 func (t *TeamService) UpdateTeam(ctx context.Context, req model.UpdateTeamRequest) error {
-	// 判断小组是否存在
-	_, err := t.querier.GetTeamByID(ctx, req.ID)
-	if err != nil {
-		return err
-	}
-
 	// 更新数据
-	_, err = t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
+	_, err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
 		ID:          req.ID,
 		Name:        req.Name,
 		Description: req.Description,
@@ -47,12 +41,6 @@ func (t *TeamService) UpdateTeam(ctx context.Context, req model.UpdateTeamReques
 }
 
 func (t *TeamService) DeleteTeam(ctx context.Context, req model.DeleteTeamRequest) error {
-	// 判断小组是否存在
-	_, err := t.querier.GetTeamByID(ctx, req.ID)
-	if err != nil {
-		return err
-	}
-
 	// 删除数据
 	if err := t.querier.DeleteTeam(ctx, req.ID); err != nil {
 		return err

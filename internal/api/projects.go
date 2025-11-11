@@ -14,7 +14,7 @@ type ProjectService interface {
 	CreateProject(ctx context.Context, req model.CreateProjectRequest) error
 	UpdateProject(ctx context.Context, req model.UpdateProjectRequest) error
 	DeleteProject(ctx context.Context, req model.DeleteProjectRequest) error
-	ListProjects(ctx context.Context) ([]repo.ListProjectsRow, error)
+	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)
@@ -92,9 +92,15 @@ func (p *ProjectHandler) DeleteProject(c echo.Context) error {
 	})
 }
 
-func (p *ProjectHandler) ListProjects(c echo.Context) error {
+func (p *ProjectHandler) ListProjectsFiltered(c echo.Context) error {
+	// 绑定请求
+	var req model.ListProjectsRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	// 获取数据
-	projects, err := p.projectService.ListProjects(c.Request().Context())
+	projects, err := p.projectService.ListProjectsFiltered(c.Request().Context(), req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

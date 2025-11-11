@@ -15,11 +15,9 @@ type Querier interface {
 	DeleteEmployee(ctx context.Context, id int32) error
 	DeleteProject(ctx context.Context, id int32) error
 	DeleteTeam(ctx context.Context, id int32) error
-	GetEmployeeByID(ctx context.Context, id int32) (GetEmployeeByIDRow, error)
-	GetProjectByID(ctx context.Context, id int32) (GetProjectByIDRow, error)
-	GetTeamByID(ctx context.Context, id int32) (Team, error)
 	ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
-	ListProjects(ctx context.Context) ([]ListProjectsRow, error)
+	ListProcessesFiltered(ctx context.Context, arg ListProcessesFilteredParams) ([]ListProcessesFilteredRow, error)
+	ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error)
 	ListTeams(ctx context.Context) ([]Team, error)
 	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error)
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
