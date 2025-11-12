@@ -7,16 +7,17 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 )
 
-const createTeam = `-- name: CreateTeam :one
+const createTeam = `-- name: CreateTeam :exec
 INSERT INTO teams (
   name,
   description
 ) VALUES (
   $1,
   $2
-) RETURNING id, name, description, created_at, updated_at
+)
 `
 
 type CreateTeamParams struct {
@@ -24,17 +25,9 @@ type CreateTeamParams struct {
 	Description string `json:"description"`
 }
 
-func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error) {
-	row := q.db.QueryRowContext(ctx, createTeam, arg.Name, arg.Description)
-	var i Team
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) error {
+	_, err := q.db.ExecContext(ctx, createTeam, arg.Name, arg.Description)
+	return err
 }
 
 const deleteTeam = `-- name: DeleteTeam :exec
@@ -87,30 +80,21 @@ func (q *Queries) ListTeams(ctx context.Context) ([]Team, error) {
 	return items, nil
 }
 
-const updateTeam = `-- name: UpdateTeam :one
+const updateTeam = `-- name: UpdateTeam :exec
 UPDATE teams
 SET
-  name = $2,
-  description = $3
-WHERE id = $1
-RETURNING id, name, description, created_at, updated_at
+  name = COALESCE($1,name),
+  description = COALESCE($2,description)
+WHERE id = $3
 `
 
 type UpdateTeamParams struct {
-	ID          int32  `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        sql.NullString `json:"name"`
+	Description sql.NullString `json:"description"`
+	ID          int32          `json:"id"`
 }
 
-func (q *Queries) UpdateTeam(ctx context.Context, arg UpdateTeamParams) (Team, error) {
-	row := q.db.QueryRowContext(ctx, updateTeam, arg.ID, arg.Name, arg.Description)
-	var i Team
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+func (q *Queries) UpdateTeam(ctx context.Context, arg UpdateTeamParams) error {
+	_, err := q.db.ExecContext(ctx, updateTeam, arg.Name, arg.Description, arg.ID)
+	return err
 }

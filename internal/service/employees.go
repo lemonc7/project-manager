@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
+	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type EmployeeService struct {
@@ -13,16 +13,10 @@ type EmployeeService struct {
 }
 
 func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error {
-	var teamID sql.NullInt32
-	if req.TeamID != nil {
-		teamID.Valid = true
-		teamID.Int32 = *req.TeamID
-	}
-
 	// 插入数据
-	_, err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
+	err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
 		Name:   req.Name,
-		TeamID: teamID,
+		TeamID: util.ToNullInt32(req.TeamID),
 	})
 
 	if err != nil {
@@ -33,18 +27,12 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 }
 
 func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEmployeeRequest) error {
-	var teamID sql.NullInt32
-	if req.TeamID != nil {
-		teamID.Valid = true
-		teamID.Int32 = *req.TeamID
-	}
-
 	// 更新数据
-	_, err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
+	err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       req.ID,
-		Name:     req.Name,
-		TeamID:   teamID,
-		IsActive: req.IsActive,
+		Name:     util.ToNullString(req.Name),
+		TeamID:   util.ToNullInt32(req.TeamID),
+		IsActive: util.ToNullBool(req.IsActive),
 	})
 
 	if err != nil {

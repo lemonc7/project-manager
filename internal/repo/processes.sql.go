@@ -11,6 +11,55 @@ import (
 	"time"
 )
 
+const createProcess = `-- name: CreateProcess :exec
+INSERT INTO processes (
+  name,
+  project_id,
+  employee_id,
+  description,
+  sequence,
+  remark
+) VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5,
+  $6
+)
+`
+
+type CreateProcessParams struct {
+	Name        string        `json:"name"`
+	ProjectID   int32         `json:"project_id"`
+	EmployeeID  sql.NullInt32 `json:"employee_id"`
+	Description string        `json:"description"`
+	Sequence    int32         `json:"sequence"`
+	Remark      string        `json:"remark"`
+}
+
+func (q *Queries) CreateProcess(ctx context.Context, arg CreateProcessParams) error {
+	_, err := q.db.ExecContext(ctx, createProcess,
+		arg.Name,
+		arg.ProjectID,
+		arg.EmployeeID,
+		arg.Description,
+		arg.Sequence,
+		arg.Remark,
+	)
+	return err
+}
+
+const deleteProcess = `-- name: DeleteProcess :exec
+DELETE FROM processes
+WHERE id = $1
+`
+
+func (q *Queries) DeleteProcess(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteProcess, id)
+	return err
+}
+
 const listProcessesFiltered = `-- name: ListProcessesFiltered :many
 SELECT
   p.id,
@@ -29,15 +78,15 @@ LEFT JOIN employees e ON p.employee_id = e.id
 LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE 
   p.project_id = COALESCE($1, p.project_id)
-  AND p.status = COALESCE(NULLIF($2::text, '')::process_status, p.status)
+  AND p.status = COALESCE($2, p.status)
   AND p.employee_id = COALESCE($3, p.employee_id)
 ORDER BY p.sequence
 `
 
 type ListProcessesFilteredParams struct {
-	ProjectID  int32         `json:"project_id"`
-	Column2    string        `json:"column_2"`
-	EmployeeID sql.NullInt32 `json:"employee_id"`
+	ProjectID  sql.NullInt32     `json:"project_id"`
+	Status     NullProcessStatus `json:"status"`
+	EmployeeID sql.NullInt32     `json:"employee_id"`
 }
 
 type ListProcessesFilteredRow struct {
@@ -55,7 +104,7 @@ type ListProcessesFilteredRow struct {
 }
 
 func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFilteredParams) ([]ListProcessesFilteredRow, error) {
-	rows, err := q.db.QueryContext(ctx, listProcessesFiltered, arg.ProjectID, arg.Column2, arg.EmployeeID)
+	rows, err := q.db.QueryContext(ctx, listProcessesFiltered, arg.ProjectID, arg.Status, arg.EmployeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -87,4 +136,39 @@ func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFi
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateProcess = `-- name: UpdateProcess :exec
+UPDATE processes
+SET
+  name = COALESCE($1,name),
+  description = COALESCE($2,description),
+  status = COALESCE($3,status),
+  employee_id = COALESCE($4,employee_id),
+  sequence = COALESCE($5,sequence),
+  remark = COALESCE($6,remark)
+WHERE id = $7
+`
+
+type UpdateProcessParams struct {
+	Name        sql.NullString    `json:"name"`
+	Description sql.NullString    `json:"description"`
+	Status      NullProcessStatus `json:"status"`
+	EmployeeID  sql.NullInt32     `json:"employee_id"`
+	Sequence    sql.NullInt32     `json:"sequence"`
+	Remark      sql.NullString    `json:"remark"`
+	ID          int32             `json:"id"`
+}
+
+func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) error {
+	_, err := q.db.ExecContext(ctx, updateProcess,
+		arg.Name,
+		arg.Description,
+		arg.Status,
+		arg.EmployeeID,
+		arg.Sequence,
+		arg.Remark,
+		arg.ID,
+	)
+	return err
 }

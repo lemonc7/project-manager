@@ -6,6 +6,7 @@ import (
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
+	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type ProjectService struct {
@@ -19,10 +20,11 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 		managerID.Int32 = *req.ManagerID
 	}
 	// 插入数据
-	_, err := p.querier.CreateProject(ctx, repo.CreateProjectParams{
+	err := p.querier.CreateProject(ctx, repo.CreateProjectParams{
 		Name:        req.Name,
 		Description: req.Description,
 		ManagerID:   managerID,
+		Remark:      req.Remark,
 	})
 
 	if err != nil {
@@ -33,27 +35,21 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 }
 
 func (p *ProjectService) UpdateProject(ctx context.Context, req model.UpdateProjectRequest) error {
-	var managerID sql.NullInt32
-	var startTime sql.NullTime
-	if req.ManagerID != nil {
-		managerID.Valid = true
-		managerID.Int32 = *req.ManagerID
+	var status repo.NullProjectStatus
+	if req.Status != nil {
+		status.Valid = true
+		status.ProjectStatus = repo.ProjectStatus(*req.Status)
 	}
-
-	if req.StartTime != nil {
-		startTime.Valid = true
-		startTime.Time = *req.StartTime
-	}
-
 	// 更新数据
-	_, err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
+	err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
 		ID:          req.ID,
-		Name:        req.Name,
-		Description: req.Description,
-		Status:      repo.ProjectStatus(req.Status),
-		ManagerID:   managerID,
-		StartTime:   startTime,
-		Duration:    req.Duration,
+		Name:        util.ToNullString(req.Name),
+		Description: util.ToNullString(req.Description),
+		Status:      status,
+		ManagerID:   util.ToNullInt32(req.ManagerID),
+		StartTime:   util.ToNullTime(req.StartTime),
+		Duration:    util.ToNullInt32(req.Duration),
+		Remark:      util.ToNullString(req.Remark),
 	})
 
 	if err != nil {
@@ -73,31 +69,18 @@ func (p *ProjectService) DeleteProject(ctx context.Context, req model.DeleteProj
 }
 
 func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error) {
-	var status string
-	var managerID sql.NullInt32
-	var startTime, endTime sql.NullTime
+	var status repo.NullProjectStatus
 	if req.Status != nil {
-		status = string(*req.Status)
-	}
-	if req.ManagerID != nil {
-		managerID.Valid = true
-		managerID.Int32 = *req.ManagerID
-	}
-	if req.StartTime != nil {
-		startTime.Valid = true
-		startTime.Time = *req.StartTime
-	}
-	if req.EndTime != nil {
-		endTime.Valid = true
-		endTime.Time = *req.EndTime
+		status.Valid = true
+		status.ProjectStatus = repo.ProjectStatus(*req.Status)
 	}
 
 	// 获取数据
 	projects, err := p.querier.ListProjectsFiltered(ctx, repo.ListProjectsFilteredParams{
-		Column1:     status,
-		ManagerID:   managerID,
-		StartTime:   startTime,
-		StartTime_2: endTime,
+		Status:    status,
+		ManagerID: util.ToNullInt32(req.ManagerID),
+		StartTime: util.ToNullTime(req.StartTime),
+		EndTime:   util.ToNullTime(req.EndTime),
 	})
 	if err != nil {
 		return nil, err

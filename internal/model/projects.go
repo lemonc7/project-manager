@@ -8,18 +8,20 @@ import (
 
 type CreateProjectRequest struct {
 	Name        string `json:"name" validate:"required"`
-	Description string `json:"description,omitempty"`
+	Description string `json:"description"`
 	ManagerID   *int32 `json:"manager_id"`
+	Remark      string `json:"remark"`
 }
 
 type UpdateProjectRequest struct {
-	ID          int32              `json:"id" validate:"required"`
-	Name        string             `json:"name" validate:"required"`
-	Description string             `json:"description,omitempty"`
-	Status      repo.ProcessStatus `json:"status"`
-	ManagerID   *int32             `json:"manager_id,omitempty"`
-	StartTime   *time.Time         `json:"start_time"`
-	Duration    int32              `json:"duration"`
+	ID          int32               `json:"id" validate:"required"`
+	Name        *string             `json:"name"`
+	Description *string             `json:"description"`
+	Status      *repo.ProcessStatus `json:"status"`
+	ManagerID   *int32              `json:"manager_id"`
+	StartTime   *time.Time          `json:"start_time"`
+	Duration    *int32              `json:"duration"`
+	Remark      *string             `json:"remark"`
 }
 
 type DeleteProjectRequest struct {

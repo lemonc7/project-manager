@@ -11,40 +11,35 @@ import (
 	"time"
 )
 
-const createProject = `-- name: CreateProject :one
+const createProject = `-- name: CreateProject :exec
 INSERT INTO projects (
   name,
   description,
-  manager_id
+  manager_id,
+  remark
 ) VALUES (
   $1,
   $2,
-  $3
-) RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at, remark
+  $3,
+  $4
+)
 `
 
 type CreateProjectParams struct {
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
 	ManagerID   sql.NullInt32 `json:"manager_id"`
+	Remark      string        `json:"remark"`
 }
 
-func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error) {
-	row := q.db.QueryRowContext(ctx, createProject, arg.Name, arg.Description, arg.ManagerID)
-	var i Project
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.Status,
-		&i.ManagerID,
-		&i.StartTime,
-		&i.Duration,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Remark,
+func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) error {
+	_, err := q.db.ExecContext(ctx, createProject,
+		arg.Name,
+		arg.Description,
+		arg.ManagerID,
+		arg.Remark,
 	)
-	return i, err
+	return err
 }
 
 const deleteProject = `-- name: DeleteProject :exec
@@ -71,7 +66,7 @@ SELECT
 FROM projects p
 LEFT JOIN employees e ON p.manager_id = e.id
 WHERE 
-  p.status = COALESCE(NULLIF($1::text, '')::project_status, p.status)
+  p.status = COALESCE($1, p.status)
   AND p.manager_id = COALESCE($2, p.manager_id)
   AND p.start_time >= COALESCE($3, p.start_time)
   AND p.start_time <= COALESCE($4, p.start_time)
@@ -90,10 +85,10 @@ ORDER BY
 `
 
 type ListProjectsFilteredParams struct {
-	Column1     string        `json:"column_1"`
-	ManagerID   sql.NullInt32 `json:"manager_id"`
-	StartTime   sql.NullTime  `json:"start_time"`
-	StartTime_2 sql.NullTime  `json:"start_time_2"`
+	Status    NullProjectStatus `json:"status"`
+	ManagerID sql.NullInt32     `json:"manager_id"`
+	StartTime sql.NullTime      `json:"start_time"`
+	EndTime   sql.NullTime      `json:"end_time"`
 }
 
 type ListProjectsFilteredRow struct {
@@ -110,10 +105,10 @@ type ListProjectsFilteredRow struct {
 
 func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error) {
 	rows, err := q.db.QueryContext(ctx, listProjectsFiltered,
-		arg.Column1,
+		arg.Status,
 		arg.ManagerID,
 		arg.StartTime,
-		arg.StartTime_2,
+		arg.EndTime,
 	)
 	if err != nil {
 		return nil, err
@@ -146,51 +141,40 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 	return items, nil
 }
 
-const updateProject = `-- name: UpdateProject :one
+const updateProject = `-- name: UpdateProject :exec
 UPDATE projects
 SET
-  name = $2,
-  description = $3,
-  status = $4,
-  manager_id = $5,
-  start_time = $6,
-  duration = $7
-WHERE id = $1
-RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at, remark
+  name = COALESCE($1,name),
+  description = COALESCE($2,description),
+  status = COALESCE($3,status),
+  manager_id = COALESCE($4,manager_id),
+  start_time = COALESCE($5,start_time),
+  duration = COALESCE($6,duration),
+  remark = COALESCE($7,remark)
+WHERE id = $8
 `
 
 type UpdateProjectParams struct {
-	ID          int32         `json:"id"`
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Status      ProjectStatus `json:"status"`
-	ManagerID   sql.NullInt32 `json:"manager_id"`
-	StartTime   sql.NullTime  `json:"start_time"`
-	Duration    int32         `json:"duration"`
+	Name        sql.NullString    `json:"name"`
+	Description sql.NullString    `json:"description"`
+	Status      NullProjectStatus `json:"status"`
+	ManagerID   sql.NullInt32     `json:"manager_id"`
+	StartTime   sql.NullTime      `json:"start_time"`
+	Duration    sql.NullInt32     `json:"duration"`
+	Remark      sql.NullString    `json:"remark"`
+	ID          int32             `json:"id"`
 }
 
-func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error) {
-	row := q.db.QueryRowContext(ctx, updateProject,
-		arg.ID,
+func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) error {
+	_, err := q.db.ExecContext(ctx, updateProject,
 		arg.Name,
 		arg.Description,
 		arg.Status,
 		arg.ManagerID,
 		arg.StartTime,
 		arg.Duration,
+		arg.Remark,
+		arg.ID,
 	)
-	var i Project
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.Status,
-		&i.ManagerID,
-		&i.StartTime,
-		&i.Duration,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Remark,
-	)
-	return i, err
+	return err
 }

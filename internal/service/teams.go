@@ -5,6 +5,7 @@ import (
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
+	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type TeamService struct {
@@ -13,7 +14,7 @@ type TeamService struct {
 
 func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamRequest) error {
 	// 插入数据
-	_, err := t.querier.CreateTeam(ctx, repo.CreateTeamParams{
+	err := t.querier.CreateTeam(ctx, repo.CreateTeamParams{
 		Name:        req.Name,
 		Description: req.Description,
 	})
@@ -27,10 +28,10 @@ func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamReques
 
 func (t *TeamService) UpdateTeam(ctx context.Context, req model.UpdateTeamRequest) error {
 	// 更新数据
-	_, err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
+	err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
 		ID:          req.ID,
-		Name:        req.Name,
-		Description: req.Description,
+		Name:        util.ToNullString(req.Name),
+		Description: util.ToNullString(req.Description),
 	})
 
 	if err != nil {

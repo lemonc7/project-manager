@@ -12,10 +12,10 @@ SELECT
 FROM projects p
 LEFT JOIN employees e ON p.manager_id = e.id
 WHERE 
-  p.status = COALESCE(NULLIF($1::text, '')::project_status, p.status)
-  AND p.manager_id = COALESCE($2, p.manager_id)
-  AND p.start_time >= COALESCE($3, p.start_time)
-  AND p.start_time <= COALESCE($4, p.start_time)
+  p.status = COALESCE(sqlc.narg('status'), p.status)
+  AND p.manager_id = COALESCE(sqlc.narg('manager_id'), p.manager_id)
+  AND p.start_time >= COALESCE(sqlc.narg('start_time'), p.start_time)
+  AND p.start_time <= COALESCE(sqlc.narg('end_time'), p.start_time)
 ORDER BY
   CASE p.status
     WHEN '进行' THEN 1
@@ -29,28 +29,30 @@ ORDER BY
   (p.start_time + (p.duration || 'days')::interval) NULLS LAST,
   p.id;
 
--- name: CreateProject :one
+-- name: CreateProject :exec
 INSERT INTO projects (
   name,
   description,
-  manager_id
+  manager_id,
+  remark
 ) VALUES (
   $1,
   $2,
-  $3
-) RETURNING *;
+  $3,
+  $4
+);
 
--- name: UpdateProject :one
+-- name: UpdateProject :exec
 UPDATE projects
 SET
-  name = $2,
-  description = $3,
-  status = $4,
-  manager_id = $5,
-  start_time = $6,
-  duration = $7
-WHERE id = $1
-RETURNING *;
+  name = COALESCE(sqlc.narg('name'),name),
+  description = COALESCE(sqlc.narg('description'),description),
+  status = COALESCE(sqlc.narg('status'),status),
+  manager_id = COALESCE(sqlc.narg('manager_id'),manager_id),
+  start_time = COALESCE(sqlc.narg('start_time'),start_time),
+  duration = COALESCE(sqlc.narg('duration'),duration),
+  remark = COALESCE(sqlc.narg('remark'),remark)
+WHERE id = sqlc.arg('id');
 
 -- name: DeleteProject :exec
 DELETE FROM projects

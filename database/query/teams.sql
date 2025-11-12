@@ -8,22 +8,21 @@ SELECT
 FROM teams
 ORDER BY name;
 
--- name: CreateTeam :one
+-- name: CreateTeam :exec
 INSERT INTO teams (
   name,
   description
 ) VALUES (
   $1,
   $2
-) RETURNING *;
+);
 
--- name: UpdateTeam :one
+-- name: UpdateTeam :exec
 UPDATE teams
 SET
-  name = $2,
-  description = $3
-WHERE id = $1
-RETURNING *;
+  name = COALESCE(sqlc.narg('name'),name),
+  description = COALESCE(sqlc.narg('description'),description)
+WHERE id = sqlc.arg('id');
 
 -- name: DeleteTeam :exec
 DELETE FROM teams
