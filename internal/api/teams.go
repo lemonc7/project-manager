@@ -23,6 +23,12 @@ type TeamHandler struct {
 	teamService TeamService
 }
 
+func NewTeamHandler(service TeamService) *TeamHandler {
+	return &TeamHandler{
+		teamService: service,
+	}
+}
+
 // 创建小组
 func (t *TeamHandler) CreateTeam(c echo.Context) error {
 	// 绑定请求

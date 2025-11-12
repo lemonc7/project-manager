@@ -13,6 +13,12 @@ type ProjectService struct {
 	querier repo.Querier
 }
 
+func NewProjectService(db *sql.DB) *ProjectService {
+	return &ProjectService{
+		querier: repo.New(db),
+	}
+}
+
 func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProjectRequest) error {
 	var managerID sql.NullInt32
 	if req.ManagerID != nil {

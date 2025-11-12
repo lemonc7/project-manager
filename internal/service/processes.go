@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
@@ -10,6 +11,12 @@ import (
 
 type ProcessService struct {
 	querier repo.Querier
+}
+
+func NewProcessService(db *sql.DB) *ProcessService {
+	return &ProcessService{
+		querier: repo.New(db),
+	}
 }
 
 func (p *ProcessService) CreateProcess(ctx context.Context, req model.CreateProcessRequest) error {

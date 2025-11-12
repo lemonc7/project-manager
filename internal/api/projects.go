@@ -23,6 +23,12 @@ type ProjectHandler struct {
 	projectService ProjectService
 }
 
+func NewProjectHandler(service ProjectService) *ProjectHandler {
+	return &ProjectHandler{
+		projectService: service,
+	}
+}
+
 func (p *ProjectHandler) CreateProject(c echo.Context) error {
 	// 绑定请求
 	var req model.CreateProjectRequest

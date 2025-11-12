@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
@@ -10,6 +11,13 @@ import (
 
 type TeamService struct {
 	querier repo.Querier
+}
+
+func NewTeamService(db *sql.DB) *TeamService {
+	return &TeamService{
+		querier: repo.New(db),
+	}
+	
 }
 
 func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamRequest) error {

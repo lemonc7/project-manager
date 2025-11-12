@@ -23,6 +23,12 @@ type ProcessHandler struct {
 	processService ProcessService
 }
 
+func NewProcessHandler(service ProcessService) *ProcessHandler {
+	return &ProcessHandler{
+		processService: service,
+	}
+}
+
 func (p *ProcessHandler) CreateProcess(c echo.Context) error {
 	// 绑定请求
 	var req model.CreateProcessRequest

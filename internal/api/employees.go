@@ -23,6 +23,12 @@ type EmployeeHandler struct {
 	employeeService EmployeeService
 }
 
+func NewEmployeeHandler(service EmployeeService) *EmployeeHandler {
+	return &EmployeeHandler{
+		employeeService: service,
+	}
+}
+
 // 创建员工
 func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
 	// 绑定请求

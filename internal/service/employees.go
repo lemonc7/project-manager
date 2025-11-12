@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
@@ -10,6 +11,12 @@ import (
 
 type EmployeeService struct {
 	querier repo.Querier
+}
+
+func NewEmployeeService(db *sql.DB) *EmployeeService {
+	return &EmployeeService{
+		querier: repo.New(db),
+	}
 }
 
 func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error {
