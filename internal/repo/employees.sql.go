@@ -45,7 +45,7 @@ const listEmployees = `-- name: ListEmployees :many
 SELECT
   e.id,
   e.name AS employee_name,
-  t.name AS team_name,
+  COALESCE(t.name,'') AS team_name,
   e.is_active,
   e.created_at,
   e.updated_at
@@ -54,12 +54,12 @@ LEFT JOIN teams t ON e.team_id = t.id
 `
 
 type ListEmployeesRow struct {
-	ID           int32          `json:"id"`
-	EmployeeName string         `json:"employee_name"`
-	TeamName     sql.NullString `json:"team_name"`
-	IsActive     bool           `json:"is_active"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
+	ID           int32     `json:"id"`
+	EmployeeName string    `json:"employee_name"`
+	TeamName     string    `json:"team_name"`
+	IsActive     bool      `json:"is_active"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error) {

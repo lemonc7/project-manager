@@ -2,7 +2,7 @@
 SELECT
   e.id,
   e.name AS employee_name,
-  t.name AS team_name,
+  COALESCE(t.name,'') AS team_name,
   e.is_active,
   e.created_at,
   e.updated_at
