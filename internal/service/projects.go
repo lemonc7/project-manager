@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
@@ -20,16 +21,11 @@ func NewProjectService(db *sql.DB) *ProjectService {
 }
 
 func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProjectRequest) error {
-	var managerID sql.NullInt32
-	if req.ManagerID != nil {
-		managerID.Valid = true
-		managerID.Int32 = *req.ManagerID
-	}
 	// 插入数据
 	err := p.querier.CreateProject(ctx, repo.CreateProjectParams{
 		Name:        req.Name,
 		Description: req.Description,
-		ManagerID:   managerID,
+		ManagerID:   req.ManagerID,
 		Remark:      req.Remark,
 	})
 
@@ -80,7 +76,7 @@ func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.Lis
 		status.Valid = true
 		status.ProjectStatus = repo.ProjectStatus(*req.Status)
 	}
-
+	fmt.Println(util.ToNullInt32(req.ManagerID))
 	// 获取数据
 	projects, err := p.querier.ListProjectsFiltered(ctx, repo.ListProjectsFilteredParams{
 		Status:    status,

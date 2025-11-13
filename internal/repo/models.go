@@ -120,7 +120,7 @@ type Process struct {
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
 	Status      ProcessStatus `json:"status"`
-	EmployeeID  sql.NullInt32 `json:"employee_id"`
+	EmployeeID  int32         `json:"employee_id"`
 	Sequence    int32         `json:"sequence"`
 	StartTime   sql.NullTime  `json:"start_time"`
 	EndTime     sql.NullTime  `json:"end_time"`
@@ -134,7 +134,7 @@ type Project struct {
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
 	Status      ProjectStatus `json:"status"`
-	ManagerID   sql.NullInt32 `json:"manager_id"`
+	ManagerID   int32         `json:"manager_id"`
 	StartTime   sql.NullTime  `json:"start_time"`
 	Duration    int32         `json:"duration"`
 	CreatedAt   time.Time     `json:"created_at"`

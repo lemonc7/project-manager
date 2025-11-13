@@ -2,7 +2,7 @@
 SELECT
   p.id,
   p.name AS project_name,
-  e.name AS manager_name,
+  COALESCE(e.name,'') AS manager_name,
   p.description,
   p.status,
   p.start_time,
@@ -14,8 +14,8 @@ LEFT JOIN employees e ON p.manager_id = e.id
 WHERE 
   p.status = COALESCE(sqlc.narg('status'), p.status)
   AND p.manager_id = COALESCE(sqlc.narg('manager_id'), p.manager_id)
-  AND p.start_time >= COALESCE(sqlc.narg('start_time'), p.start_time)
-  AND p.start_time <= COALESCE(sqlc.narg('end_time'), p.start_time)
+  AND p.created_at >= COALESCE(sqlc.narg('start_time'), p.created_at)
+  AND p.created_at <= COALESCE(sqlc.narg('end_time'), p.created_at)
 ORDER BY
   CASE p.status
     WHEN '进行' THEN 1

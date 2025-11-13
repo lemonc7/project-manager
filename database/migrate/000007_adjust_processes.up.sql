@@ -1,0 +1,5 @@
+ALTER TABLE processes
+ALTER COLUMN employee_id SET NOT NULL;
+
+ALTER TABLE projects
+ALTER COLUMN manager_id SET NOT NULL;

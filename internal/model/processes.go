@@ -5,7 +5,7 @@ import "github.com/lemonc7/project-manager/internal/repo"
 type CreateProcessRequest struct {
 	Name        string `json:"name" validate:"required"`
 	ProjectID   int32  `json:"project_id" validate:"required"`
-	EmployeeID  *int32 `json:"employee_id"`
+	EmployeeID  int32  `json:"employee_id" validate:"required"`
 	Description string `json:"description"`
 	Sequence    int32  `json:"sequence" validate:"required"`
 	Remark      string `json:"remark"`

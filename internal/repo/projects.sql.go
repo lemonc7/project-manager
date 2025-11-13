@@ -26,10 +26,10 @@ INSERT INTO projects (
 `
 
 type CreateProjectParams struct {
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	ManagerID   sql.NullInt32 `json:"manager_id"`
-	Remark      string        `json:"remark"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ManagerID   int32  `json:"manager_id"`
+	Remark      string `json:"remark"`
 }
 
 func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) error {
@@ -56,7 +56,7 @@ const listProjectsFiltered = `-- name: ListProjectsFiltered :many
 SELECT
   p.id,
   p.name AS project_name,
-  e.name AS manager_name,
+  COALESCE(e.name,'') AS manager_name,
   p.description,
   p.status,
   p.start_time,
@@ -68,8 +68,8 @@ LEFT JOIN employees e ON p.manager_id = e.id
 WHERE 
   p.status = COALESCE($1, p.status)
   AND p.manager_id = COALESCE($2, p.manager_id)
-  AND p.start_time >= COALESCE($3, p.start_time)
-  AND p.start_time <= COALESCE($4, p.start_time)
+  AND p.created_at >= COALESCE($3, p.created_at)
+  AND p.created_at <= COALESCE($4, p.created_at)
 ORDER BY
   CASE p.status
     WHEN '进行' THEN 1
@@ -92,15 +92,15 @@ type ListProjectsFilteredParams struct {
 }
 
 type ListProjectsFilteredRow struct {
-	ID          int32          `json:"id"`
-	ProjectName string         `json:"project_name"`
-	ManagerName sql.NullString `json:"manager_name"`
-	Description string         `json:"description"`
-	Status      ProjectStatus  `json:"status"`
-	StartTime   sql.NullTime   `json:"start_time"`
-	Duration    int32          `json:"duration"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	ID          int32         `json:"id"`
+	ProjectName string        `json:"project_name"`
+	ManagerName string        `json:"manager_name"`
+	Description string        `json:"description"`
+	Status      ProjectStatus `json:"status"`
+	StartTime   sql.NullTime  `json:"start_time"`
+	Duration    int32         `json:"duration"`
+	CreatedAt   time.Time     `json:"created_at"`
+	UpdatedAt   time.Time     `json:"updated_at"`
 }
 
 func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error) {

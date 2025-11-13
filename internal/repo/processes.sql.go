@@ -30,12 +30,12 @@ INSERT INTO processes (
 `
 
 type CreateProcessParams struct {
-	Name        string        `json:"name"`
-	ProjectID   int32         `json:"project_id"`
-	EmployeeID  sql.NullInt32 `json:"employee_id"`
-	Description string        `json:"description"`
-	Sequence    int32         `json:"sequence"`
-	Remark      string        `json:"remark"`
+	Name        string `json:"name"`
+	ProjectID   int32  `json:"project_id"`
+	EmployeeID  int32  `json:"employee_id"`
+	Description string `json:"description"`
+	Sequence    int32  `json:"sequence"`
+	Remark      string `json:"remark"`
 }
 
 func (q *Queries) CreateProcess(ctx context.Context, arg CreateProcessParams) error {
@@ -64,11 +64,11 @@ const listProcessesFiltered = `-- name: ListProcessesFiltered :many
 SELECT
   p.id,
   p.name AS process_name,
-  pr.name AS project_name,
-  p.description,
-  p.status,
-  e.name AS employee_name,
   p.sequence,
+  p.status,
+  COALESCE(pr.name,'') AS project_name,
+  COALESCE(e.name,'') AS employee_name,
+  p.description,
   p.start_time,
   p.end_time,
   p.created_at,
@@ -90,17 +90,17 @@ type ListProcessesFilteredParams struct {
 }
 
 type ListProcessesFilteredRow struct {
-	ID           int32          `json:"id"`
-	ProcessName  string         `json:"process_name"`
-	ProjectName  sql.NullString `json:"project_name"`
-	Description  string         `json:"description"`
-	Status       ProcessStatus  `json:"status"`
-	EmployeeName sql.NullString `json:"employee_name"`
-	Sequence     int32          `json:"sequence"`
-	StartTime    sql.NullTime   `json:"start_time"`
-	EndTime      sql.NullTime   `json:"end_time"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
+	ID           int32         `json:"id"`
+	ProcessName  string        `json:"process_name"`
+	Sequence     int32         `json:"sequence"`
+	Status       ProcessStatus `json:"status"`
+	ProjectName  string        `json:"project_name"`
+	EmployeeName string        `json:"employee_name"`
+	Description  string        `json:"description"`
+	StartTime    sql.NullTime  `json:"start_time"`
+	EndTime      sql.NullTime  `json:"end_time"`
+	CreatedAt    time.Time     `json:"created_at"`
+	UpdatedAt    time.Time     `json:"updated_at"`
 }
 
 func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFilteredParams) ([]ListProcessesFilteredRow, error) {
@@ -115,11 +115,11 @@ func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFi
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProcessName,
-			&i.ProjectName,
-			&i.Description,
-			&i.Status,
-			&i.EmployeeName,
 			&i.Sequence,
+			&i.Status,
+			&i.ProjectName,
+			&i.EmployeeName,
+			&i.Description,
 			&i.StartTime,
 			&i.EndTime,
 			&i.CreatedAt,

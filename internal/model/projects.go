@@ -9,7 +9,7 @@ import (
 type CreateProjectRequest struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description"`
-	ManagerID   *int32 `json:"manager_id"`
+	ManagerID   int32  `json:"manager_id" validate:"required"`
 	Remark      string `json:"remark"`
 }
 
@@ -29,7 +29,7 @@ type DeleteProjectRequest struct {
 }
 
 type ListProjectsRequest struct {
-	Status    *repo.ProcessStatus `json:"status"`
+	Status    *repo.ProjectStatus `json:"status"`
 	ManagerID *int32              `json:"manager_id"`
 	StartTime *time.Time          `json:"start_time"`
 	EndTime   *time.Time          `json:"end_time"`

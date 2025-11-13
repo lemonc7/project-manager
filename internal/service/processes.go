@@ -23,7 +23,7 @@ func (p *ProcessService) CreateProcess(ctx context.Context, req model.CreateProc
 	err := p.querier.CreateProcess(ctx, repo.CreateProcessParams{
 		Name:        req.Name,
 		ProjectID:   req.ProjectID,
-		EmployeeID:  util.ToNullInt32(req.EmployeeID),
+		EmployeeID:  req.EmployeeID,
 		Description: req.Description,
 		Sequence:    req.Sequence,
 		Remark:      req.Remark,
