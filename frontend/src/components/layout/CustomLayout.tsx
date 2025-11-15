@@ -8,8 +8,8 @@ const CustomLayout = () => {
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "14rem",
-          "--sidebar-width-mobile": "18rem"
+          "--sidebar-width": "12rem",
+          "--sidebar-width-mobile": "16rem"
         } as React.CSSProperties
       }
     >

@@ -6,11 +6,6 @@ type CreateTeamRequest struct {
 }
 
 type UpdateTeamRequest struct {
-	ID          int32  `json:"id" validate:"required"`
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
-}
-
-type DeleteTeamRequest struct {
-	ID int32 `json:"id" validate:"required"`
 }

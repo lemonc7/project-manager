@@ -36,7 +36,7 @@ func (p *ProcessService) CreateProcess(ctx context.Context, req model.CreateProc
 	return nil
 }
 
-func (p *ProcessService) UpdateProcess(ctx context.Context, req model.UpdateProcessRequest) error {
+func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error {
 	var status repo.NullProcessStatus
 	if req.Status != nil {
 		status.Valid = true
@@ -49,7 +49,7 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, req model.UpdateProc
 		EmployeeID:  util.ToNullInt32(req.EmployeeID),
 		Sequence:    util.ToNullInt32(req.Sequence),
 		Remark:      util.ToNullString(req.Remark),
-		ID:          req.ID,
+		ID:          id,
 	})
 
 	if err != nil {
@@ -59,8 +59,8 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, req model.UpdateProc
 	return nil
 }
 
-func (p *ProcessService) DeleteProcess(ctx context.Context, req model.DeleteProcessRequest) error {
-	err := p.querier.DeleteProcess(ctx, req.ID)
+func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
+	err := p.querier.DeleteProcess(ctx, id)
 
 	if err != nil {
 		return err

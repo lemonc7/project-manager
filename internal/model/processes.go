@@ -12,17 +12,12 @@ type CreateProcessRequest struct {
 }
 
 type UpdateProcessRequest struct {
-	ID          int32               `json:"id" validate:"required"`
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
 	Status      *repo.ProcessStatus `json:"status"`
 	EmployeeID  *int32              `json:"employee_id"`
 	Sequence    *int32              `json:"sequence"`
 	Remark      *string             `json:"remark"`
-}
-
-type DeleteProcessRequest struct {
-	ID int32 `json:"id" validate:"required"`
 }
 
 type ListProcessesRequest struct {

@@ -33,10 +33,10 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 	return nil
 }
 
-func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEmployeeRequest) error {
+func (e *EmployeeService) UpdateEmployee(ctx context.Context,id int32, req model.UpdateEmployeeRequest) error {
 	// 更新数据
 	err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
-		ID:       req.ID,
+		ID:       id,
 		Name:     util.ToNullString(req.Name),
 		TeamID:   util.ToNullInt32(req.TeamID),
 		IsActive: util.ToNullBool(req.IsActive),
@@ -49,9 +49,9 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEm
 	return nil
 }
 
-func (e *EmployeeService) DeleteEmployee(ctx context.Context, req model.DeleteEmployeeRequest) error {
+func (e *EmployeeService) DeleteEmployee(ctx context.Context, id int32) error {
 	// 删除数据
-	if err := e.querier.DeleteEmployee(ctx, req.ID); err != nil {
+	if err := e.querier.DeleteEmployee(ctx, id); err != nil {
 		return err
 	}
 

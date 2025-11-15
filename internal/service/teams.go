@@ -17,7 +17,7 @@ func NewTeamService(db *sql.DB) *TeamService {
 	return &TeamService{
 		querier: repo.New(db),
 	}
-	
+
 }
 
 func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamRequest) error {
@@ -34,10 +34,10 @@ func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamReques
 	return nil
 }
 
-func (t *TeamService) UpdateTeam(ctx context.Context, req model.UpdateTeamRequest) error {
+func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) error {
 	// 更新数据
 	err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
-		ID:          req.ID,
+		ID:          id,
 		Name:        util.ToNullString(req.Name),
 		Description: util.ToNullString(req.Description),
 	})
@@ -49,9 +49,9 @@ func (t *TeamService) UpdateTeam(ctx context.Context, req model.UpdateTeamReques
 	return nil
 }
 
-func (t *TeamService) DeleteTeam(ctx context.Context, req model.DeleteTeamRequest) error {
+func (t *TeamService) DeleteTeam(ctx context.Context, id int32) error {
 	// 删除数据
-	if err := t.querier.DeleteTeam(ctx, req.ID); err != nil {
+	if err := t.querier.DeleteTeam(ctx, id); err != nil {
 		return err
 	}
 

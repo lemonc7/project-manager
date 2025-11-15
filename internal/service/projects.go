@@ -36,7 +36,7 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 	return nil
 }
 
-func (p *ProjectService) UpdateProject(ctx context.Context, req model.UpdateProjectRequest) error {
+func (p *ProjectService) UpdateProject(ctx context.Context,id int32, req model.UpdateProjectRequest) error {
 	var status repo.NullProjectStatus
 	if req.Status != nil {
 		status.Valid = true
@@ -44,7 +44,7 @@ func (p *ProjectService) UpdateProject(ctx context.Context, req model.UpdateProj
 	}
 	// 更新数据
 	err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
-		ID:          req.ID,
+		ID:          id,
 		Name:        util.ToNullString(req.Name),
 		Description: util.ToNullString(req.Description),
 		Status:      status,
@@ -61,9 +61,9 @@ func (p *ProjectService) UpdateProject(ctx context.Context, req model.UpdateProj
 	return nil
 }
 
-func (p *ProjectService) DeleteProject(ctx context.Context, req model.DeleteProjectRequest) error {
+func (p *ProjectService) DeleteProject(ctx context.Context, id int32) error {
 	// 删除数据
-	if err := p.querier.DeleteProject(ctx, req.ID); err != nil {
+	if err := p.querier.DeleteProject(ctx, id); err != nil {
 		return err
 	}
 

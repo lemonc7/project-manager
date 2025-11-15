@@ -8,12 +8,13 @@ import (
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
+	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type TeamService interface {
 	CreateTeam(ctx context.Context, req model.CreateTeamRequest) error
-	UpdateTeam(ctx context.Context, req model.UpdateTeamRequest) error
-	DeleteTeam(ctx context.Context, req model.DeleteTeamRequest) error
+	UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) error
+	DeleteTeam(ctx context.Context, id int32) error
 	ListTeams(ctx context.Context) ([]repo.Team, error)
 }
 
@@ -34,12 +35,12 @@ func (t *TeamHandler) CreateTeam(c echo.Context) error {
 	// 绑定请求
 	var req model.CreateTeamRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// 验证数据
 	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 	}
 
 	// 调用业务函数
@@ -55,19 +56,18 @@ func (t *TeamHandler) CreateTeam(c echo.Context) error {
 
 // 更新小组
 func (t *TeamHandler) UpdateTeam(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
 	// 绑定请求
 	var req model.UpdateTeamRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	// 验证数据
-	if err := c.Validate(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// 调用业务函数
-	if err := t.teamService.UpdateTeam(c.Request().Context(), req); err != nil {
+	if err := t.teamService.UpdateTeam(c.Request().Context(), id, req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -79,19 +79,13 @@ func (t *TeamHandler) UpdateTeam(c echo.Context) error {
 
 // 删除小组
 func (t *TeamHandler) DeleteTeam(c echo.Context) error {
-	// 绑定请求
-	var req model.DeleteTeamRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	// 获取id
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
 	}
-
-	// 验证数据
-	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
 	// 删除数据
-	if err := t.teamService.DeleteTeam(c.Request().Context(), req); err != nil {
+	if err := t.teamService.DeleteTeam(c.Request().Context(), id); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -110,7 +104,5 @@ func (t *TeamHandler) ListTeams(c echo.Context) error {
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusOK, echo.Map{
-		"data": teams,
-	})
+	return c.JSON(http.StatusOK, teams)
 }

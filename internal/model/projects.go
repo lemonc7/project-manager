@@ -14,7 +14,6 @@ type CreateProjectRequest struct {
 }
 
 type UpdateProjectRequest struct {
-	ID          int32               `json:"id" validate:"required"`
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
 	Status      *repo.ProcessStatus `json:"status"`
@@ -22,10 +21,6 @@ type UpdateProjectRequest struct {
 	StartTime   *time.Time          `json:"start_time"`
 	Duration    *int32              `json:"duration"`
 	Remark      *string             `json:"remark"`
-}
-
-type DeleteProjectRequest struct {
-	ID int32 `json:"id" validate:"required"`
 }
 
 type ListProjectsRequest struct {
