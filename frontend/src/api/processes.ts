@@ -1,4 +1,8 @@
-import type { InsertProcessRequest, ListProcessesRequest, Process } from "@/model/processes"
+import type {
+  InsertProcessRequest,
+  ListProcessesRequest,
+  Process
+} from "@/model/processes"
 import service from "./request"
 
 export async function listProcesses(req: ListProcessesRequest) {
@@ -6,16 +10,19 @@ export async function listProcesses(req: ListProcessesRequest) {
   return Array.isArray(res.data) ? res.data : []
 }
 
-export async function getProcessesByProjectID(id: number) {
-  return listProcesses({ projectID: id })
+export async function listProcessesByProjectID(id: number) {
+  const res = await service.get<Process[]>(`/process/project/${id}`)
+  return Array.isArray(res.data) ? res.data : []
 }
 
-export async function insertProcessLast(req: Omit<InsertProcessRequest,"sequence">) {
+export async function insertProcessLast(
+  req: Omit<InsertProcessRequest, "sequence">
+) {
   return service.post("/process", req)
 }
 
 export async function insertProcessAt(req: InsertProcessRequest) {
-  const {sequence, ...rest} = req
+  const { sequence, ...rest } = req
   return service.post(`/process/${sequence}`, rest)
 }
 

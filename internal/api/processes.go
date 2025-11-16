@@ -17,6 +17,7 @@ type ProcessService interface {
 	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error
 	DeleteProcess(ctx context.Context, id int32) error
 	ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error)
+	ListProcesses(ctx context.Context, id int32) ([]repo.ListProcessesFilteredRow, error)
 }
 
 var _ ProcessService = (*service.ProcessService)(nil)
@@ -118,6 +119,21 @@ func (p *ProcessHandler) DeleteProcess(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "成功删除流程",
 	})
+}
+
+func (p *ProcessHandler) ListProcesses(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+
+	// 获取数据
+	processes, err := p.processService.ListProcesses(c.Request().Context(), id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, processes)
 }
 
 func (p *ProcessHandler) ListProcessFiltered(c echo.Context) error {

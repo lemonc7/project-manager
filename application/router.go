@@ -25,6 +25,7 @@ func (a *Application) initRouter() {
 	projectRouter.DELETE("/:id", a.projectHandler.DeleteProject)
 
 	// 流程
+	processRouter.GET("/:id", a.processHandler.ListProcesses)
 	processRouter.POST("", a.processHandler.InsertProcessLast)
 	processRouter.POST("/:id", a.processHandler.InsertProcessAt)
 	processRouter.POST("/filter", a.processHandler.ListProcessFiltered)
