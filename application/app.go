@@ -102,8 +102,6 @@ func (a *Application) shutdown() {
 	defer func() {
 		if err := a.db.Close(); err != nil {
 			logger.Error("close database", zap.Error(err))
-		}else {
-			logger.Info("database closed successfully")
 		}
 	}()
 
