@@ -20,23 +20,6 @@ WHERE
   AND p.employee_id = COALESCE(sqlc.narg('employee_id'), p.employee_id)
 ORDER BY p.sequence;
 
--- name: CreateProcess :exec
-INSERT INTO processes (
-  name,
-  project_id,
-  employee_id,
-  description,
-  sequence,
-  remark
-) VALUES (
-  $1,
-  $2,
-  $3,
-  $4,
-  $5,
-  $6
-);
-
 -- name: UpdateProcess :exec
 UPDATE processes
 SET
@@ -44,11 +27,85 @@ SET
   description = COALESCE(sqlc.narg('description'),description),
   status = COALESCE(sqlc.narg('status'),status),
   employee_id = COALESCE(sqlc.narg('employee_id'),employee_id),
-  sequence = COALESCE(sqlc.narg('sequence'),sequence),
   remark = COALESCE(sqlc.narg('remark'),remark)
 WHERE id = sqlc.arg('id');
 
--- name: DeleteProcess :exec
+-- name: InsertProcessLast :exec
+WITH project_lock AS (
+  SELECT id FROM projects WHERE id = $1 FOR UPDATE
+),
+max_seq AS (
+  SELECT COALESCE(MAX(sequence), 0) AS val
+  FROM processes
+  WHERE project_id = $1
+)
+INSERT INTO processes (
+  name,
+  project_id,
+  employee_id,
+  sequence,
+  description,
+  remark
+) SELECT
+  $2,
+  $1,
+  $3,
+  m.val + 1,
+  $4,
+  $5
+FROM max_seq m, project_lock pl;
+
+-- name: ShiftProcessesUp :exec
+WITH project_lock AS (
+  SELECT id FROM projects WHERE id = $1 FOR UPDATE
+),
+lock_rows AS (
+  SELECT id
+  FROM processes
+  WHERE project_id = $1 AND sequence >= $2
+  FOR UPDATE
+)
+UPDATE processes
+SET sequence = sequence + 1
+WHERE processes.project_id = $1 AND processes.sequence >= $2;
+
+-- name: GetMaxSequence :one
+SELECT COALESCE(MAX(sequence), 0)::INT AS max_seq
+FROM processes
+WHERE project_id = $1;
+
+-- name: InsertProcessAt :exec
+INSERT INTO processes (
+  name,
+  project_id,
+  employee_id,
+  sequence,
+  description,
+  remark
+) VALUES (
+  $3,
+  $1,
+  $4,
+  $2,
+  $5,
+  $6
+);
+
+-- name: DeleteProcess :one
 DELETE FROM processes
-WHERE id = $1;
+WHERE id = $1
+RETURNING project_id;
+
+-- name: ReorderProcesses :exec
+WITH project_lock AS (
+  SELECT id FROM projects WHERE id = $1 FOR UPDATE
+)
+UPDATE processes AS p
+SET sequence = sub.new_seq
+FROM (
+  SELECT id,ROW_NUMBER() OVER (ORDER BY sequence) AS new_seq
+  FROM processes
+  WHERE processes.project_id = $1
+) AS sub
+WHERE p.id = sub.id;
 

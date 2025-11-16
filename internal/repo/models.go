@@ -37,7 +37,7 @@ func (e *ProcessStatus) Scan(src interface{}) error {
 }
 
 type NullProcessStatus struct {
-	ProcessStatus ProcessStatus `json:"process_status"`
+	ProcessStatus ProcessStatus `json:"processStatus"`
 	Valid         bool          `json:"valid"` // Valid is true if ProcessStatus is not NULL
 }
 
@@ -83,7 +83,7 @@ func (e *ProjectStatus) Scan(src interface{}) error {
 }
 
 type NullProjectStatus struct {
-	ProjectStatus ProjectStatus `json:"project_status"`
+	ProjectStatus ProjectStatus `json:"projectStatus"`
 	Valid         bool          `json:"valid"` // Valid is true if ProjectStatus is not NULL
 }
 
@@ -108,24 +108,24 @@ func (ns NullProjectStatus) Value() (driver.Value, error) {
 type Employee struct {
 	ID        int32         `json:"id"`
 	Name      string        `json:"name"`
-	TeamID    sql.NullInt32 `json:"team_id"`
-	CreatedAt time.Time     `json:"created_at"`
-	UpdatedAt time.Time     `json:"updated_at"`
-	IsActive  bool          `json:"is_active"`
+	TeamID    sql.NullInt32 `json:"teamId"`
+	CreatedAt time.Time     `json:"createdAt"`
+	UpdatedAt time.Time     `json:"updatedAt"`
+	IsActive  bool          `json:"isActive"`
 }
 
 type Process struct {
 	ID          int32         `json:"id"`
-	ProjectID   int32         `json:"project_id"`
+	ProjectID   int32         `json:"projectId"`
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
 	Status      ProcessStatus `json:"status"`
-	EmployeeID  int32         `json:"employee_id"`
+	EmployeeID  int32         `json:"employeeId"`
 	Sequence    int32         `json:"sequence"`
-	StartTime   sql.NullTime  `json:"start_time"`
-	EndTime     sql.NullTime  `json:"end_time"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdatedAt   time.Time     `json:"updated_at"`
+	StartTime   sql.NullTime  `json:"startTime"`
+	EndTime     sql.NullTime  `json:"endTime"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
 	Remark      string        `json:"remark"`
 }
 
@@ -134,11 +134,11 @@ type Project struct {
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
 	Status      ProjectStatus `json:"status"`
-	ManagerID   int32         `json:"manager_id"`
-	StartTime   sql.NullTime  `json:"start_time"`
+	ManagerID   int32         `json:"managerId"`
+	StartTime   sql.NullTime  `json:"startTime"`
 	Duration    int32         `json:"duration"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdatedAt   time.Time     `json:"updated_at"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
 	Remark      string        `json:"remark"`
 }
 
@@ -146,6 +146,6 @@ type Team struct {
 	ID          int32     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }

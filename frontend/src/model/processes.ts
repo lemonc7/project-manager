@@ -10,7 +10,7 @@ type ProcessStatus =
   | "取消"
   | "暂停"
 
-interface CreateProcessRequest {
+interface InsertProcessRequest {
   name: string
   projectID: number
   employeeID: number
@@ -51,7 +51,7 @@ interface Process {
 
 export type {
   ProcessStatus,
-  CreateProcessRequest,
+  InsertProcessRequest,
   UpdateProcessRequest,
   ListProcessesRequest,
   Process

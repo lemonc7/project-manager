@@ -23,7 +23,7 @@ INSERT INTO employees (
 
 type CreateEmployeeParams struct {
 	Name   string        `json:"name"`
-	TeamID sql.NullInt32 `json:"team_id"`
+	TeamID sql.NullInt32 `json:"teamId"`
 }
 
 func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) error {
@@ -55,11 +55,11 @@ LEFT JOIN teams t ON e.team_id = t.id
 
 type ListEmployeesRow struct {
 	ID           int32     `json:"id"`
-	EmployeeName string    `json:"employee_name"`
-	TeamName     string    `json:"team_name"`
-	IsActive     bool      `json:"is_active"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	EmployeeName string    `json:"employeeName"`
+	TeamName     string    `json:"teamName"`
+	IsActive     bool      `json:"isActive"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error) {
@@ -103,8 +103,8 @@ WHERE id = $4
 
 type UpdateEmployeeParams struct {
 	Name     sql.NullString `json:"name"`
-	TeamID   sql.NullInt32  `json:"team_id"`
-	IsActive sql.NullBool   `json:"is_active"`
+	TeamID   sql.NullInt32  `json:"teamId"`
+	IsActive sql.NullBool   `json:"isActive"`
 	ID       int32          `json:"id"`
 }
 

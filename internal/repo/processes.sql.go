@@ -11,52 +11,113 @@ import (
 	"time"
 )
 
-const createProcess = `-- name: CreateProcess :exec
+const deleteProcess = `-- name: DeleteProcess :one
+DELETE FROM processes
+WHERE id = $1
+RETURNING project_id
+`
+
+func (q *Queries) DeleteProcess(ctx context.Context, id int32) (int32, error) {
+	row := q.db.QueryRowContext(ctx, deleteProcess, id)
+	var project_id int32
+	err := row.Scan(&project_id)
+	return project_id, err
+}
+
+const getMaxSequence = `-- name: GetMaxSequence :one
+SELECT COALESCE(MAX(sequence), 0)::INT AS max_seq
+FROM processes
+WHERE project_id = $1
+`
+
+func (q *Queries) GetMaxSequence(ctx context.Context, projectID int32) (int32, error) {
+	row := q.db.QueryRowContext(ctx, getMaxSequence, projectID)
+	var max_seq int32
+	err := row.Scan(&max_seq)
+	return max_seq, err
+}
+
+const insertProcessAt = `-- name: InsertProcessAt :exec
 INSERT INTO processes (
   name,
   project_id,
   employee_id,
-  description,
   sequence,
+  description,
   remark
 ) VALUES (
-  $1,
-  $2,
   $3,
+  $1,
   $4,
+  $2,
   $5,
   $6
 )
 `
 
-type CreateProcessParams struct {
-	Name        string `json:"name"`
-	ProjectID   int32  `json:"project_id"`
-	EmployeeID  int32  `json:"employee_id"`
-	Description string `json:"description"`
+type InsertProcessAtParams struct {
+	ProjectID   int32  `json:"projectId"`
 	Sequence    int32  `json:"sequence"`
+	Name        string `json:"name"`
+	EmployeeID  int32  `json:"employeeId"`
+	Description string `json:"description"`
 	Remark      string `json:"remark"`
 }
 
-func (q *Queries) CreateProcess(ctx context.Context, arg CreateProcessParams) error {
-	_, err := q.db.ExecContext(ctx, createProcess,
-		arg.Name,
+func (q *Queries) InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error {
+	_, err := q.db.ExecContext(ctx, insertProcessAt,
 		arg.ProjectID,
+		arg.Sequence,
+		arg.Name,
 		arg.EmployeeID,
 		arg.Description,
-		arg.Sequence,
 		arg.Remark,
 	)
 	return err
 }
 
-const deleteProcess = `-- name: DeleteProcess :exec
-DELETE FROM processes
-WHERE id = $1
+const insertProcessLast = `-- name: InsertProcessLast :exec
+WITH project_lock AS (
+  SELECT id FROM projects WHERE id = $1 FOR UPDATE
+),
+max_seq AS (
+  SELECT COALESCE(MAX(sequence), 0) AS val
+  FROM processes
+  WHERE project_id = $1
+)
+INSERT INTO processes (
+  name,
+  project_id,
+  employee_id,
+  sequence,
+  description,
+  remark
+) SELECT
+  $2,
+  $1,
+  $3,
+  m.val + 1,
+  $4,
+  $5
+FROM max_seq m, project_lock pl
 `
 
-func (q *Queries) DeleteProcess(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteProcess, id)
+type InsertProcessLastParams struct {
+	ProjectID   int32  `json:"projectId"`
+	Name        string `json:"name"`
+	EmployeeID  int32  `json:"employeeId"`
+	Description string `json:"description"`
+	Remark      string `json:"remark"`
+}
+
+func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) error {
+	_, err := q.db.ExecContext(ctx, insertProcessLast,
+		arg.ProjectID,
+		arg.Name,
+		arg.EmployeeID,
+		arg.Description,
+		arg.Remark,
+	)
 	return err
 }
 
@@ -84,23 +145,23 @@ ORDER BY p.sequence
 `
 
 type ListProcessesFilteredParams struct {
-	ProjectID  sql.NullInt32     `json:"project_id"`
+	ProjectID  sql.NullInt32     `json:"projectId"`
 	Status     NullProcessStatus `json:"status"`
-	EmployeeID sql.NullInt32     `json:"employee_id"`
+	EmployeeID sql.NullInt32     `json:"employeeId"`
 }
 
 type ListProcessesFilteredRow struct {
 	ID           int32         `json:"id"`
-	ProcessName  string        `json:"process_name"`
+	ProcessName  string        `json:"processName"`
 	Sequence     int32         `json:"sequence"`
 	Status       ProcessStatus `json:"status"`
-	ProjectName  string        `json:"project_name"`
-	EmployeeName string        `json:"employee_name"`
+	ProjectName  string        `json:"projectName"`
+	EmployeeName string        `json:"employeeName"`
 	Description  string        `json:"description"`
-	StartTime    sql.NullTime  `json:"start_time"`
-	EndTime      sql.NullTime  `json:"end_time"`
-	CreatedAt    time.Time     `json:"created_at"`
-	UpdatedAt    time.Time     `json:"updated_at"`
+	StartTime    sql.NullTime  `json:"startTime"`
+	EndTime      sql.NullTime  `json:"endTime"`
+	CreatedAt    time.Time     `json:"createdAt"`
+	UpdatedAt    time.Time     `json:"updatedAt"`
 }
 
 func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFilteredParams) ([]ListProcessesFilteredRow, error) {
@@ -138,6 +199,50 @@ func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFi
 	return items, nil
 }
 
+const reorderProcesses = `-- name: ReorderProcesses :exec
+WITH project_lock AS (
+  SELECT id FROM projects WHERE id = $1 FOR UPDATE
+)
+UPDATE processes AS p
+SET sequence = sub.new_seq
+FROM (
+  SELECT id,ROW_NUMBER() OVER (ORDER BY sequence) AS new_seq
+  FROM processes
+  WHERE processes.project_id = $1
+) AS sub
+WHERE p.id = sub.id
+`
+
+func (q *Queries) ReorderProcesses(ctx context.Context, projectID int32) error {
+	_, err := q.db.ExecContext(ctx, reorderProcesses, projectID)
+	return err
+}
+
+const shiftProcessesUp = `-- name: ShiftProcessesUp :exec
+WITH project_lock AS (
+  SELECT id FROM projects WHERE id = $1 FOR UPDATE
+),
+lock_rows AS (
+  SELECT id
+  FROM processes
+  WHERE project_id = $1 AND sequence >= $2
+  FOR UPDATE
+)
+UPDATE processes
+SET sequence = sequence + 1
+WHERE processes.project_id = $1 AND processes.sequence >= $2
+`
+
+type ShiftProcessesUpParams struct {
+	ProjectID int32 `json:"projectId"`
+	Sequence  int32 `json:"sequence"`
+}
+
+func (q *Queries) ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error {
+	_, err := q.db.ExecContext(ctx, shiftProcessesUp, arg.ProjectID, arg.Sequence)
+	return err
+}
+
 const updateProcess = `-- name: UpdateProcess :exec
 UPDATE processes
 SET
@@ -145,17 +250,15 @@ SET
   description = COALESCE($2,description),
   status = COALESCE($3,status),
   employee_id = COALESCE($4,employee_id),
-  sequence = COALESCE($5,sequence),
-  remark = COALESCE($6,remark)
-WHERE id = $7
+  remark = COALESCE($5,remark)
+WHERE id = $6
 `
 
 type UpdateProcessParams struct {
 	Name        sql.NullString    `json:"name"`
 	Description sql.NullString    `json:"description"`
 	Status      NullProcessStatus `json:"status"`
-	EmployeeID  sql.NullInt32     `json:"employee_id"`
-	Sequence    sql.NullInt32     `json:"sequence"`
+	EmployeeID  sql.NullInt32     `json:"employeeId"`
 	Remark      sql.NullString    `json:"remark"`
 	ID          int32             `json:"id"`
 }
@@ -166,7 +269,6 @@ func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) er
 		arg.Description,
 		arg.Status,
 		arg.EmployeeID,
-		arg.Sequence,
 		arg.Remark,
 		arg.ID,
 	)

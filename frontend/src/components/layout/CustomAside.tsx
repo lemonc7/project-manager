@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -62,7 +61,7 @@ const CustomAside = () => {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>设置</SidebarFooter>
+        {/* <SidebarFooter>设置</SidebarFooter> */}
       </Sidebar>
     </div>
   )

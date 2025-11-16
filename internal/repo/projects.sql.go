@@ -28,7 +28,7 @@ INSERT INTO projects (
 type CreateProjectParams struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	ManagerID   int32  `json:"manager_id"`
+	ManagerID   int32  `json:"managerId"`
 	Remark      string `json:"remark"`
 }
 
@@ -86,21 +86,21 @@ ORDER BY
 
 type ListProjectsFilteredParams struct {
 	Status    NullProjectStatus `json:"status"`
-	ManagerID sql.NullInt32     `json:"manager_id"`
-	StartTime sql.NullTime      `json:"start_time"`
-	EndTime   sql.NullTime      `json:"end_time"`
+	ManagerID sql.NullInt32     `json:"managerId"`
+	StartTime sql.NullTime      `json:"startTime"`
+	EndTime   sql.NullTime      `json:"endTime"`
 }
 
 type ListProjectsFilteredRow struct {
 	ID          int32         `json:"id"`
-	ProjectName string        `json:"project_name"`
-	ManagerName string        `json:"manager_name"`
+	ProjectName string        `json:"projectName"`
+	ManagerName string        `json:"managerName"`
 	Description string        `json:"description"`
 	Status      ProjectStatus `json:"status"`
-	StartTime   sql.NullTime  `json:"start_time"`
+	StartTime   sql.NullTime  `json:"startTime"`
 	Duration    int32         `json:"duration"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdatedAt   time.Time     `json:"updated_at"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
 }
 
 func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error) {
@@ -158,8 +158,8 @@ type UpdateProjectParams struct {
 	Name        sql.NullString    `json:"name"`
 	Description sql.NullString    `json:"description"`
 	Status      NullProjectStatus `json:"status"`
-	ManagerID   sql.NullInt32     `json:"manager_id"`
-	StartTime   sql.NullTime      `json:"start_time"`
+	ManagerID   sql.NullInt32     `json:"managerId"`
+	StartTime   sql.NullTime      `json:"startTime"`
 	Duration    sql.NullInt32     `json:"duration"`
 	Remark      sql.NullString    `json:"remark"`
 	ID          int32             `json:"id"`

@@ -9,7 +9,7 @@ import (
 type CreateProjectRequest struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description"`
-	ManagerID   int32  `json:"manager_id" validate:"required"`
+	ManagerID   int32  `json:"managerID" validate:"required"`
 	Remark      string `json:"remark"`
 }
 
@@ -17,15 +17,15 @@ type UpdateProjectRequest struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
 	Status      *repo.ProcessStatus `json:"status"`
-	ManagerID   *int32              `json:"manager_id"`
-	StartTime   *time.Time          `json:"start_time"`
+	ManagerID   *int32              `json:"managerID"`
+	StartTime   *time.Time          `json:"startTime"`
 	Duration    *int32              `json:"duration"`
 	Remark      *string             `json:"remark"`
 }
 
 type ListProjectsRequest struct {
 	Status    *repo.ProjectStatus `json:"status"`
-	ManagerID *int32              `json:"manager_id"`
-	StartTime *time.Time          `json:"start_time"`
-	EndTime   *time.Time          `json:"end_time"`
+	ManagerID *int32              `json:"managerID"`
+	StartTime *time.Time          `json:"startTime"`
+	EndTime   *time.Time          `json:"endTime"`
 }

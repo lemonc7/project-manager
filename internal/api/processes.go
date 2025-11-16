@@ -12,7 +12,8 @@ import (
 )
 
 type ProcessService interface {
-	CreateProcess(ctx context.Context, req model.CreateProcessRequest) error
+	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) error
+	InsertProcessAt(ctx context.Context, id int32, req model.InsertProcessRequest) error
 	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error
 	DeleteProcess(ctx context.Context, id int32) error
 	ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error)
@@ -30,9 +31,9 @@ func NewProcessHandler(service ProcessService) *ProcessHandler {
 	}
 }
 
-func (p *ProcessHandler) CreateProcess(c echo.Context) error {
+func (p *ProcessHandler) InsertProcessLast(c echo.Context) error {
 	// 绑定请求
-	var req model.CreateProcessRequest
+	var req model.InsertProcessRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -43,11 +44,37 @@ func (p *ProcessHandler) CreateProcess(c echo.Context) error {
 	}
 
 	// 业务函数
-	if err := p.processService.CreateProcess(c.Request().Context(), req); err != nil {
+	if err := p.processService.InsertProcessLast(c.Request().Context(), req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	// 返回响应
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "成功创建流程",
+	})
+}
+
+func (p *ProcessHandler) InsertProcessAt(c echo.Context) error {
+	sequence, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+	// 绑定请求
+	var req model.InsertProcessRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	// 验证数据
+	if err := c.Validate(req); err != nil {
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+	}
+
+	// 业务函数
+	if err := p.processService.InsertProcessAt(c.Request().Context(), sequence, req); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "成功创建流程",
 	})
