@@ -130,6 +130,7 @@ SELECT
   COALESCE(pr.name,'') AS project_name,
   COALESCE(e.name,'') AS employee_name,
   p.description,
+  p.remark,
   p.start_time,
   p.end_time,
   p.created_at,
@@ -158,6 +159,7 @@ type ListProcessesFilteredRow struct {
 	ProjectName  string        `json:"projectName"`
 	EmployeeName string        `json:"employeeName"`
 	Description  string        `json:"description"`
+	Remark       string        `json:"remark"`
 	StartTime    sql.NullTime  `json:"startTime"`
 	EndTime      sql.NullTime  `json:"endTime"`
 	CreatedAt    time.Time     `json:"createdAt"`
@@ -181,6 +183,7 @@ func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFi
 			&i.ProjectName,
 			&i.EmployeeName,
 			&i.Description,
+			&i.Remark,
 			&i.StartTime,
 			&i.EndTime,
 			&i.CreatedAt,

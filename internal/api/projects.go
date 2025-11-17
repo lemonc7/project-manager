@@ -16,6 +16,7 @@ type ProjectService interface {
 	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) error
 	DeleteProject(ctx context.Context, id int32) error
 	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
+	ListProcesses(ctx context.Context, id int32) ([]repo.ListProcessesFilteredRow, error)
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)
@@ -107,4 +108,19 @@ func (p *ProjectHandler) ListProjectsFiltered(c echo.Context) error {
 
 	// 返回响应
 	return c.JSON(http.StatusOK, projects)
+}
+
+func (p *ProjectHandler) ListProcesses(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+
+	// 获取数据
+	processes, err := p.projectService.ListProcesses(c.Request().Context(), id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, processes)
 }

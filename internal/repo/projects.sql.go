@@ -58,6 +58,7 @@ SELECT
   p.name AS project_name,
   COALESCE(e.name,'') AS manager_name,
   p.description,
+  p.remark,
   p.status,
   p.start_time,
   p.duration,
@@ -96,6 +97,7 @@ type ListProjectsFilteredRow struct {
 	ProjectName string        `json:"projectName"`
 	ManagerName string        `json:"managerName"`
 	Description string        `json:"description"`
+	Remark      string        `json:"remark"`
 	Status      ProjectStatus `json:"status"`
 	StartTime   sql.NullTime  `json:"startTime"`
 	Duration    int32         `json:"duration"`
@@ -122,6 +124,7 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 			&i.ProjectName,
 			&i.ManagerName,
 			&i.Description,
+			&i.Remark,
 			&i.Status,
 			&i.StartTime,
 			&i.Duration,

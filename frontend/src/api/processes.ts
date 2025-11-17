@@ -10,11 +10,6 @@ export async function listProcessesFilter(req: ListProcessesRequest) {
   return Array.isArray(res.data) ? res.data : []
 }
 
-export async function listProcesses(id: number) {
-  const res = await service.get<Process[]>(`/process/project/${id}`)
-  return Array.isArray(res.data) ? res.data : []
-}
-
 export async function insertProcessLast(
   req: Omit<InsertProcessRequest, "sequence">
 ) {

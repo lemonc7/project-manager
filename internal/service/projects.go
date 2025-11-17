@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
@@ -36,7 +35,7 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 	return nil
 }
 
-func (p *ProjectService) UpdateProject(ctx context.Context,id int32, req model.UpdateProjectRequest) error {
+func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) error {
 	var status repo.NullProjectStatus
 	if req.Status != nil {
 		status.Valid = true
@@ -76,7 +75,6 @@ func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.Lis
 		status.Valid = true
 		status.ProjectStatus = repo.ProjectStatus(*req.Status)
 	}
-	fmt.Println(util.ToNullInt32(req.ManagerID))
 	// 获取数据
 	projects, err := p.querier.ListProjectsFiltered(ctx, repo.ListProjectsFilteredParams{
 		Status:    status,
@@ -89,4 +87,14 @@ func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.Lis
 	}
 
 	return projects, nil
+}
+
+func (p *ProjectService) ListProcesses(ctx context.Context, id int32) ([]repo.ListProcessesFilteredRow, error) {
+	processes, err := p.querier.ListProcessesFiltered(ctx, repo.ListProcessesFilteredParams{
+		ProjectID: util.ToNullInt32(&id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return processes, nil
 }

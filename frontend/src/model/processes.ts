@@ -36,13 +36,14 @@ interface ListProcessesRequest {
 }
 
 interface Process {
-  ID: number
+  id: number
   processName: string
   sequence: number
   status: ProcessStatus
   projectName: string
   employeeName: string
   description: string
+  remark: string
   startTime: NullableTime
   endTime: NullableTime
   createdAt: string

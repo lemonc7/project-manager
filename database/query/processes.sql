@@ -7,6 +7,7 @@ SELECT
   COALESCE(pr.name,'') AS project_name,
   COALESCE(e.name,'') AS employee_name,
   p.description,
+  p.remark,
   p.start_time,
   p.end_time,
   p.created_at,

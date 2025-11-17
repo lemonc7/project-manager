@@ -31,12 +31,13 @@ interface NullableTime {
 }
 
 interface Project {
-  ID: number
+  id: number
   projectName: string
   managerName: string
   description: string
+  remark: string
   status: ProjectStatus
-  startTime?: NullableTime
+  startTime: NullableTime
   duration: number
   createdAt: string
   updatedAt: string

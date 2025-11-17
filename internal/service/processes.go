@@ -132,16 +132,6 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 	return tx.Commit()
 }
 
-func (p *ProcessService) ListProcesses(ctx context.Context, id int32) ([]repo.ListProcessesFilteredRow, error) {
-	processes, err := p.queries.ListProcessesFiltered(ctx, repo.ListProcessesFilteredParams{
-		ProjectID: util.ToNullInt32(&id),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return processes, nil
-}
-
 func (p *ProcessService) ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error) {
 	var status repo.NullProcessStatus
 	if req.Status != nil {

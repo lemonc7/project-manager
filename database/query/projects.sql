@@ -4,6 +4,7 @@ SELECT
   p.name AS project_name,
   COALESCE(e.name,'') AS manager_name,
   p.description,
+  p.remark,
   p.status,
   p.start_time,
   p.duration,
