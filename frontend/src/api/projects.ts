@@ -6,8 +6,13 @@ import type {
 } from "@/model/projects"
 import service from "./request"
 
-export async function listProjects(req: ListProjectsRequest) {
+export async function listProjectsFilter(req: ListProjectsRequest) {
   const res = await service.post<Project[]>("/project/filter", req)
+  return Array.isArray(res.data) ? res.data : []
+}
+
+export async function listProjects() {
+  const res = await service.get<Project[]>("/project/filter")
   return Array.isArray(res.data) ? res.data : []
 }
 

@@ -1,5 +1,3 @@
-"use client"
-
 import { listEmployees } from "@/api/employees"
 import {
   Table,
@@ -15,15 +13,17 @@ import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 const EmployeePage = () => {
-  const { data, isError, isLoading } = useQuery<Employee[], Error>({
+  const { data, isError, isPending } = useQuery<Employee[], Error>({
     queryKey: ["employees"],
     queryFn: listEmployees
   })
 
   if (isError) {
     toast.error("获取员工失败")
+    return null
   }
-  if (isLoading) {
+  
+  if (isPending) {
     return <div>Loading...</div>
   }
 
@@ -38,7 +38,7 @@ const EmployeePage = () => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data?.map(
+        {data.map(
           (emp) =>
             emp.isActive && (
               <TableRow key={emp.id}>
