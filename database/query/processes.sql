@@ -1,7 +1,7 @@
 -- name: ListProcessesFiltered :many
 SELECT
   p.id,
-  p.name AS process_name,
+  p.name,
   p.sequence,
   p.status,
   COALESCE(pr.name,'') AS project_name,

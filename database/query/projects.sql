@@ -1,7 +1,7 @@
 -- name: ListProjectsFiltered :many
 SELECT
   p.id,
-  p.name AS project_name,
+  p.name,
   COALESCE(e.name,'') AS manager_name,
   p.description,
   p.remark,

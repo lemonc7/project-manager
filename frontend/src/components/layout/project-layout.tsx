@@ -1,6 +1,6 @@
 import { Outlet } from "react-router"
 
-const ProjectLayout = () => {
+function ProjectLayout() {
   return (
     <>
       <Outlet />

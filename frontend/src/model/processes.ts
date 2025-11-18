@@ -25,7 +25,6 @@ interface UpdateProcessRequest {
   description?: string
   status?: ProcessStatus
   employeeID?: number
-  sequence?: number
   remark?: string
 }
 
@@ -37,7 +36,7 @@ interface ListProcessesRequest {
 
 interface Process {
   id: number
-  processName: string
+  name: string
   sequence: number
   status: ProcessStatus
   projectName: string

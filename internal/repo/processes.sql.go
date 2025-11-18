@@ -140,7 +140,7 @@ func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastPa
 const listProcessesFiltered = `-- name: ListProcessesFiltered :many
 SELECT
   p.id,
-  p.name AS process_name,
+  p.name,
   p.sequence,
   p.status,
   COALESCE(pr.name,'') AS project_name,
@@ -169,7 +169,7 @@ type ListProcessesFilteredParams struct {
 
 type ListProcessesFilteredRow struct {
 	ID           int32         `json:"id"`
-	ProcessName  string        `json:"processName"`
+	Name         string        `json:"name"`
 	Sequence     int32         `json:"sequence"`
 	Status       ProcessStatus `json:"status"`
 	ProjectName  string        `json:"projectName"`
@@ -193,7 +193,7 @@ func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFi
 		var i ListProcessesFilteredRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.ProcessName,
+			&i.Name,
 			&i.Sequence,
 			&i.Status,
 			&i.ProjectName,

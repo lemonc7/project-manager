@@ -15,7 +15,6 @@ type UpdateProcessRequest struct {
 	Description *string             `json:"description"`
 	Status      *repo.ProcessStatus `json:"status"`
 	EmployeeID  *int32              `json:"employeeID"`
-	Sequence    *int32              `json:"sequence"`
 	Remark      *string             `json:"remark"`
 }
 

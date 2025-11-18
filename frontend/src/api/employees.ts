@@ -15,11 +15,9 @@ export async function createEmployee(req: CreateEmployeeRequest) {
   return res.data
 }
 
-export async function updateEmployee(
-  id: number,
-  req: Omit<UPdateEmployeeRequest, "id">
-) {
-  const res = await service.put<Employee>(`/employee/${id}`, req)
+export async function updateEmployee(req: UPdateEmployeeRequest) {
+  const { id, ...rest } = req
+  const res = await service.put<Employee>(`/employee/${id}`, rest)
   return res.data
 }
 

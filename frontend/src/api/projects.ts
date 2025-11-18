@@ -27,11 +27,9 @@ export async function createProject(req: CreateProjectRequest) {
   return res.data
 }
 
-export async function updateProject(
-  id: number,
-  req: Omit<UpdateProjectRequest, "id">
-) {
-  const res = await service.put<Project>(`/project/${id}`, req)
+export async function updateProject(req: UpdateProjectRequest) {
+  const { id, ...rest } = req
+  const res = await service.put<Project>(`/project/${id}`, rest)
   return res.data
 }
 

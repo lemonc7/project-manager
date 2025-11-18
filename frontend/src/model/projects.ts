@@ -32,7 +32,7 @@ interface NullableTime {
 
 interface Project {
   id: number
-  projectName: string
+  name: string
   managerName: string
   description: string
   remark: string

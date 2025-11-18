@@ -1,4 +1,6 @@
+import { updateProcess } from "@/api/processes"
 import { listProcesses } from "@/api/projects"
+import EditableCell from "@/components/editable-cell"
 import {
   Table,
   TableBody,
@@ -7,8 +9,12 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import type { Process } from "@/model/processes"
-import { useQuery } from "@tanstack/react-query"
+import type {
+  Process,
+  ProcessStatus,
+  UpdateProcessRequest
+} from "@/model/processes"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   flexRender,
   getCoreRowModel,
@@ -18,7 +24,18 @@ import {
 import { useParams } from "react-router"
 import { toast } from "sonner"
 
-const ProcessPage = () => {
+const processStatusOptions = [
+  "等待",
+  "准备",
+  "进行",
+  "完成",
+  "返工",
+  "终止",
+  "取消",
+  "暂停"
+] satisfies ProcessStatus[]
+
+function ProcessPage() {
   const params = useParams<{ id: string }>()
   const { data, isError, isPending } = useQuery({
     queryKey: ["processes", params.id],
@@ -30,26 +47,96 @@ const ProcessPage = () => {
     }
   })
 
+  const queryClient = useQueryClient()
+
+  const updateProcessMutation = useMutation({
+    mutationFn: ({
+      id,
+      fields
+    }: {
+      id: number
+      fields: Partial<Omit<UpdateProcessRequest, "id">>
+    }) => updateProcess({ id, ...fields }),
+    onSuccess: (updatedProcess) => {
+      queryClient.setQueryData<Process[]>(
+        ["processes", params.id],
+        (currentProcesses) =>
+          currentProcesses
+            ? currentProcesses.map((process) =>
+                process.id === updatedProcess.id
+                  ? { ...process, ...updatedProcess }
+                  : process
+              )
+            : [updatedProcess]
+      )
+    },
+    onError: () => {
+      toast.error("更新失败")
+    }
+  })
+
   const columns: ColumnDef<Process>[] = [
     {
       accessorKey: "sequence",
       header: "序号"
     },
     {
-      accessorKey: "processName",
-      header: "流程"
+      header: "流程",
+      cell: ({ row }) => {
+        return (
+          <EditableCell
+            value={row.original.name}
+            type="text"
+            onSave={(value) =>
+              updateProcessMutation.mutate({
+                id: row.original.id,
+                fields: { name: value }
+              })
+            }
+          />
+        )
+      }
     },
     {
-      accessorKey: "description",
-      header: "描述"
+      header: "描述",
+      cell: ({ row }) => {
+        return (
+          <EditableCell
+            value={row.original.description}
+            onSave={(value) =>
+              updateProcessMutation.mutate({
+                id: row.original.id,
+                fields: { description: value }
+              })
+            }
+          />
+        )
+      }
     },
     {
       accessorKey: "employeeName",
       header: "负责人"
     },
     {
-      accessorKey: "status",
-      header: "状态"
+      header: "状态",
+      cell: ({ row }) => {
+        return (
+          <EditableCell
+            value={row.original.status}
+            type="select"
+            options={processStatusOptions.map((s) => ({
+              label: s,
+              value: s
+            }))}
+            onSave={(value) =>
+              updateProcessMutation.mutate({
+                id: row.original.id,
+                fields: { status: value }
+              })
+            }
+          />
+        )
+      }
     },
     {
       header: "完成时间",
@@ -84,8 +171,20 @@ const ProcessPage = () => {
       }
     },
     {
-      accessorKey: "remark",
-      header: "备注"
+      header: "备注",
+      cell: ({ row }) => {
+        return (
+          <EditableCell
+            value={row.original.remark}
+            onSave={(value) =>
+              updateProcessMutation.mutate({
+                id: row.original.id,
+                fields: { remark: value }
+              })
+            }
+          />
+        )
+      }
     }
   ]
 
@@ -127,7 +226,7 @@ const ProcessPage = () => {
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                date-state={row.getIsSelected() && "selected"}
+                date-state={row.getIsSelected() ? "selected" : undefined}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>

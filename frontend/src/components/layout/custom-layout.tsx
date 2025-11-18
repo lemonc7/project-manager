@@ -1,10 +1,10 @@
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { Outlet } from "react-router"
-import CustomAside from "./CustomAside"
-import CustomHeader from "./CustomHeader"
+import CustomAside from "./custom-aside"
+import CustomHeader from "./custom-header"
 import { Toaster } from "sonner"
 
-const CustomLayout = () => {
+function CustomLayout() {
   return (
     <SidebarProvider
       style={
@@ -23,7 +23,7 @@ const CustomLayout = () => {
           <Outlet />
         </div>
       </div>
-      <Toaster richColors position="top-right" closeButton duration={2000}/>
+      <Toaster richColors position="top-right" closeButton duration={2000} />
     </SidebarProvider>
   )
 }

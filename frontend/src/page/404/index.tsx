@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button"
-import React from "react"
 import { useNavigate } from "react-router"
 
-const NotFoundPage: React.FC = () => {
+function NotFoundPage() {
   const navigate = useNavigate()
 
   return (

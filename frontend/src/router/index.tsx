@@ -1,9 +1,9 @@
 import NotFoundPage from "@/page/404"
 import TaskPage from "@/page/task"
-import CustomLayout from "@/components/layout/CustomLayout"
+import CustomLayout from "@/components/layout/custom-layout"
 import { createBrowserRouter, redirect } from "react-router"
 import ProjectPage from "@/page/project"
-import ProjectLayout from "@/components/layout/ProjectLayout"
+import ProjectLayout from "@/components/layout/project-layout"
 import ProcessPage from "@/page/process"
 import EmployeePage from "@/page/employee"
 

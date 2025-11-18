@@ -31,7 +31,7 @@ const items = [
   }
 ]
 
-const CustomAside = () => {
+function CustomAside() {
   const navigate = useNavigate()
   return (
     <div className="[&_div[data-slot=sidebar-inner]]:bg-gray-50">

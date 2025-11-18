@@ -12,7 +12,7 @@ import type { Employee } from "@/model/employees"
 import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 
-const EmployeePage = () => {
+function EmployeePage() {
   const { data, isError, isPending } = useQuery<Employee[], Error>({
     queryKey: ["employees"],
     queryFn: listEmployees
@@ -22,7 +22,7 @@ const EmployeePage = () => {
     toast.error("获取员工失败")
     return null
   }
-  
+
   if (isPending) {
     return <div>Loading...</div>
   }

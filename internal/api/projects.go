@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -63,6 +65,8 @@ func (p *ProjectHandler) UpdateProject(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	jsonData,_ := json.MarshalIndent(&req,"","  ")
+	fmt.Println(string(jsonData))
 
 	// 业务函数
 	project, err := p.projectService.UpdateProject(c.Request().Context(), id, req)

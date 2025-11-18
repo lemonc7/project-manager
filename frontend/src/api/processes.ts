@@ -1,7 +1,8 @@
 import type {
   InsertProcessRequest,
   ListProcessesRequest,
-  Process
+  Process,
+  UpdateProcessRequest
 } from "@/model/processes"
 import service from "./request"
 
@@ -22,8 +23,9 @@ export async function insertProcessAt(req: InsertProcessRequest) {
   return service.post(`/process/${sequence}`, rest)
 }
 
-export async function updateProcess(id: number, req: Process) {
-  const res = await service.put<Process>(`/process/${id}`, req)
+export async function updateProcess(req: UpdateProcessRequest) {
+  const { id, ...rest } = req
+  const res = await service.put<Process>(`/process/${id}`, rest)
   return res.data
 }
 

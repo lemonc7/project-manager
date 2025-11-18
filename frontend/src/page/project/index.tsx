@@ -1,5 +1,9 @@
 import { listProjects, updateProject } from "@/api/projects"
-import type { Project, ProjectStatus } from "@/model/projects"
+import type {
+  Project,
+  ProjectStatus,
+  UpdateProjectRequest
+} from "@/model/projects"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
@@ -17,7 +21,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { Select, SelectTrigger, SelectValue } from "@/components/ui/select"
+import EditableCell from "@/components/editable-cell"
 
 const projectStatusOptions = [
   "排单",
@@ -28,44 +32,79 @@ const projectStatusOptions = [
   "归档"
 ] satisfies ProjectStatus[]
 
-const ProjectPage = () => {
+function ProjectPage() {
   const { data, isError, isPending } = useQuery<Project[], Error>({
     queryKey: ["projects", "overview"],
     queryFn: listProjects
   })
-  // const queryClient = useQueryClient()
 
-  // const updateStatusMutation = useMutation({
-  //   mutationFn: ({ id, status }: { id: number; status: ProjectStatus }) =>
-  //     updateProject(id, { status }),
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
-  //   },
-  //   onError: () => {
-  //     toast.error("更新失败")
-  //   }
+  // const {
+  //   data: employees = [],
+  //   isError: isEmployeeError,
+  //   isPending: isEmployeePending
+  // } = useQuery<Employee[], Error>({
+  //   queryKey: ["employees"],
+  //   queryFn: listEmployees
   // })
+
+  const queryClient = useQueryClient()
+
+  const updateProjectMutation = useMutation({
+    mutationFn: ({
+      id,
+      fields
+    }: {
+      id: number
+      fields: Partial<Omit<UpdateProjectRequest, "id">>
+    }) => updateProject({ id, ...fields }),
+    onSuccess: (updatedProject) => {
+      // 更新缓存: 只更新当前项目的数据
+      queryClient.setQueryData<Project[]>(
+        ["projects", "overview"],
+        (currentProjects) =>
+          currentProjects
+            ? currentProjects.map((project) =>
+                project.id === updatedProject.id
+                  ? { ...project, ...updatedProject }
+                  : project
+              )
+            : [updatedProject]
+      )
+    },
+    onError: () => {
+      toast.error("更新失败")
+    }
+  })
   const navigate = useNavigate()
 
   const columns: ColumnDef<Project>[] = [
     {
-      accessorKey: "projectName",
       header: "项目",
       cell: ({ row }) => (
         <div
           className="cursor-pointer"
           onClick={() => navigate(`/projects/${row.original.id}`)}
         >
-          {row.getValue("projectName")}
+          {row.original.name}
         </div>
       )
     },
     {
-      accessorKey: "description",
-      header: "描述"
+      header: "描述",
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.description}
+          onSave={(value) =>
+            updateProjectMutation.mutate({
+              id: row.original.id,
+              fields: { description: value }
+            })
+          }
+        />
+      )
     },
     {
-      accessorKey: "managerName",
+      accessorKey: "employeeName",
       header: "负责人"
     },
     {
@@ -95,19 +134,36 @@ const ProjectPage = () => {
     },
     {
       header: "状态",
-      cell: ({ row }) => {
-        const id = row.original.id
-        const value = row.original.status
-        return (
-          <Select value={value} onValueChange={}>
-            <SelectTrigger></SelectTrigger>
-          </Select>
-        )
-      }
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.status}
+          type="select"
+          options={projectStatusOptions.map((s) => ({
+            label: s,
+            value: s
+          }))}
+          onSave={(value) =>
+            updateProjectMutation.mutate({
+              id: row.original.id,
+              fields: { status: value }
+            })
+          }
+        />
+      )
     },
     {
-      accessorKey: "remark",
-      header: "备注"
+      header: "备注",
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.remark}
+          onSave={(value) =>
+            updateProjectMutation.mutate({
+              id: row.original.id,
+              fields: { remark: value }
+            })
+          }
+        />
+      )
     }
   ]
 

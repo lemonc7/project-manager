@@ -11,11 +11,9 @@ export async function createTeam(req: CreateTeamRequest) {
   return res.data
 }
 
-export async function updateTeam(
-  id: number,
-  req: Omit<UpdateTeamRequest, "id">
-) {
-  const res = await service.put<Team>(`/team/${id}`, req)
+export async function updateTeam(req: UpdateTeamRequest) {
+  const { id, ...rest } = req
+  const res = await service.put<Team>(`/team/${id}`, rest)
   return res.data
 }
 

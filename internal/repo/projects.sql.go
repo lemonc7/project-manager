@@ -68,7 +68,7 @@ func (q *Queries) DeleteProject(ctx context.Context, id int32) error {
 const listProjectsFiltered = `-- name: ListProjectsFiltered :many
 SELECT
   p.id,
-  p.name AS project_name,
+  p.name,
   COALESCE(e.name,'') AS manager_name,
   p.description,
   p.remark,
@@ -107,7 +107,7 @@ type ListProjectsFilteredParams struct {
 
 type ListProjectsFilteredRow struct {
 	ID          int32         `json:"id"`
-	ProjectName string        `json:"projectName"`
+	Name        string        `json:"name"`
 	ManagerName string        `json:"managerName"`
 	Description string        `json:"description"`
 	Remark      string        `json:"remark"`
@@ -134,7 +134,7 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 		var i ListProjectsFilteredRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.ProjectName,
+			&i.Name,
 			&i.ManagerName,
 			&i.Description,
 			&i.Remark,
