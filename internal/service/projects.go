@@ -19,9 +19,9 @@ func NewProjectService(db *sql.DB) *ProjectService {
 	}
 }
 
-func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProjectRequest) error {
+func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProjectRequest) (repo.Project, error) {
 	// 插入数据
-	err := p.querier.CreateProject(ctx, repo.CreateProjectParams{
+	project, err := p.querier.CreateProject(ctx, repo.CreateProjectParams{
 		Name:        req.Name,
 		Description: req.Description,
 		ManagerID:   req.ManagerID,
@@ -29,20 +29,20 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 	})
 
 	if err != nil {
-		return err
+		return repo.Project{}, err
 	}
 
-	return nil
+	return project, nil
 }
 
-func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) error {
+func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.Project, error) {
 	var status repo.NullProjectStatus
 	if req.Status != nil {
 		status.Valid = true
 		status.ProjectStatus = repo.ProjectStatus(*req.Status)
 	}
 	// 更新数据
-	err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
+	project, err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
 		ID:          id,
 		Name:        util.ToNullString(req.Name),
 		Description: util.ToNullString(req.Description),
@@ -54,10 +54,10 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.
 	})
 
 	if err != nil {
-		return err
+		return repo.Project{}, err
 	}
 
-	return nil
+	return project, nil
 }
 
 func (p *ProjectService) DeleteProject(ctx context.Context, id int32) error {

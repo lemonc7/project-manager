@@ -13,7 +13,8 @@ export async function listProcessesFilter(req: ListProcessesRequest) {
 export async function insertProcessLast(
   req: Omit<InsertProcessRequest, "sequence">
 ) {
-  return service.post("/process", req)
+  const res = await service.post<Process>("/process", req)
+  return res.data
 }
 
 export async function insertProcessAt(req: InsertProcessRequest) {
@@ -22,7 +23,8 @@ export async function insertProcessAt(req: InsertProcessRequest) {
 }
 
 export async function updateProcess(id: number, req: Process) {
-  return service.put(`/process/${id}`, req)
+  const res = await service.put<Process>(`/process/${id}`, req)
+  return res.data
 }
 
 export async function deleteProcess(id: number) {

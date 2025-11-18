@@ -22,8 +22,8 @@ func NewProcessService(db *sql.DB) *ProcessService {
 	}
 }
 
-func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) error {
-	err := p.queries.InsertProcessLast(ctx, repo.InsertProcessLastParams{
+func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.Process, error) {
+	process, err := p.queries.InsertProcessLast(ctx, repo.InsertProcessLastParams{
 		Name:        req.Name,
 		ProjectID:   req.ProjectID,
 		EmployeeID:  req.EmployeeID,
@@ -32,10 +32,10 @@ func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.Insert
 	})
 
 	if err != nil {
-		return err
+		return repo.Process{}, err
 	}
 
-	return nil
+	return process, nil
 }
 
 func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error {
@@ -84,13 +84,13 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 	return tx.Commit()
 }
 
-func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error {
+func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.Process, error) {
 	var status repo.NullProcessStatus
 	if req.Status != nil {
 		status.Valid = true
 		status.ProcessStatus = repo.ProcessStatus(*req.Status)
 	}
-	err := p.queries.UpdateProcess(ctx, repo.UpdateProcessParams{
+	process, err := p.queries.UpdateProcess(ctx, repo.UpdateProcessParams{
 		Name:        util.ToNullString(req.Name),
 		Description: util.ToNullString(req.Description),
 		Status:      status,
@@ -100,10 +100,10 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.
 	})
 
 	if err != nil {
-		return err
+		return repo.Process{}, err
 	}
 
-	return nil
+	return process, nil
 }
 
 func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {

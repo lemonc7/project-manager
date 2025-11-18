@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const createProject = `-- name: CreateProject :exec
+const createProject = `-- name: CreateProject :one
 INSERT INTO projects (
   name,
   description,
@@ -22,7 +22,7 @@ INSERT INTO projects (
   $2,
   $3,
   $4
-)
+) RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at, remark
 `
 
 type CreateProjectParams struct {
@@ -32,14 +32,27 @@ type CreateProjectParams struct {
 	Remark      string `json:"remark"`
 }
 
-func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) error {
-	_, err := q.db.ExecContext(ctx, createProject,
+func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error) {
+	row := q.db.QueryRowContext(ctx, createProject,
 		arg.Name,
 		arg.Description,
 		arg.ManagerID,
 		arg.Remark,
 	)
-	return err
+	var i Project
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.ManagerID,
+		&i.StartTime,
+		&i.Duration,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Remark,
+	)
+	return i, err
 }
 
 const deleteProject = `-- name: DeleteProject :exec
@@ -144,7 +157,7 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 	return items, nil
 }
 
-const updateProject = `-- name: UpdateProject :exec
+const updateProject = `-- name: UpdateProject :one
 UPDATE projects
 SET
   name = COALESCE($1,name),
@@ -155,6 +168,7 @@ SET
   duration = COALESCE($6,duration),
   remark = COALESCE($7,remark)
 WHERE id = $8
+RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at, remark
 `
 
 type UpdateProjectParams struct {
@@ -168,8 +182,8 @@ type UpdateProjectParams struct {
 	ID          int32             `json:"id"`
 }
 
-func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) error {
-	_, err := q.db.ExecContext(ctx, updateProject,
+func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error) {
+	row := q.db.QueryRowContext(ctx, updateProject,
 		arg.Name,
 		arg.Description,
 		arg.Status,
@@ -179,5 +193,18 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) er
 		arg.Remark,
 		arg.ID,
 	)
-	return err
+	var i Project
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.ManagerID,
+		&i.StartTime,
+		&i.Duration,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Remark,
+	)
+	return i, err
 }

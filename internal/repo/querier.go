@@ -9,26 +9,26 @@ import (
 )
 
 type Querier interface {
-	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) error
-	CreateProject(ctx context.Context, arg CreateProjectParams) error
-	CreateTeam(ctx context.Context, arg CreateTeamParams) error
+	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (Employee, error)
+	CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error)
+	CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error)
 	DeleteEmployee(ctx context.Context, id int32) error
 	DeleteProcess(ctx context.Context, id int32) (int32, error)
 	DeleteProject(ctx context.Context, id int32) error
 	DeleteTeam(ctx context.Context, id int32) error
 	GetMaxSequence(ctx context.Context, projectID int32) (int32, error)
 	InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error
-	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) error
+	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) (Process, error)
 	ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 	ListProcessesFiltered(ctx context.Context, arg ListProcessesFilteredParams) ([]ListProcessesFilteredRow, error)
 	ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error)
 	ListTeams(ctx context.Context) ([]Team, error)
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error
-	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error
-	UpdateProcess(ctx context.Context, arg UpdateProcessParams) error
-	UpdateProject(ctx context.Context, arg UpdateProjectParams) error
-	UpdateTeam(ctx context.Context, arg UpdateTeamParams) error
+	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error)
+	UpdateProcess(ctx context.Context, arg UpdateProcessParams) (Process, error)
+	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
+	UpdateTeam(ctx context.Context, arg UpdateTeamParams) (Team, error)
 }
 
 var _ Querier = (*Queries)(nil)

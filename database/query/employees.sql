@@ -9,22 +9,23 @@ SELECT
 FROM employees e
 LEFT JOIN teams t ON e.team_id = t.id;
 
--- name: CreateEmployee :exec
+-- name: CreateEmployee :one
 INSERT INTO employees (
   name,
   team_id
 ) VALUES (
   $1,
   $2
-);
+) RETURNING *;
 
--- name: UpdateEmployee :exec
+-- name: UpdateEmployee :one
 UPDATE employees
 SET
   name = COALESCE(sqlc.narg('name'),name),
   team_id = COALESCE(sqlc.narg('team_id'),team_id),
   is_active = COALESCE(sqlc.narg('is_active'),is_active)
-WHERE id = sqlc.arg('id');
+WHERE id = sqlc.arg('id')
+RETURNING *;
 
 -- name: DeleteEmployee :exec
 DELETE FROM employees

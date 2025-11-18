@@ -30,7 +30,7 @@ ORDER BY
   (p.start_time + (p.duration || 'days')::interval) NULLS LAST,
   p.id;
 
--- name: CreateProject :exec
+-- name: CreateProject :one
 INSERT INTO projects (
   name,
   description,
@@ -41,9 +41,9 @@ INSERT INTO projects (
   $2,
   $3,
   $4
-);
+) RETURNING *;
 
--- name: UpdateProject :exec
+-- name: UpdateProject :one
 UPDATE projects
 SET
   name = COALESCE(sqlc.narg('name'),name),
@@ -53,7 +53,8 @@ SET
   start_time = COALESCE(sqlc.narg('start_time'),start_time),
   duration = COALESCE(sqlc.narg('duration'),duration),
   remark = COALESCE(sqlc.narg('remark'),remark)
-WHERE id = sqlc.arg('id');
+WHERE id = sqlc.arg('id')
+RETURNING *;
 
 -- name: DeleteProject :exec
 DELETE FROM projects

@@ -1,6 +1,6 @@
-import { listProjects } from "@/api/projects"
-import type { Project } from "@/model/projects"
-import { useQuery } from "@tanstack/react-query"
+import { listProjects, updateProject } from "@/api/projects"
+import type { Project, ProjectStatus } from "@/model/projects"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
   flexRender,
@@ -17,12 +17,34 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import { Select, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+const projectStatusOptions = [
+  "排单",
+  "进行",
+  "暂停",
+  "完成",
+  "终止",
+  "归档"
+] satisfies ProjectStatus[]
 
 const ProjectPage = () => {
   const { data, isError, isPending } = useQuery<Project[], Error>({
     queryKey: ["projects", "overview"],
     queryFn: listProjects
   })
+  // const queryClient = useQueryClient()
+
+  // const updateStatusMutation = useMutation({
+  //   mutationFn: ({ id, status }: { id: number; status: ProjectStatus }) =>
+  //     updateProject(id, { status }),
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
+  //   },
+  //   onError: () => {
+  //     toast.error("更新失败")
+  //   }
+  // })
   const navigate = useNavigate()
 
   const columns: ColumnDef<Project>[] = [
@@ -72,8 +94,16 @@ const ProjectPage = () => {
       }
     },
     {
-      accessorKey: "status",
-      header: "状态"
+      header: "状态",
+      cell: ({ row }) => {
+        const id = row.original.id
+        const value = row.original.status
+        return (
+          <Select value={value} onValueChange={}>
+            <SelectTrigger></SelectTrigger>
+          </Select>
+        )
+      }
     },
     {
       accessorKey: "remark",
@@ -101,18 +131,16 @@ const ProjectPage = () => {
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                )
-              })}
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
             </TableRow>
           ))}
         </TableHeader>

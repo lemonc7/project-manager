@@ -12,9 +12,9 @@ import (
 )
 
 type ProcessService interface {
-	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) error
+	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.Process, error)
 	InsertProcessAt(ctx context.Context, id int32, req model.InsertProcessRequest) error
-	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error
+	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.Process, error)
 	DeleteProcess(ctx context.Context, id int32) error
 	ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error)
 }
@@ -44,14 +44,13 @@ func (p *ProcessHandler) InsertProcessLast(c echo.Context) error {
 	}
 
 	// 业务函数
-	if err := p.processService.InsertProcessLast(c.Request().Context(), req); err != nil {
+	process, err := p.processService.InsertProcessLast(c.Request().Context(), req)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusCreated, echo.Map{
-		"message": "成功创建流程",
-	})
+	return c.JSON(http.StatusCreated, process)
 }
 
 func (p *ProcessHandler) InsertProcessAt(c echo.Context) error {
@@ -92,14 +91,13 @@ func (p *ProcessHandler) UpdateProcess(c echo.Context) error {
 	}
 
 	// 业务函数
-	if err := p.processService.UpdateProcess(c.Request().Context(), id, req); err != nil {
+	process, err := p.processService.UpdateProcess(c.Request().Context(), id, req)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusOK, echo.Map{
-		"message": "成功更新流程",
-	})
+	return c.JSON(http.StatusOK, process)
 }
 
 func (p *ProcessHandler) DeleteProcess(c echo.Context) error {
@@ -119,7 +117,6 @@ func (p *ProcessHandler) DeleteProcess(c echo.Context) error {
 		"message": "成功删除流程",
 	})
 }
-
 
 func (p *ProcessHandler) ListProcessFiltered(c echo.Context) error {
 	// 绑定请求

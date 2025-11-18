@@ -20,33 +20,33 @@ func NewTeamService(db *sql.DB) *TeamService {
 
 }
 
-func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamRequest) error {
+func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamRequest) (repo.Team, error) {
 	// 插入数据
-	err := t.querier.CreateTeam(ctx, repo.CreateTeamParams{
+	team, err := t.querier.CreateTeam(ctx, repo.CreateTeamParams{
 		Name:        req.Name,
 		Description: req.Description,
 	})
 
 	if err != nil {
-		return err
+		return repo.Team{}, err
 	}
 
-	return nil
+	return team, nil
 }
 
-func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) error {
+func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) (repo.Team,error) {
 	// 更新数据
-	err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
+	team,err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
 		ID:          id,
 		Name:        util.ToNullString(req.Name),
 		Description: util.ToNullString(req.Description),
 	})
 
 	if err != nil {
-		return err
+		return repo.Team{}, err
 	}
 
-	return nil
+	return team,err
 }
 
 func (t *TeamService) DeleteTeam(ctx context.Context, id int32) error {

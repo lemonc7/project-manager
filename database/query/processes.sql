@@ -21,7 +21,7 @@ WHERE
   AND p.employee_id = COALESCE(sqlc.narg('employee_id'), p.employee_id)
 ORDER BY p.sequence;
 
--- name: UpdateProcess :exec
+-- name: UpdateProcess :one
 UPDATE processes
 SET
   name = COALESCE(sqlc.narg('name'),name),
@@ -29,9 +29,10 @@ SET
   status = COALESCE(sqlc.narg('status'),status),
   employee_id = COALESCE(sqlc.narg('employee_id'),employee_id),
   remark = COALESCE(sqlc.narg('remark'),remark)
-WHERE id = sqlc.arg('id');
+WHERE id = sqlc.arg('id')
+RETURNING *;
 
--- name: InsertProcessLast :exec
+-- name: InsertProcessLast :one
 WITH project_lock AS (
   SELECT id FROM projects WHERE id = $1 FOR UPDATE
 ),
@@ -54,7 +55,8 @@ INSERT INTO processes (
   m.val + 1,
   $4,
   $5
-FROM max_seq m, project_lock pl;
+FROM max_seq m, project_lock pl
+RETURNING *;
 
 -- name: ShiftProcessesUp :exec
 WITH project_lock AS (

@@ -11,14 +11,14 @@ import (
 	"time"
 )
 
-const createEmployee = `-- name: CreateEmployee :exec
+const createEmployee = `-- name: CreateEmployee :one
 INSERT INTO employees (
   name,
   team_id
 ) VALUES (
   $1,
   $2
-)
+) RETURNING id, name, team_id, created_at, updated_at, is_active
 `
 
 type CreateEmployeeParams struct {
@@ -26,9 +26,18 @@ type CreateEmployeeParams struct {
 	TeamID sql.NullInt32 `json:"teamId"`
 }
 
-func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) error {
-	_, err := q.db.ExecContext(ctx, createEmployee, arg.Name, arg.TeamID)
-	return err
+func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (Employee, error) {
+	row := q.db.QueryRowContext(ctx, createEmployee, arg.Name, arg.TeamID)
+	var i Employee
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.TeamID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsActive,
+	)
+	return i, err
 }
 
 const deleteEmployee = `-- name: DeleteEmployee :exec
@@ -92,13 +101,14 @@ func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 	return items, nil
 }
 
-const updateEmployee = `-- name: UpdateEmployee :exec
+const updateEmployee = `-- name: UpdateEmployee :one
 UPDATE employees
 SET
   name = COALESCE($1,name),
   team_id = COALESCE($2,team_id),
   is_active = COALESCE($3,is_active)
 WHERE id = $4
+RETURNING id, name, team_id, created_at, updated_at, is_active
 `
 
 type UpdateEmployeeParams struct {
@@ -108,12 +118,21 @@ type UpdateEmployeeParams struct {
 	ID       int32          `json:"id"`
 }
 
-func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
-	_, err := q.db.ExecContext(ctx, updateEmployee,
+func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error) {
+	row := q.db.QueryRowContext(ctx, updateEmployee,
 		arg.Name,
 		arg.TeamID,
 		arg.IsActive,
 		arg.ID,
 	)
-	return err
+	var i Employee
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.TeamID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsActive,
+	)
+	return i, err
 }

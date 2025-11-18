@@ -19,23 +19,23 @@ func NewEmployeeService(db *sql.DB) *EmployeeService {
 	}
 }
 
-func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error {
+func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (repo.Employee, error) {
 	// 插入数据
-	err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
+	employee, err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
 		Name:   req.Name,
 		TeamID: util.ToNullInt32(req.TeamID),
 	})
 
 	if err != nil {
-		return err
+		return repo.Employee{}, err
 	}
 
-	return nil
+	return employee, nil
 }
 
-func (e *EmployeeService) UpdateEmployee(ctx context.Context,id int32, req model.UpdateEmployeeRequest) error {
+func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (repo.Employee, error) {
 	// 更新数据
-	err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
+	employee, err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       id,
 		Name:     util.ToNullString(req.Name),
 		TeamID:   util.ToNullInt32(req.TeamID),
@@ -43,10 +43,10 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context,id int32, req model
 	})
 
 	if err != nil {
-		return err
+		return repo.Employee{}, err
 	}
 
-	return nil
+	return employee, nil
 }
 
 func (e *EmployeeService) DeleteEmployee(ctx context.Context, id int32) error {

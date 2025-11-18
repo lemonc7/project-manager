@@ -76,7 +76,7 @@ func (q *Queries) InsertProcessAt(ctx context.Context, arg InsertProcessAtParams
 	return err
 }
 
-const insertProcessLast = `-- name: InsertProcessLast :exec
+const insertProcessLast = `-- name: InsertProcessLast :one
 WITH project_lock AS (
   SELECT id FROM projects WHERE id = $1 FOR UPDATE
 ),
@@ -100,6 +100,7 @@ INSERT INTO processes (
   $4,
   $5
 FROM max_seq m, project_lock pl
+RETURNING id, project_id, name, description, status, employee_id, sequence, start_time, end_time, created_at, updated_at, remark
 `
 
 type InsertProcessLastParams struct {
@@ -110,15 +111,30 @@ type InsertProcessLastParams struct {
 	Remark      string `json:"remark"`
 }
 
-func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) error {
-	_, err := q.db.ExecContext(ctx, insertProcessLast,
+func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) (Process, error) {
+	row := q.db.QueryRowContext(ctx, insertProcessLast,
 		arg.ProjectID,
 		arg.Name,
 		arg.EmployeeID,
 		arg.Description,
 		arg.Remark,
 	)
-	return err
+	var i Process
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.EmployeeID,
+		&i.Sequence,
+		&i.StartTime,
+		&i.EndTime,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Remark,
+	)
+	return i, err
 }
 
 const listProcessesFiltered = `-- name: ListProcessesFiltered :many
@@ -246,7 +262,7 @@ func (q *Queries) ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpPara
 	return err
 }
 
-const updateProcess = `-- name: UpdateProcess :exec
+const updateProcess = `-- name: UpdateProcess :one
 UPDATE processes
 SET
   name = COALESCE($1,name),
@@ -255,6 +271,7 @@ SET
   employee_id = COALESCE($4,employee_id),
   remark = COALESCE($5,remark)
 WHERE id = $6
+RETURNING id, project_id, name, description, status, employee_id, sequence, start_time, end_time, created_at, updated_at, remark
 `
 
 type UpdateProcessParams struct {
@@ -266,8 +283,8 @@ type UpdateProcessParams struct {
 	ID          int32             `json:"id"`
 }
 
-func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) error {
-	_, err := q.db.ExecContext(ctx, updateProcess,
+func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) (Process, error) {
+	row := q.db.QueryRowContext(ctx, updateProcess,
 		arg.Name,
 		arg.Description,
 		arg.Status,
@@ -275,5 +292,20 @@ func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) er
 		arg.Remark,
 		arg.ID,
 	)
-	return err
+	var i Process
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.Name,
+		&i.Description,
+		&i.Status,
+		&i.EmployeeID,
+		&i.Sequence,
+		&i.StartTime,
+		&i.EndTime,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Remark,
+	)
+	return i, err
 }

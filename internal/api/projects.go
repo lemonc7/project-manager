@@ -12,8 +12,8 @@ import (
 )
 
 type ProjectService interface {
-	CreateProject(ctx context.Context, req model.CreateProjectRequest) error
-	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) error
+	CreateProject(ctx context.Context, req model.CreateProjectRequest) (repo.Project, error)
+	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.Project, error)
 	DeleteProject(ctx context.Context, id int32) error
 	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
 	ListProcesses(ctx context.Context, id int32) ([]repo.ListProcessesFilteredRow, error)
@@ -44,14 +44,13 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 	}
 
 	// 业务函数
-	if err := p.projectService.CreateProject(c.Request().Context(), req); err != nil {
+	project, err := p.projectService.CreateProject(c.Request().Context(), req)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusCreated, echo.Map{
-		"message": "成功创建项目",
-	})
+	return c.JSON(http.StatusCreated, project)
 }
 
 func (p *ProjectHandler) UpdateProject(c echo.Context) error {
@@ -66,14 +65,13 @@ func (p *ProjectHandler) UpdateProject(c echo.Context) error {
 	}
 
 	// 业务函数
-	if err := p.projectService.UpdateProject(c.Request().Context(), id, req); err != nil {
+	project, err := p.projectService.UpdateProject(c.Request().Context(), id, req)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusOK, echo.Map{
-		"message": "成功更新项目",
-	})
+	return c.JSON(http.StatusOK, project)
 }
 
 func (p *ProjectHandler) DeleteProject(c echo.Context) error {

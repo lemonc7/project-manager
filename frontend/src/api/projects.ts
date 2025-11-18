@@ -23,15 +23,16 @@ export async function listProcesses(id: number) {
 }
 
 export async function createProject(req: CreateProjectRequest) {
-  const res = await service.post<Project[]>("/project/filter", req)
-  return Array.isArray(res.data) ? res.data : []
+  const res = await service.post<Project>("/project", req)
+  return res.data
 }
 
 export async function updateProject(
   id: number,
   req: Omit<UpdateProjectRequest, "id">
 ) {
-  return service.put(`/project/${id}`, req)
+  const res = await service.put<Project>(`/project/${id}`, req)
+  return res.data
 }
 
 export async function deleteProject(id: number) {

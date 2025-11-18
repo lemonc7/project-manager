@@ -7,14 +7,16 @@ export async function listTeams() {
 }
 
 export async function createTeam(req: CreateTeamRequest) {
-  return service.post("/team", req)
+  const res = await service.post<Team>("/team", req)
+  return res.data
 }
 
 export async function updateTeam(
   id: number,
   req: Omit<UpdateTeamRequest, "id">
 ) {
-  return service.put(`/team/${id}`, req)
+  const res = await service.put<Team>(`/team/${id}`, req)
+  return res.data
 }
 
 export async function deleteTeam(id: number) {
