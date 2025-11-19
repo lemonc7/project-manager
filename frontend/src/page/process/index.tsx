@@ -226,7 +226,7 @@ function ProcessPage() {
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                date-state={row.getIsSelected() ? "selected" : undefined}
+                data-state={row.getIsSelected() && "selected"}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
@@ -238,7 +238,7 @@ function ProcessPage() {
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                无结果
+                无数据
               </TableCell>
             </TableRow>
           )}

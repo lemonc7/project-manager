@@ -217,7 +217,7 @@ function ProjectPage() {
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                无结果
+                无数据
               </TableCell>
             </TableRow>
           )}
