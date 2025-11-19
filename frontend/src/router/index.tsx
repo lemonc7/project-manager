@@ -18,7 +18,8 @@ const router = createBrowserRouter([
       },
       {
         path: "home",
-        element: <TaskPage />
+        element: <TaskPage />,
+        handle: { title: "任务总览" }
       },
       {
         path: "projects",
@@ -26,17 +27,20 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <ProjectPage />
+            element: <ProjectPage />,
+            handle: { title: "项目总览" }
           },
           {
             path: ":id",
-            element: <ProcessPage />
+            element: <ProcessPage />,
+            handle: { title: "项目流程" }
           }
         ]
       },
       {
         path: "employees",
-        element: <EmployeePage />
+        element: <EmployeePage />,
+        handle: { title: "成员列表" }
       },
       {
         path: "ping",
@@ -44,7 +48,8 @@ const router = createBrowserRouter([
       },
       {
         path: "*",
-        element: <NotFoundPage />
+        element: <NotFoundPage />,
+        handle: { title: "无此页面" }
       }
     ]
   }

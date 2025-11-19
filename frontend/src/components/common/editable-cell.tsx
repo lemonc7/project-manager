@@ -1,12 +1,12 @@
 import { useState } from "react"
-import { Input } from "./ui/input"
+import { Input } from "../ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "./ui/select"
+} from "../ui/select"
 
 type EditableType = "text" | "number" | "select"
 

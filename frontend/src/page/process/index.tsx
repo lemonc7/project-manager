@@ -1,6 +1,7 @@
 import { updateProcess } from "@/api/processes"
 import { listProcesses } from "@/api/projects"
-import EditableCell from "@/components/editable-cell"
+import EditableCell from "@/components/common/editable-cell"
+import { Loading } from "@/components/common/loading"
 import {
   Table,
   TableBody,
@@ -200,7 +201,11 @@ function ProcessPage() {
   }
 
   if (isPending) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loading content="项目流程加载中..." />
+      </div>
+    )
   }
   return (
     <div className="overflow-hidden rounded-md border">

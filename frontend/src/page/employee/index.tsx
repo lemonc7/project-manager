@@ -1,4 +1,5 @@
 import { deleteEmployee, listEmployees } from "@/api/employees"
+import { Loading } from "@/components/common/loading"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -148,7 +149,11 @@ function EmployeePage() {
   }
 
   if (isPending) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loading content="成员列表加载中..." />
+      </div>
+    )
   }
 
   return (
@@ -203,7 +208,7 @@ function EmployeePage() {
       </div>
       {/* 弹窗 */}
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
           <AlertDialogHeader>
             <AlertDialogTitle>确定要删除该成员吗?</AlertDialogTitle>
             <AlertDialogDescription>

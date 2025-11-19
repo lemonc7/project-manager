@@ -21,7 +21,8 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import EditableCell from "@/components/editable-cell"
+import EditableCell from "@/components/common/editable-cell"
+import { Loading } from "@/components/common/loading"
 
 const projectStatusOptions = [
   "排单",
@@ -174,7 +175,11 @@ function ProjectPage() {
   })
 
   if (isPending) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loading content="项目列表加载中..." />
+      </div>
+    )
   }
 
   if (isError) {
