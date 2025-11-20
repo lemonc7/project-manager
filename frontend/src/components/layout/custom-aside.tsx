@@ -11,7 +11,7 @@ import {
   SidebarMenuItem
 } from "@/components/ui/sidebar"
 import { Users, ListTodo, Sheet, User } from "lucide-react"
-import { useNavigate } from "react-router"
+import { Link, useNavigate } from "react-router"
 
 const items = [
   {
@@ -50,10 +50,10 @@ function CustomAside() {
                 {items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <a href={item.url}>
+                      <Link to={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

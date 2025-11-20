@@ -1,4 +1,5 @@
 import { deleteEmployee, listEmployees } from "@/api/employees"
+import { HeaderActions } from "@/components/common/header-actions"
 import { Loading } from "@/components/common/loading"
 import {
   AlertDialog,
@@ -41,9 +42,17 @@ import { toast } from "sonner"
 
 function EmployeePage() {
   // 获取employees数据
-  const { data, isError, isPending } = useQuery<Employee[], Error>({
+  const { data, isError, isLoading } = useQuery<Employee[], Error>({
     queryKey: ["employees"],
-    queryFn: listEmployees,
+    queryFn: () => {
+      const api = listEmployees()
+      toast.promise(api, {
+        loading: "成员加载中...",
+        success: "成员加载成功",
+        error: "加载失败"
+      })
+      return api
+    },
     select: (data) => data.filter((employee) => employee.isActive === true)
   })
 
@@ -144,11 +153,10 @@ function EmployeePage() {
   })
 
   if (isError) {
-    toast.error("获取员工失败")
     return null
   }
 
-  if (isPending) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loading content="成员列表加载中..." />
@@ -158,6 +166,9 @@ function EmployeePage() {
 
   return (
     <>
+      <HeaderActions>
+        <Button>新建</Button>
+      </HeaderActions>
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>

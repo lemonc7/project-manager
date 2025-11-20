@@ -36,7 +36,15 @@ const projectStatusOptions = [
 function ProjectPage() {
   const { data, isError, isPending } = useQuery<Project[], Error>({
     queryKey: ["projects", "overview"],
-    queryFn: listProjects
+    queryFn: () => {
+      const api = listProjects()
+      toast.promise(api, {
+        loading: "项目加载中...",
+        success: "项目加载成功",
+        error: "加载失败"
+      })
+      return api
+    }
   })
 
   // const {
@@ -174,7 +182,7 @@ function ProjectPage() {
     getCoreRowModel: getCoreRowModel()
   })
 
-  if (isPending) {
+  if (isPending && !data) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loading content="项目列表加载中..." />
@@ -183,7 +191,6 @@ function ProjectPage() {
   }
 
   if (isError) {
-    toast.error("获取项目失败")
     return null
   }
   return (

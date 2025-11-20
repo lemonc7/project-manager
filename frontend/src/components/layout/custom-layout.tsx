@@ -2,14 +2,14 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { Outlet } from "react-router"
 import CustomAside from "./custom-aside"
 import CustomHeader from "./custom-header"
-import { toast, Toaster } from "sonner"
-import { useState } from "react"
+import { Toaster } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 
 function CustomLayout() {
-  const [outletKey, setOutletKey] = useState(0)
-  const handlerRefresh = () => {
-    setOutletKey((prev) => prev + 1)
-    toast.info("页面已刷新", { duration: 500 })
+  const queryClient = useQueryClient()
+
+  const handlerRefresh = async () => {
+    await queryClient.invalidateQueries({ type: "active" })
   }
 
   return (
@@ -27,7 +27,7 @@ function CustomLayout() {
         {/* 内侧圆角容器 */}
         <div className="flex flex-1 flex-col rounded-xl bg-white shadow overflow-hidden px-4">
           <CustomHeader onRefresh={handlerRefresh} />
-          <Outlet key={outletKey} />
+          <Outlet />
         </div>
       </div>
       <Toaster richColors position="top-center" closeButton duration={2000} />

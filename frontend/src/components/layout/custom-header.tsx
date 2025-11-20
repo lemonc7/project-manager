@@ -4,6 +4,7 @@ import { Separator } from "../ui/separator"
 import { ButtonGroup } from "../ui/button-group"
 import { Button } from "../ui/button"
 import { ArrowLeft, ArrowRight, HomeIcon, RefreshCw } from "lucide-react"
+import { HEADER_ACTIONS_ID } from "../common/header-actions"
 
 function CustomHeader({ onRefresh }: { onRefresh: () => void }) {
   const matches = useMatches()
@@ -54,6 +55,7 @@ function CustomHeader({ onRefresh }: { onRefresh: () => void }) {
       </div>
       {/* 右侧动态元素 | 刷新*/}
       <div className="flex items-center gap-2">
+        <div id={HEADER_ACTIONS_ID} className="flex items-center gap-2" />
         <Button variant="outline" size="sm" title="刷新" onClick={onRefresh}>
           <RefreshCw />
         </Button>

@@ -42,7 +42,13 @@ function ProcessPage() {
     queryKey: ["processes", params.id],
     queryFn: () => {
       if (params.id) {
-        return listProcesses(parseInt(params.id))
+        const api = listProcesses(+params.id)
+        toast.promise(api, {
+          loading: "流程加载中...",
+          success: "流程加载成功",
+          error: "加载失败"
+        })
+        return api
       }
       return []
     }
@@ -196,11 +202,10 @@ function ProcessPage() {
   })
 
   if (isError) {
-    toast.error("获取流程失败")
     return null
   }
 
-  if (isPending) {
+  if (isPending && !data) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loading content="项目流程加载中..." />
