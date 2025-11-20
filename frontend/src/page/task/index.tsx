@@ -1,4 +1,7 @@
+import { listProcessesFilter } from "@/api/processes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useQuery } from "@tanstack/react-query"
 
 function TaskOverview() {
   return (
@@ -12,12 +15,27 @@ function TaskOverview() {
 }
 
 function TaskTodo() {
+  const employeeID = 1
+  const { data } = useQuery({
+    queryKey: ["processes", "todo", employeeID],
+    queryFn: () => listProcessesFilter({ employeeID })
+  })
+
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300">
       <CardHeader>
         <CardTitle>待办</CardTitle>
       </CardHeader>
-      <CardContent>内容</CardContent>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>任务</TableHead>
+              <TableHead>剩余时间</TableHead>
+            </TableRow>
+          </TableHeader>
+        </Table>
+      </CardContent>
     </Card>
   )
 }

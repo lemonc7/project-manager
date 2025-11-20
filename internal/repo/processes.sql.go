@@ -218,6 +218,70 @@ func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFi
 	return items, nil
 }
 
+const listProcessesTask = `-- name: ListProcessesTask :many
+SELECT
+  p.id,
+  p.name,
+  p.start_time,
+  pr.name AS project_name,
+  -- 计算项目剩余天数
+  CASE
+    WHEN pr.start_time IS NULL OR pr.duration = 0 THEN NULL
+    ELSE ((pr.start_time + (pr.duration || 'days')::INTERVAL)::DATE - NOW()::DATE)::INT
+  END AS remaining_days
+FROM processes p
+LEFT JOIN projects pr ON p.project_id = pr.id
+WHERE
+  p.employee_id = $1
+  AND p.status = COALESCE($2, p.status)
+ORDER BY 
+  remaining_days ASC NULLS LAST,
+  p.start_time ASC NULLS LAST,
+  p.id
+`
+
+type ListProcessesTaskParams struct {
+	EmployeeID int32             `json:"employeeId"`
+	Status     NullProcessStatus `json:"status"`
+}
+
+type ListProcessesTaskRow struct {
+	ID            int32          `json:"id"`
+	Name          string         `json:"name"`
+	StartTime     sql.NullTime   `json:"startTime"`
+	ProjectName   sql.NullString `json:"projectName"`
+	RemainingDays int32          `json:"remainingDays"`
+}
+
+func (q *Queries) ListProcessesTask(ctx context.Context, arg ListProcessesTaskParams) ([]ListProcessesTaskRow, error) {
+	rows, err := q.db.QueryContext(ctx, listProcessesTask, arg.EmployeeID, arg.Status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProcessesTaskRow
+	for rows.Next() {
+		var i ListProcessesTaskRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.ProjectName,
+			&i.RemainingDays,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const reorderProcesses = `-- name: ReorderProcesses :exec
 WITH project_lock AS (
   SELECT id FROM projects WHERE id = $1 FOR UPDATE

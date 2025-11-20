@@ -21,6 +21,27 @@ WHERE
   AND p.employee_id = COALESCE(sqlc.narg('employee_id'), p.employee_id)
 ORDER BY p.sequence;
 
+-- name: ListProcessesTask :many
+SELECT
+  p.id,
+  p.name,
+  p.start_time,
+  pr.name AS project_name,
+  -- 计算项目剩余天数
+  CASE
+    WHEN pr.start_time IS NULL OR pr.duration = 0 THEN NULL
+    ELSE ((pr.start_time + (pr.duration || 'days')::INTERVAL)::DATE - NOW()::DATE)::INT
+  END AS remaining_days
+FROM processes p
+LEFT JOIN projects pr ON p.project_id = pr.id
+WHERE
+  p.employee_id = sqlc.arg('employee_id')
+  AND p.status = COALESCE(sqlc.narg('status'), p.status)
+ORDER BY 
+  remaining_days ASC NULLS LAST,
+  p.start_time ASC NULLS LAST,
+  p.id;
+
 -- name: UpdateProcess :one
 UPDATE processes
 SET

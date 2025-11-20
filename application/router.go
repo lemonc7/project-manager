@@ -31,4 +31,5 @@ func (a *Application) initRouter() {
 	processRouter.POST("/filter", a.processHandler.ListProcessFiltered)
 	processRouter.PUT("/:id", a.processHandler.UpdateProcess)
 	processRouter.DELETE("/:id", a.processHandler.DeleteProcess)
+	processRouter.GET("/task/:id", a.processHandler.ListProcessesTask)
 }

@@ -151,3 +151,21 @@ func (p *ProcessService) ListProcessesFiltered(ctx context.Context, req model.Li
 
 	return processes, nil
 }
+
+func (p *ProcessService) ListProcessesTask(ctx context.Context, employeeID int32, status *repo.ProcessStatus) ([]repo.ListProcessesTaskRow, error) {
+	var s repo.NullProcessStatus
+	if status != nil {
+		s.Valid = true
+		s.ProcessStatus = *status
+	}
+	processes, err := p.queries.ListProcessesTask(ctx, repo.ListProcessesTaskParams{
+		EmployeeID: employeeID,
+		Status:     s,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return processes, nil
+}
