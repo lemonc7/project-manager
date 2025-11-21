@@ -8,12 +8,7 @@ import service from "./request"
 import type { Process } from "@/model/processes"
 
 export async function listProjectsFilter(req: ListProjectsRequest) {
-  const res = await service.post<Project[]>("/project/filter", req)
-  return Array.isArray(res.data) ? res.data : []
-}
-
-export async function listProjects() {
-  const res = await service.post<Project[]>("/project/filter")
+  const res = await service.get<Project[]>("/project/filter", { params: req })
   return Array.isArray(res.data) ? res.data : []
 }
 
@@ -27,9 +22,8 @@ export async function createProject(req: CreateProjectRequest) {
   return res.data
 }
 
-export async function updateProject(req: UpdateProjectRequest) {
-  const { id, ...rest } = req
-  const res = await service.put<Project>(`/project/${id}`, rest)
+export async function updateProject(id: number, req: UpdateProjectRequest) {
+  const res = await service.put<Project>(`/project/${id}`, req)
   return res.data
 }
 

@@ -20,16 +20,16 @@ func (a *Application) initRouter() {
 
 	// 项目
 	projectRouter.GET("/:id", a.projectHandler.ListProcesses)
+	projectRouter.GET("/filter", a.projectHandler.ListProjectsFiltered)
 	projectRouter.POST("", a.projectHandler.CreateProject)
-	projectRouter.POST("/filter", a.projectHandler.ListProjectsFiltered)
 	projectRouter.PUT("/:id", a.projectHandler.UpdateProject)
 	projectRouter.DELETE("/:id", a.projectHandler.DeleteProject)
 
 	// 流程
+	processRouter.GET("/filter", a.processHandler.ListProcessesFiltered)
 	processRouter.POST("", a.processHandler.InsertProcessLast)
 	processRouter.POST("/:id", a.processHandler.InsertProcessAt)
-	processRouter.POST("/filter", a.processHandler.ListProcessFiltered)
 	processRouter.PUT("/:id", a.processHandler.UpdateProcess)
 	processRouter.DELETE("/:id", a.processHandler.DeleteProcess)
-	// processRouter.GET("/task/:id", a.processHandler.ListProcessesTask)
+	processRouter.GET("/task/:id", a.processHandler.ListTasks)
 }

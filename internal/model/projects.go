@@ -24,8 +24,8 @@ type UpdateProjectRequest struct {
 }
 
 type ListProjectsRequest struct {
-	Status    *repo.ProjectStatus `json:"status"`
-	ManagerID *int32              `json:"managerID"`
-	StartTime *time.Time          `json:"startTime"`
-	EndTime   *time.Time          `json:"endTime"`
+	Status    *repo.ProjectStatus `query:"status"`
+	ManagerID *int32              `query:"managerID"`
+	StartTime *time.Time          `query:"startTime"`
+	EndTime   *time.Time          `query:"endTime"`
 }

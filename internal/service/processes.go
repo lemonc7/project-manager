@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
+	"slices"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
@@ -144,4 +147,66 @@ func (p *ProcessService) ListProcessesFiltered(ctx context.Context, req model.Li
 	}
 
 	return processes, nil
+}
+
+func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error) {
+	tasks, err := p.queries.ListTasksTodo(ctx, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}
+
+func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error) {
+	tasks, err := p.queries.ListTasksReady(ctx, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}
+
+func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) ([]model.Task, error) {
+	ts, err := p.queries.ListTasksDoing(ctx, employeeID)
+	if err != nil {
+		return nil, err
+	}
+
+	tasks := make([]model.Task, len(ts))
+	// 计算剩余天数
+	today := time.Now().Truncate(24 * time.Hour)
+	for i, t := range ts {
+		tasks[i] = model.Task{
+			ID:          t.ID,
+			Name:        t.Name,
+			StartTime:   t.StartTime,
+			ProjectID:   t.ProjectID,
+			ProjectName: t.ProjectName,
+		}
+
+		if t.Duration != nil && *t.Duration > 0 && t.StartTime != nil {
+			endDate := t.StartTime.AddDate(0, 0, int(*t.Duration))
+			remainingTime := endDate.Sub(today)
+
+			days := int32(math.Ceil(remainingTime.Hours() / 24))
+			tasks[i].RemainingDays = &days
+		}
+	}
+
+	// 排序
+	slices.SortFunc(tasks, func(a, b model.Task) int {
+		switch {
+		case a.RemainingDays != nil && b.RemainingDays == nil:
+			return -1
+		case a.RemainingDays == nil && b.RemainingDays != nil:
+			return 1
+		case a.RemainingDays != nil && b.RemainingDays != nil:
+			if *a.RemainingDays < *b.RemainingDays {
+				return -1
+			} else if *a.RemainingDays > *b.RemainingDays {
+				return 1
+			}
+		}
+		return 0
+	})
+	return tasks, nil
 }

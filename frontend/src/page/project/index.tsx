@@ -1,4 +1,4 @@
-import { listProjects, updateProject } from "@/api/projects"
+import { listProjectsFilter, updateProject } from "@/api/projects"
 import type {
   Project,
   ProjectStatus,
@@ -37,7 +37,7 @@ function ProjectPage() {
   const { data, isError, isPending } = useQuery<Project[], Error>({
     queryKey: ["projects", "overview"],
     queryFn: () => {
-      const api = listProjects()
+      const api = listProjectsFilter({})
       toast.promise(api, {
         loading: "项目加载中...",
         success: "项目加载成功",
@@ -64,8 +64,8 @@ function ProjectPage() {
       fields
     }: {
       id: number
-      fields: Partial<Omit<UpdateProjectRequest, "id">>
-    }) => updateProject({ id, ...fields }),
+      fields: Partial<UpdateProjectRequest>
+    }) => updateProject( id, fields ),
     onSuccess: (updatedProject) => {
       // 更新缓存: 只更新当前项目的数据
       queryClient.setQueryData<Project[]>(
@@ -123,14 +123,14 @@ function ProjectPage() {
         const duration = row.original.duration
 
         // 没设置startTime或duration为0时，说明没设置时间
-        if (!startTime.Valid || duration === 0) {
+        if (!startTime || duration === 0) {
           return "-"
         }
         // 计算剩余天数
-        const startDate = new Date(startTime.Time)
+        const startDate = new Date(startTime)
         const currentDate = new Date()
 
-        const endDate = new Date(startTime.Time)
+        const endDate = new Date(startTime)
         endDate.setDate(startDate.getDate() + duration)
 
         const timeDiff = endDate.getTime() - currentDate.getTime()

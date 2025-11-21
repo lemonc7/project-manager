@@ -214,6 +214,150 @@ func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFi
 	return items, nil
 }
 
+const listTasksDoing = `-- name: ListTasksDoing :many
+SELECT
+  p.id,
+  p.name,
+  p.start_time,
+  pr.duration,
+  p.project_id,
+  COALESCE(pr.name,'') AS project_name
+FROM processes p
+LEFT JOIN projects pr ON p.project_id = pr.id
+WHERE
+  p.employee_id = $1
+  AND p.status IN ('进行', '返工')
+ORDER BY p.id
+`
+
+type ListTasksDoingRow struct {
+	ID          int32      `json:"id"`
+	Name        string     `json:"name"`
+	StartTime   *time.Time `json:"startTime"`
+	Duration    *int32     `json:"duration"`
+	ProjectID   int32      `json:"projectId"`
+	ProjectName string     `json:"projectName"`
+}
+
+func (q *Queries) ListTasksDoing(ctx context.Context, employeeID int32) ([]ListTasksDoingRow, error) {
+	rows, err := q.db.Query(ctx, listTasksDoing, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTasksDoingRow
+	for rows.Next() {
+		var i ListTasksDoingRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.Duration,
+			&i.ProjectID,
+			&i.ProjectName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTasksReady = `-- name: ListTasksReady :many
+SELECT
+  p.id,
+  p.name,
+  p.project_id,
+  COALESCE(pr.name,'') AS project_name
+FROM processes p
+LEFT JOIN projects pr ON p.project_id = pr.id
+WHERE
+  p.employee_id = $1
+  AND p.status IN ('准备', '暂停')
+ORDER BY p.id
+`
+
+type ListTasksReadyRow struct {
+	ID          int32  `json:"id"`
+	Name        string `json:"name"`
+	ProjectID   int32  `json:"projectId"`
+	ProjectName string `json:"projectName"`
+}
+
+func (q *Queries) ListTasksReady(ctx context.Context, employeeID int32) ([]ListTasksReadyRow, error) {
+	rows, err := q.db.Query(ctx, listTasksReady, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTasksReadyRow
+	for rows.Next() {
+		var i ListTasksReadyRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProjectID,
+			&i.ProjectName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTasksTodo = `-- name: ListTasksTodo :many
+SELECT
+  p.id,
+  p.name,
+  p.project_id,
+  COALESCE(pr.name,'') AS project_name
+FROM processes p
+LEFT JOIN projects pr ON p.project_id = pr.id
+WHERE
+  p.employee_id = $1
+  AND p.status NOT IN ('取消', '终止')
+ORDER BY p.id
+`
+
+type ListTasksTodoRow struct {
+	ID          int32  `json:"id"`
+	Name        string `json:"name"`
+	ProjectID   int32  `json:"projectId"`
+	ProjectName string `json:"projectName"`
+}
+
+func (q *Queries) ListTasksTodo(ctx context.Context, employeeID int32) ([]ListTasksTodoRow, error) {
+	rows, err := q.db.Query(ctx, listTasksTodo, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTasksTodoRow
+	for rows.Next() {
+		var i ListTasksTodoRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProjectID,
+			&i.ProjectName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const reorderProcesses = `-- name: ReorderProcesses :exec
 WITH project_lock AS (
   SELECT id FROM projects WHERE id = $1 FOR UPDATE
@@ -259,7 +403,6 @@ func (q *Queries) ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpPara
 }
 
 const updateProcess = `-- name: UpdateProcess :one
-
 UPDATE processes
 SET
   name = COALESCE($1,name),
@@ -280,34 +423,6 @@ type UpdateProcessParams struct {
 	ID          int32          `json:"id"`
 }
 
-// -- name: ListProcessesTask :many
-// SELECT
-//
-//	p.id,
-//	p.name,
-//	p.start_time,
-//	pr.id AS project_id,
-//	pr.name AS project_name,
-//	COALESCE(
-//	  CASE
-//	    WHEN pr.start_time IS NULL OR pr.duration = 0 THEN NULL
-//	    ELSE ((pr.start_time::DATE + pr.duration) - CURRENT_DATE)
-//	  END,
-//	  NULL
-//	) AS remaining_days
-//
-// FROM processes p
-// LEFT JOIN projects pr ON p.project_id = pr.id
-// WHERE
-//
-//	p.employee_id = sqlc.arg('employee_id')
-//	AND p.status = COALESCE(sqlc.narg('status'), p.status)
-//
-// ORDER BY
-//
-//	remaining_days ASC NULLS LAST,
-//	p.start_time ASC NULLS LAST,
-//	p.id;
 func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) (Process, error) {
 	row := q.db.QueryRow(ctx, updateProcess,
 		arg.Name,

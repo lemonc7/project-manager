@@ -1,10 +1,9 @@
 interface CreateTeamRequest {
   name: string
-  description: string
+  description?: string
 }
 
 interface UpdateTeamRequest {
-  id: number
   name?: string
   description?: string
 }

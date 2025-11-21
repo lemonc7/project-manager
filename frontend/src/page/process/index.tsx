@@ -62,8 +62,8 @@ function ProcessPage() {
       fields
     }: {
       id: number
-      fields: Partial<Omit<UpdateProcessRequest, "id">>
-    }) => updateProcess({ id, ...fields }),
+      fields: Partial<UpdateProcessRequest>
+    }) => updateProcess(id, fields),
     onSuccess: (updatedProcess) => {
       queryClient.setQueryData<Process[]>(
         ["processes", params.id],
@@ -151,19 +151,19 @@ function ProcessPage() {
         const startTime = row.original.startTime
         const endTime = row.original.endTime
 
-        if (!endTime.Valid) {
+        if (!endTime) {
           return "-"
         }
 
-        const endDate = new Date(endTime.Time)
+        const endDate = new Date(endTime)
         const endDateFormat = `${endDate.getFullYear()}-${
           endDate.getMonth() + 1
         }-${endDate.getDate()} ${endDate.getHours()}:${endDate.getMinutes()}`
-        if (!startTime.Valid) {
+        if (!startTime) {
           return endDateFormat
         }
 
-        const startDate = new Date(startTime.Time)
+        const startDate = new Date(startTime)
         const timeDiff = endDate.getTime() - startDate.getTime()
         const diffDays = Math.floor((timeDiff / 1000) * 3600 * 24)
         const diffHours = Math.floor(

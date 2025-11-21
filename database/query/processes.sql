@@ -21,29 +21,46 @@ WHERE
   AND p.employee_id = COALESCE(sqlc.narg('employee_id'), p.employee_id)
 ORDER BY p.sequence;
 
--- -- name: ListProcessesTask :many
--- SELECT
---   p.id,
---   p.name,
---   p.start_time,
---   pr.id AS project_id,
---   pr.name AS project_name,
---   COALESCE(
---     CASE
---       WHEN pr.start_time IS NULL OR pr.duration = 0 THEN NULL
---       ELSE ((pr.start_time::DATE + pr.duration) - CURRENT_DATE)
---     END,
---     NULL
---   ) AS remaining_days
--- FROM processes p
--- LEFT JOIN projects pr ON p.project_id = pr.id
--- WHERE
---   p.employee_id = sqlc.arg('employee_id')
---   AND p.status = COALESCE(sqlc.narg('status'), p.status)
--- ORDER BY
---   remaining_days ASC NULLS LAST,
---   p.start_time ASC NULLS LAST,
---   p.id;
+-- name: ListTasksTodo :many
+SELECT
+  p.id,
+  p.name,
+  p.project_id,
+  COALESCE(pr.name,'') AS project_name
+FROM processes p
+LEFT JOIN projects pr ON p.project_id = pr.id
+WHERE
+  p.employee_id = $1
+  AND p.status NOT IN ('取消', '终止')
+ORDER BY p.id;
+
+-- name: ListTasksReady :many
+SELECT
+  p.id,
+  p.name,
+  p.project_id,
+  COALESCE(pr.name,'') AS project_name
+FROM processes p
+LEFT JOIN projects pr ON p.project_id = pr.id
+WHERE
+  p.employee_id = $1
+  AND p.status IN ('准备', '暂停')
+ORDER BY p.id;
+
+-- name: ListTasksDoing :many
+SELECT
+  p.id,
+  p.name,
+  p.start_time,
+  pr.duration,
+  p.project_id,
+  COALESCE(pr.name,'') AS project_name
+FROM processes p
+LEFT JOIN projects pr ON p.project_id = pr.id
+WHERE
+  p.employee_id = $1
+  AND p.status IN ('进行', '返工')
+ORDER BY p.id;
 
 -- name: UpdateProcess :one
 UPDATE processes

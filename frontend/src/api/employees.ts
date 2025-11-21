@@ -1,7 +1,7 @@
 import type {
   CreateEmployeeRequest,
   Employee,
-  UPdateEmployeeRequest
+  UpdateEmployeeRequest
 } from "@/model/employees"
 import service from "./request"
 
@@ -15,9 +15,8 @@ export async function createEmployee(req: CreateEmployeeRequest) {
   return res.data
 }
 
-export async function updateEmployee(req: UPdateEmployeeRequest) {
-  const { id, ...rest } = req
-  const res = await service.put<Employee>(`/employee/${id}`, rest)
+export async function updateEmployee(id: number, req: UpdateEmployeeRequest) {
+  const res = await service.put<Employee>(`/employee/${id}`, req)
   return res.data
 }
 

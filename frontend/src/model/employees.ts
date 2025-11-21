@@ -3,8 +3,7 @@ interface CreateEmployeeRequest {
   teamID?: number
 }
 
-interface UPdateEmployeeRequest {
-  id: number
+interface UpdateEmployeeRequest {
   name?: string
   teamID?: number
   isActive?: boolean
@@ -19,4 +18,4 @@ interface Employee {
   updatedAt: string
 }
 
-export type { CreateEmployeeRequest, UPdateEmployeeRequest, Employee }
+export type { CreateEmployeeRequest, UpdateEmployeeRequest, Employee }

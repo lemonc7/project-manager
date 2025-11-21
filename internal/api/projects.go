@@ -37,18 +37,18 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 	// 绑定请求
 	var req model.CreateProjectRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 验证数据
 	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
 	}
 
 	// 业务函数
 	project, err := p.projectService.CreateProject(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -63,15 +63,15 @@ func (p *ProjectHandler) UpdateProject(c echo.Context) error {
 	// 绑定请求
 	var req model.UpdateProjectRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	jsonData,_ := json.MarshalIndent(&req,"","  ")
+	jsonData, _ := json.MarshalIndent(&req, "", "  ")
 	fmt.Println(string(jsonData))
 
 	// 业务函数
 	project, err := p.projectService.UpdateProject(c.Request().Context(), id, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -86,7 +86,7 @@ func (p *ProjectHandler) DeleteProject(c echo.Context) error {
 	}
 	// 删除数据
 	if err := p.projectService.DeleteProject(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -99,13 +99,16 @@ func (p *ProjectHandler) ListProjectsFiltered(c echo.Context) error {
 	// 绑定请求
 	var req model.ListProjectsRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
+
+	json, _ := json.MarshalIndent(&req, "", "  ")
+	fmt.Println(string(json))
 
 	// 获取数据
 	projects, err := p.projectService.ListProjectsFiltered(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -121,7 +124,7 @@ func (p *ProjectHandler) ListProcesses(c echo.Context) error {
 	// 获取数据
 	processes, err := p.projectService.ListProcesses(c.Request().Context(), id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	return c.JSON(http.StatusOK, processes)

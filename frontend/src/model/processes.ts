@@ -1,5 +1,3 @@
-import type { NullableTime } from "./projects"
-
 type ProcessStatus =
   | "等待"
   | "准备"
@@ -14,13 +12,11 @@ interface InsertProcessRequest {
   name: string
   projectID: number
   employeeID: number
-  description: string
-  sequence: number
-  remark: string
+  description?: string
+  remark?: string
 }
 
 interface UpdateProcessRequest {
-  id: number
   name?: string
   description?: string
   status?: ProcessStatus
@@ -43,10 +39,19 @@ interface Process {
   employeeName: string
   description: string
   remark: string
-  startTime: NullableTime
-  endTime: NullableTime
+  startTime: string | null
+  endTime: string | null
   createdAt: string
   updatedAt: string
+}
+
+interface Task {
+  id: number
+  name: string
+  startTime?: string
+  duration?: number
+  projectId: number
+  projectName: string
 }
 
 export type {
@@ -54,5 +59,6 @@ export type {
   InsertProcessRequest,
   UpdateProcessRequest,
   ListProcessesRequest,
-  Process
+  Process,
+  Task
 }

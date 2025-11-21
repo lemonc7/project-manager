@@ -35,18 +35,18 @@ func (t *TeamHandler) CreateTeam(c echo.Context) error {
 	// 绑定请求
 	var req model.CreateTeamRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 验证数据
 	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
 	}
 
 	// 调用业务函数
 	team, err := t.teamService.CreateTeam(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -62,13 +62,13 @@ func (t *TeamHandler) UpdateTeam(c echo.Context) error {
 	// 绑定请求
 	var req model.UpdateTeamRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 调用业务函数
 	team, err := t.teamService.UpdateTeam(c.Request().Context(), id, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -84,7 +84,7 @@ func (t *TeamHandler) DeleteTeam(c echo.Context) error {
 	}
 	// 删除数据
 	if err := t.teamService.DeleteTeam(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -98,7 +98,7 @@ func (t *TeamHandler) ListTeams(c echo.Context) error {
 	// 获取数据
 	teams, err := t.teamService.ListTeams(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应

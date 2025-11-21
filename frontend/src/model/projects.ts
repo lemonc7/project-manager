@@ -1,19 +1,19 @@
 type ProjectStatus = "排单" | "进行" | "暂停" | "完成" | "终止" | "归档"
+type TaskStatus = "todo" | "ready" | "doing"
 
 interface CreateProjectRequest {
   name: string
-  description: string
+  description?: string
   managerID: number
-  remark: string
+  remark?: string
 }
 
 interface UpdateProjectRequest {
-  id: number
   name?: string
   description?: string
   status?: ProjectStatus
   managerID?: number
-  startTime?: Date
+  startTime?: string
   duration?: number
   remark?: string
 }
@@ -21,13 +21,8 @@ interface UpdateProjectRequest {
 interface ListProjectsRequest {
   status?: ProjectStatus
   managerID?: number
-  startTime?: Date
-  endTime?: Date
-}
-
-interface NullableTime {
-  Time: string
-  Valid: boolean
+  startTime?: string
+  endTime?: string
 }
 
 interface Project {
@@ -37,7 +32,7 @@ interface Project {
   description: string
   remark: string
   status: ProjectStatus
-  startTime: NullableTime
+  startTime: string | null
   duration: number
   createdAt: string
   updatedAt: string
@@ -45,9 +40,9 @@ interface Project {
 
 export type {
   ProjectStatus,
+  TaskStatus,
   CreateProjectRequest,
   UpdateProjectRequest,
   ListProjectsRequest,
-  NullableTime,
   Project
 }

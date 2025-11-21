@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -17,6 +18,9 @@ type ProcessService interface {
 	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.Process, error)
 	DeleteProcess(ctx context.Context, id int32) error
 	ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error)
+	ListTasksTodo(ctx context.Context, id int32) ([]repo.ListTasksTodoRow, error)
+	ListTasksReady(ctx context.Context, id int32) ([]repo.ListTasksReadyRow, error)
+	ListTasksDoing(ctx context.Context, id int32) ([]model.Task, error)
 }
 
 var _ ProcessService = (*service.ProcessService)(nil)
@@ -35,18 +39,18 @@ func (p *ProcessHandler) InsertProcessLast(c echo.Context) error {
 	// 绑定请求
 	var req model.InsertProcessRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 验证数据
 	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
 	}
 
 	// 业务函数
 	process, err := p.processService.InsertProcessLast(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -61,17 +65,17 @@ func (p *ProcessHandler) InsertProcessAt(c echo.Context) error {
 	// 绑定请求
 	var req model.InsertProcessRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 验证数据
 	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
 	}
 
 	// 业务函数
 	if err := p.processService.InsertProcessAt(c.Request().Context(), sequence, req); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	return c.JSON(http.StatusCreated, echo.Map{
@@ -87,13 +91,13 @@ func (p *ProcessHandler) UpdateProcess(c echo.Context) error {
 	// 绑定请求
 	var req model.UpdateProcessRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 业务函数
 	process, err := p.processService.UpdateProcess(c.Request().Context(), id, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -109,7 +113,7 @@ func (p *ProcessHandler) DeleteProcess(c echo.Context) error {
 
 	// 业务函数
 	if err := p.processService.DeleteProcess(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -118,40 +122,50 @@ func (p *ProcessHandler) DeleteProcess(c echo.Context) error {
 	})
 }
 
-func (p *ProcessHandler) ListProcessFiltered(c echo.Context) error {
+func (p *ProcessHandler) ListProcessesFiltered(c echo.Context) error {
 	// 绑定请求
 	var req model.ListProcessesRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 获取数据
 	processes, err := p.processService.ListProcessesFiltered(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
 	return c.JSON(http.StatusOK, processes)
 }
 
-// func (p *ProcessHandler) ListProcessesTask(c echo.Context) error {
-// 	id, err := util.GetParamID(c)
-// 	if err != nil {
-// 		return err
-// 	}
+func (p *ProcessHandler) ListTasks(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
 
-// 	statusStr := c.QueryParam("status")
-// 	var status *repo.ProcessStatus
-// 	if statusStr != "" {
-// 		st := repo.ProcessStatus(statusStr)
-// 		status = &st
-// 	}
-
-// 	tasks, err := p.processService.ListProcessesTask(c.Request().Context(), id, status)
-// 	if err != nil {
-// 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-// 	}
-
-// 	return c.JSON(http.StatusOK, tasks)
-// }
+	statusStr := c.QueryParam("status")
+	switch statusStr {
+	case "todo":
+		tasks, err := p.processService.ListTasksTodo(c.Request().Context(), id)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+		return c.JSON(http.StatusOK, tasks)
+	case "ready":
+		tasks, err := p.processService.ListTasksReady(c.Request().Context(), id)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+		return c.JSON(http.StatusOK, tasks)
+	case "doing":
+		tasks, err := p.processService.ListTasksDoing(c.Request().Context(), id)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+		return c.JSON(http.StatusOK, tasks)
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("status参数错误: %s", statusStr))
+	}
+}

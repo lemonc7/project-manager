@@ -35,18 +35,18 @@ func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
 	// 绑定请求
 	var req model.CreateEmployeeRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 验证数据
 	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
 	}
 
 	// 业务函数
 	employee, err := e.employeeService.CreateEmployee(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -62,13 +62,13 @@ func (e *EmployeeHandler) UpdateEmployee(c echo.Context) error {
 	// 绑定请求
 	var req model.UpdateEmployeeRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
 	// 业务函数
 	employee, err := e.employeeService.UpdateEmployee(c.Request().Context(), id, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -85,7 +85,7 @@ func (e *EmployeeHandler) DeleteEmployee(c echo.Context) error {
 
 	// 业务函数
 	if err := e.employeeService.DeleteEmployee(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
@@ -99,7 +99,7 @@ func (e *EmployeeHandler) ListEmployees(c echo.Context) error {
 	// 获取数据
 	employees, err := e.employeeService.ListEmployees(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应

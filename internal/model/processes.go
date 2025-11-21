@@ -1,6 +1,10 @@
 package model
 
-import "github.com/lemonc7/project-manager/internal/repo"
+import (
+	"time"
+
+	"github.com/lemonc7/project-manager/internal/repo"
+)
 
 type InsertProcessRequest struct {
 	Name        string `json:"name" validate:"required"`
@@ -19,7 +23,16 @@ type UpdateProcessRequest struct {
 }
 
 type ListProcessesRequest struct {
-	ProjectID  *int32              `json:"projectID"`
-	Status     *repo.ProcessStatus `json:"status"`
-	EmployeeID *int32              `json:"employeeID"`
+	ProjectID  *int32              `query:"projectID"`
+	Status     *repo.ProcessStatus `query:"status"`
+	EmployeeID *int32              `query:"employeeID"`
+}
+
+type Task struct {
+	ID            int32      `json:"id"`
+	Name          string     `json:"name"`
+	StartTime     *time.Time `json:"startTime,omitempty"`
+	RemainingDays *int32     `json:"remainingDays,omitempty"`
+	ProjectID     int32      `json:"projectID"`
+	ProjectName   string     `json:"projectName"`
 }
