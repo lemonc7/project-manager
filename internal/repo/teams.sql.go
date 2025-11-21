@@ -7,7 +7,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 )
 
 const createTeam = `-- name: CreateTeam :one
@@ -26,7 +25,7 @@ type CreateTeamParams struct {
 }
 
 func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error) {
-	row := q.db.QueryRowContext(ctx, createTeam, arg.Name, arg.Description)
+	row := q.db.QueryRow(ctx, createTeam, arg.Name, arg.Description)
 	var i Team
 	err := row.Scan(
 		&i.ID,
@@ -44,7 +43,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteTeam(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteTeam, id)
+	_, err := q.db.Exec(ctx, deleteTeam, id)
 	return err
 }
 
@@ -60,7 +59,7 @@ ORDER BY name
 `
 
 func (q *Queries) ListTeams(ctx context.Context) ([]Team, error) {
-	rows, err := q.db.QueryContext(ctx, listTeams)
+	rows, err := q.db.Query(ctx, listTeams)
 	if err != nil {
 		return nil, err
 	}
@@ -79,9 +78,6 @@ func (q *Queries) ListTeams(ctx context.Context) ([]Team, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -98,13 +94,13 @@ RETURNING id, name, description, created_at, updated_at
 `
 
 type UpdateTeamParams struct {
-	Name        sql.NullString `json:"name"`
-	Description sql.NullString `json:"description"`
-	ID          int32          `json:"id"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	ID          int32   `json:"id"`
 }
 
 func (q *Queries) UpdateTeam(ctx context.Context, arg UpdateTeamParams) (Team, error) {
-	row := q.db.QueryRowContext(ctx, updateTeam, arg.Name, arg.Description, arg.ID)
+	row := q.db.QueryRow(ctx, updateTeam, arg.Name, arg.Description, arg.ID)
 	var i Team
 	err := row.Scan(
 		&i.ID,

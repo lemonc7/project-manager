@@ -2,20 +2,19 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type ProcessService struct {
-	db      *sql.DB
+	db      *pgxpool.Pool
 	queries *repo.Queries
 }
 
-func NewProcessService(db *sql.DB) *ProcessService {
+func NewProcessService(db *pgxpool.Pool) *ProcessService {
 	return &ProcessService{
 		db:      db,
 		queries: repo.New(db),
@@ -50,12 +49,12 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 	}
 
 	// 开启事务
-	tx, err := p.db.Begin()
+	tx, err := p.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
 	// 保证出错时回滚
-	defer tx.Rollback()
+	defer tx.Rollback(ctx)
 
 	// 使用事务
 	qtx := p.queries.WithTx(tx)
@@ -68,6 +67,7 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 	if err != nil {
 		return err
 	}
+
 	// 插入新的process
 	err = qtx.InsertProcessAt(ctx, repo.InsertProcessAtParams{
 		ProjectID:   req.ProjectID,
@@ -81,21 +81,16 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 		return err
 	}
 
-	return tx.Commit()
+	return tx.Commit(ctx)
 }
 
 func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.Process, error) {
-	var status repo.NullProcessStatus
-	if req.Status != nil {
-		status.Valid = true
-		status.ProcessStatus = repo.ProcessStatus(*req.Status)
-	}
 	process, err := p.queries.UpdateProcess(ctx, repo.UpdateProcessParams{
-		Name:        util.ToNullString(req.Name),
-		Description: util.ToNullString(req.Description),
-		Status:      status,
-		EmployeeID:  util.ToNullInt32(req.EmployeeID),
-		Remark:      util.ToNullString(req.Remark),
+		Name:        req.Name,
+		Description: req.Description,
+		Status:      req.Status,
+		EmployeeID:  req.EmployeeID,
+		Remark:      req.Remark,
 		ID:          id,
 	})
 
@@ -108,11 +103,11 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.
 
 func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 	// 开启事务
-	tx, err := p.db.Begin()
+	tx, err := p.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer tx.Rollback(ctx)
 
 	// 使用事务
 	qtx := p.queries.WithTx(tx)
@@ -129,38 +124,19 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 		return err
 	}
 
-	return tx.Commit()
+	// 提交事务
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *ProcessService) ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error) {
-	var status repo.NullProcessStatus
-	if req.Status != nil {
-		status.Valid = true
-		status.ProcessStatus = repo.ProcessStatus(*req.Status)
-	}
-
 	processes, err := p.queries.ListProcessesFiltered(ctx, repo.ListProcessesFilteredParams{
-		ProjectID:  util.ToNullInt32(req.ProjectID),
-		Status:     status,
-		EmployeeID: util.ToNullInt32(req.EmployeeID),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return processes, nil
-}
-
-func (p *ProcessService) ListProcessesTask(ctx context.Context, employeeID int32, status *repo.ProcessStatus) ([]repo.ListProcessesTaskRow, error) {
-	var s repo.NullProcessStatus
-	if status != nil {
-		s.Valid = true
-		s.ProcessStatus = *status
-	}
-	processes, err := p.queries.ListProcessesTask(ctx, repo.ListProcessesTaskParams{
-		EmployeeID: employeeID,
-		Status:     s,
+		ProjectID:  req.ProjectID,
+		Status:     req.Status,
+		EmployeeID: req.EmployeeID,
 	})
 
 	if err != nil {

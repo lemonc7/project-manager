@@ -21,12 +21,34 @@ type Querier interface {
 	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) (Process, error)
 	ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 	ListProcessesFiltered(ctx context.Context, arg ListProcessesFilteredParams) ([]ListProcessesFilteredRow, error)
-	ListProcessesTask(ctx context.Context, arg ListProcessesTaskParams) ([]ListProcessesTaskRow, error)
 	ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error)
 	ListTeams(ctx context.Context) ([]Team, error)
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error
 	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error)
+	// -- name: ListProcessesTask :many
+	// SELECT
+	//   p.id,
+	//   p.name,
+	//   p.start_time,
+	//   pr.id AS project_id,
+	//   pr.name AS project_name,
+	//   COALESCE(
+	//     CASE
+	//       WHEN pr.start_time IS NULL OR pr.duration = 0 THEN NULL
+	//       ELSE ((pr.start_time::DATE + pr.duration) - CURRENT_DATE)
+	//     END,
+	//     NULL
+	//   ) AS remaining_days
+	// FROM processes p
+	// LEFT JOIN projects pr ON p.project_id = pr.id
+	// WHERE
+	//   p.employee_id = sqlc.arg('employee_id')
+	//   AND p.status = COALESCE(sqlc.narg('status'), p.status)
+	// ORDER BY
+	//   remaining_days ASC NULLS LAST,
+	//   p.start_time ASC NULLS LAST,
+	//   p.id;
 	UpdateProcess(ctx context.Context, arg UpdateProcessParams) (Process, error)
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
 	UpdateTeam(ctx context.Context, arg UpdateTeamParams) (Team, error)

@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/config"
 	"github.com/lemonc7/project-manager/database"
@@ -21,9 +21,9 @@ import (
 )
 
 type Application struct {
-	e   *echo.Echo
-	db  *sql.DB
-	cfg *config.Config
+	e      *echo.Echo
+	dbPool *pgxpool.Pool
+	cfg    *config.Config
 
 	employeeHandler *api.EmployeeHandler
 	teamHandler     *api.TeamHandler
@@ -50,7 +50,7 @@ func InitApp(filePath string) (*Application, error) {
 	logger.InitLogger(cfg.Logger)
 
 	// 连接数据库
-	db, err := database.NewDB(cfg.Database)
+	dbPool, err := database.NewDB(cfg.Database)
 	if err != nil {
 		return nil, err
 	}
@@ -62,21 +62,21 @@ func InitApp(filePath string) (*Application, error) {
 
 	// handler
 	employeeHandler := api.NewEmployeeHandler(
-		service.NewEmployeeService(db),
+		service.NewEmployeeService(dbPool),
 	)
 	teamHandler := api.NewTeamHandler(
-		service.NewTeamService(db),
+		service.NewTeamService(dbPool),
 	)
 	projectHandler := api.NewProjectHandler(
-		service.NewProjectService(db),
+		service.NewProjectService(dbPool),
 	)
 	processHandler := api.NewProcessHandler(
-		service.NewProcessService(db),
+		service.NewProcessService(dbPool),
 	)
 
 	app := &Application{
 		e:               e,
-		db:              db,
+		dbPool:          dbPool,
 		cfg:             cfg,
 		employeeHandler: employeeHandler,
 		teamHandler:     teamHandler,
@@ -100,11 +100,11 @@ func (a *Application) Start() {
 
 func (a *Application) shutdown() {
 	defer func() {
-		if err := a.db.Close(); err != nil {
-			logger.Error("close database", zap.Error(err))
-		}
+		a.dbPool.Close()
+		logger.Info("database connection pool closed")
 	}()
 
+	// 监听系统信号
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -116,7 +116,7 @@ func (a *Application) shutdown() {
 	defer cancel()
 	if err := a.e.Shutdown(ctx); err != nil {
 		logger.Error("shutdown server", zap.Error(err))
-	}else {
+	} else {
 		logger.Info("HTTP server shutdown successfully")
 	}
 

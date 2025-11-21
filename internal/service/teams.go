@@ -2,18 +2,17 @@ package service
 
 import (
 	"context"
-	"database/sql"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type TeamService struct {
 	querier repo.Querier
 }
 
-func NewTeamService(db *sql.DB) *TeamService {
+func NewTeamService(db *pgxpool.Pool) *TeamService {
 	return &TeamService{
 		querier: repo.New(db),
 	}
@@ -34,19 +33,19 @@ func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamReques
 	return team, nil
 }
 
-func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) (repo.Team,error) {
+func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) (repo.Team, error) {
 	// 更新数据
-	team,err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
+	team, err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
 		ID:          id,
-		Name:        util.ToNullString(req.Name),
-		Description: util.ToNullString(req.Description),
+		Name:        req.Name,
+		Description: req.Description,
 	})
 
 	if err != nil {
 		return repo.Team{}, err
 	}
 
-	return team,err
+	return team, err
 }
 
 func (t *TeamService) DeleteTeam(ctx context.Context, id int32) error {

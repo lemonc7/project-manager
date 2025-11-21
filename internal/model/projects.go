@@ -16,7 +16,7 @@ type CreateProjectRequest struct {
 type UpdateProjectRequest struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
-	Status      *repo.ProcessStatus `json:"status"`
+	Status      *repo.ProjectStatus `json:"status"`
 	ManagerID   *int32              `json:"managerID"`
 	StartTime   *time.Time          `json:"startTime"`
 	Duration    *int32              `json:"duration"`

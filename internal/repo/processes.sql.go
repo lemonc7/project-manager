@@ -7,7 +7,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
 
@@ -18,7 +17,7 @@ RETURNING project_id
 `
 
 func (q *Queries) DeleteProcess(ctx context.Context, id int32) (int32, error) {
-	row := q.db.QueryRowContext(ctx, deleteProcess, id)
+	row := q.db.QueryRow(ctx, deleteProcess, id)
 	var project_id int32
 	err := row.Scan(&project_id)
 	return project_id, err
@@ -31,7 +30,7 @@ WHERE project_id = $1
 `
 
 func (q *Queries) GetMaxSequence(ctx context.Context, projectID int32) (int32, error) {
-	row := q.db.QueryRowContext(ctx, getMaxSequence, projectID)
+	row := q.db.QueryRow(ctx, getMaxSequence, projectID)
 	var max_seq int32
 	err := row.Scan(&max_seq)
 	return max_seq, err
@@ -65,7 +64,7 @@ type InsertProcessAtParams struct {
 }
 
 func (q *Queries) InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error {
-	_, err := q.db.ExecContext(ctx, insertProcessAt,
+	_, err := q.db.Exec(ctx, insertProcessAt,
 		arg.ProjectID,
 		arg.Sequence,
 		arg.Name,
@@ -112,7 +111,7 @@ type InsertProcessLastParams struct {
 }
 
 func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) (Process, error) {
-	row := q.db.QueryRowContext(ctx, insertProcessLast,
+	row := q.db.QueryRow(ctx, insertProcessLast,
 		arg.ProjectID,
 		arg.Name,
 		arg.EmployeeID,
@@ -162,9 +161,9 @@ ORDER BY p.sequence
 `
 
 type ListProcessesFilteredParams struct {
-	ProjectID  sql.NullInt32     `json:"projectId"`
-	Status     NullProcessStatus `json:"status"`
-	EmployeeID sql.NullInt32     `json:"employeeId"`
+	ProjectID  *int32         `json:"projectId"`
+	Status     *ProcessStatus `json:"status"`
+	EmployeeID *int32         `json:"employeeId"`
 }
 
 type ListProcessesFilteredRow struct {
@@ -176,14 +175,14 @@ type ListProcessesFilteredRow struct {
 	EmployeeName string        `json:"employeeName"`
 	Description  string        `json:"description"`
 	Remark       string        `json:"remark"`
-	StartTime    sql.NullTime  `json:"startTime"`
-	EndTime      sql.NullTime  `json:"endTime"`
+	StartTime    *time.Time    `json:"startTime"`
+	EndTime      *time.Time    `json:"endTime"`
 	CreatedAt    time.Time     `json:"createdAt"`
 	UpdatedAt    time.Time     `json:"updatedAt"`
 }
 
 func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFilteredParams) ([]ListProcessesFilteredRow, error) {
-	rows, err := q.db.QueryContext(ctx, listProcessesFiltered, arg.ProjectID, arg.Status, arg.EmployeeID)
+	rows, err := q.db.Query(ctx, listProcessesFiltered, arg.ProjectID, arg.Status, arg.EmployeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -209,73 +208,6 @@ func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFi
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listProcessesTask = `-- name: ListProcessesTask :many
-SELECT
-  p.id,
-  p.name,
-  p.start_time,
-  pr.name AS project_name,
-  -- 计算项目剩余天数
-  CASE
-    WHEN pr.start_time IS NULL OR pr.duration = 0 THEN NULL
-    ELSE ((pr.start_time + (pr.duration || 'days')::INTERVAL)::DATE - NOW()::DATE)::INT
-  END AS remaining_days
-FROM processes p
-LEFT JOIN projects pr ON p.project_id = pr.id
-WHERE
-  p.employee_id = $1
-  AND p.status = COALESCE($2, p.status)
-ORDER BY 
-  remaining_days ASC NULLS LAST,
-  p.start_time ASC NULLS LAST,
-  p.id
-`
-
-type ListProcessesTaskParams struct {
-	EmployeeID int32             `json:"employeeId"`
-	Status     NullProcessStatus `json:"status"`
-}
-
-type ListProcessesTaskRow struct {
-	ID            int32          `json:"id"`
-	Name          string         `json:"name"`
-	StartTime     sql.NullTime   `json:"startTime"`
-	ProjectName   sql.NullString `json:"projectName"`
-	RemainingDays int32          `json:"remainingDays"`
-}
-
-func (q *Queries) ListProcessesTask(ctx context.Context, arg ListProcessesTaskParams) ([]ListProcessesTaskRow, error) {
-	rows, err := q.db.QueryContext(ctx, listProcessesTask, arg.EmployeeID, arg.Status)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListProcessesTaskRow
-	for rows.Next() {
-		var i ListProcessesTaskRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.StartTime,
-			&i.ProjectName,
-			&i.RemainingDays,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -297,7 +229,7 @@ WHERE p.id = sub.id
 `
 
 func (q *Queries) ReorderProcesses(ctx context.Context, projectID int32) error {
-	_, err := q.db.ExecContext(ctx, reorderProcesses, projectID)
+	_, err := q.db.Exec(ctx, reorderProcesses, projectID)
 	return err
 }
 
@@ -322,11 +254,12 @@ type ShiftProcessesUpParams struct {
 }
 
 func (q *Queries) ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error {
-	_, err := q.db.ExecContext(ctx, shiftProcessesUp, arg.ProjectID, arg.Sequence)
+	_, err := q.db.Exec(ctx, shiftProcessesUp, arg.ProjectID, arg.Sequence)
 	return err
 }
 
 const updateProcess = `-- name: UpdateProcess :one
+
 UPDATE processes
 SET
   name = COALESCE($1,name),
@@ -339,16 +272,44 @@ RETURNING id, project_id, name, description, status, employee_id, sequence, star
 `
 
 type UpdateProcessParams struct {
-	Name        sql.NullString    `json:"name"`
-	Description sql.NullString    `json:"description"`
-	Status      NullProcessStatus `json:"status"`
-	EmployeeID  sql.NullInt32     `json:"employeeId"`
-	Remark      sql.NullString    `json:"remark"`
-	ID          int32             `json:"id"`
+	Name        *string        `json:"name"`
+	Description *string        `json:"description"`
+	Status      *ProcessStatus `json:"status"`
+	EmployeeID  *int32         `json:"employeeId"`
+	Remark      *string        `json:"remark"`
+	ID          int32          `json:"id"`
 }
 
+// -- name: ListProcessesTask :many
+// SELECT
+//
+//	p.id,
+//	p.name,
+//	p.start_time,
+//	pr.id AS project_id,
+//	pr.name AS project_name,
+//	COALESCE(
+//	  CASE
+//	    WHEN pr.start_time IS NULL OR pr.duration = 0 THEN NULL
+//	    ELSE ((pr.start_time::DATE + pr.duration) - CURRENT_DATE)
+//	  END,
+//	  NULL
+//	) AS remaining_days
+//
+// FROM processes p
+// LEFT JOIN projects pr ON p.project_id = pr.id
+// WHERE
+//
+//	p.employee_id = sqlc.arg('employee_id')
+//	AND p.status = COALESCE(sqlc.narg('status'), p.status)
+//
+// ORDER BY
+//
+//	remaining_days ASC NULLS LAST,
+//	p.start_time ASC NULLS LAST,
+//	p.id;
 func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) (Process, error) {
-	row := q.db.QueryRowContext(ctx, updateProcess,
+	row := q.db.QueryRow(ctx, updateProcess,
 		arg.Name,
 		arg.Description,
 		arg.Status,

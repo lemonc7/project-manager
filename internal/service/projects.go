@@ -2,18 +2,17 @@ package service
 
 import (
 	"context"
-	"database/sql"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type ProjectService struct {
 	querier repo.Querier
 }
 
-func NewProjectService(db *sql.DB) *ProjectService {
+func NewProjectService(db *pgxpool.Pool) *ProjectService {
 	return &ProjectService{
 		querier: repo.New(db),
 	}
@@ -36,21 +35,16 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 }
 
 func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.Project, error) {
-	var status repo.NullProjectStatus
-	if req.Status != nil {
-		status.Valid = true
-		status.ProjectStatus = repo.ProjectStatus(*req.Status)
-	}
 	// 更新数据
 	project, err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
 		ID:          id,
-		Name:        util.ToNullString(req.Name),
-		Description: util.ToNullString(req.Description),
-		Status:      status,
-		ManagerID:   util.ToNullInt32(req.ManagerID),
-		StartTime:   util.ToNullTime(req.StartTime),
-		Duration:    util.ToNullInt32(req.Duration),
-		Remark:      util.ToNullString(req.Remark),
+		Name:        req.Name,
+		Description: req.Description,
+		Status:      req.Status,
+		ManagerID:   req.ManagerID,
+		StartTime:   req.StartTime,
+		Duration:    req.Duration,
+		Remark:      req.Remark,
 	})
 
 	if err != nil {
@@ -70,17 +64,12 @@ func (p *ProjectService) DeleteProject(ctx context.Context, id int32) error {
 }
 
 func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error) {
-	var status repo.NullProjectStatus
-	if req.Status != nil {
-		status.Valid = true
-		status.ProjectStatus = repo.ProjectStatus(*req.Status)
-	}
 	// 获取数据
 	projects, err := p.querier.ListProjectsFiltered(ctx, repo.ListProjectsFilteredParams{
-		Status:    status,
-		ManagerID: util.ToNullInt32(req.ManagerID),
-		StartTime: util.ToNullTime(req.StartTime),
-		EndTime:   util.ToNullTime(req.EndTime),
+		Status:    req.Status,
+		ManagerID: req.ManagerID,
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
 	})
 	if err != nil {
 		return nil, err
@@ -91,7 +80,7 @@ func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.Lis
 
 func (p *ProjectService) ListProcesses(ctx context.Context, id int32) ([]repo.ListProcessesFilteredRow, error) {
 	processes, err := p.querier.ListProcessesFiltered(ctx, repo.ListProcessesFilteredParams{
-		ProjectID: util.ToNullInt32(&id),
+		ProjectID: &id,
 	})
 	if err != nil {
 		return nil, err

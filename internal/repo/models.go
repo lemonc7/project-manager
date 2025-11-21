@@ -5,7 +5,6 @@
 package repo
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"time"
@@ -106,12 +105,12 @@ func (ns NullProjectStatus) Value() (driver.Value, error) {
 }
 
 type Employee struct {
-	ID        int32         `json:"id"`
-	Name      string        `json:"name"`
-	TeamID    sql.NullInt32 `json:"teamId"`
-	CreatedAt time.Time     `json:"createdAt"`
-	UpdatedAt time.Time     `json:"updatedAt"`
-	IsActive  bool          `json:"isActive"`
+	ID        int32     `json:"id"`
+	Name      string    `json:"name"`
+	TeamID    *int32    `json:"teamId"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	IsActive  bool      `json:"isActive"`
 }
 
 type Process struct {
@@ -122,8 +121,8 @@ type Process struct {
 	Status      ProcessStatus `json:"status"`
 	EmployeeID  int32         `json:"employeeId"`
 	Sequence    int32         `json:"sequence"`
-	StartTime   sql.NullTime  `json:"startTime"`
-	EndTime     sql.NullTime  `json:"endTime"`
+	StartTime   *time.Time    `json:"startTime"`
+	EndTime     *time.Time    `json:"endTime"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
 	Remark      string        `json:"remark"`
@@ -135,7 +134,7 @@ type Project struct {
 	Description string        `json:"description"`
 	Status      ProjectStatus `json:"status"`
 	ManagerID   int32         `json:"managerId"`
-	StartTime   sql.NullTime  `json:"startTime"`
+	StartTime   *time.Time    `json:"startTime"`
 	Duration    int32         `json:"duration"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	UpdatedAt   time.Time     `json:"updatedAt"`

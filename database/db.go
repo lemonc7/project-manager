@@ -1,21 +1,24 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/config"
-	_ "github.com/lib/pq"
 )
 
-func NewDB(cfg config.DatabaseConfig) (*sql.DB, error) {
-	db, err := sql.Open(cfg.Driver, cfg.DSN())
+func NewDB(cfg config.DatabaseConfig) (*pgxpool.Pool, error) {
+	ctx := context.Background()
+	dbPool, err := pgxpool.New(ctx, cfg.DSN())
 	if err != nil {
-		return nil, fmt.Errorf("connect database: %w", err)
-	}
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("ping database: %w", err)
+		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
-	return db, nil
+	if err := dbPool.Ping(ctx); err != nil {
+		dbPool.Close()
+		return nil, fmt.Errorf("unable to ping database: %w", err)
+	}
+
+	return dbPool, nil
 }

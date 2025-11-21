@@ -17,7 +17,6 @@ type ProcessService interface {
 	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.Process, error)
 	DeleteProcess(ctx context.Context, id int32) error
 	ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error)
-	ListProcessesTask(ctx context.Context, employeeID int32, status *repo.ProcessStatus) ([]repo.ListProcessesTaskRow, error)
 }
 
 var _ ProcessService = (*service.ProcessService)(nil)
@@ -136,23 +135,23 @@ func (p *ProcessHandler) ListProcessFiltered(c echo.Context) error {
 	return c.JSON(http.StatusOK, processes)
 }
 
-func (p *ProcessHandler) ListProcessesTask(c echo.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
+// func (p *ProcessHandler) ListProcessesTask(c echo.Context) error {
+// 	id, err := util.GetParamID(c)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	statusStr := c.QueryParam("status")
-	var status *repo.ProcessStatus
-	if statusStr != "" {
-		st := repo.ProcessStatus(statusStr)
-		status = &st
-	}
+// 	statusStr := c.QueryParam("status")
+// 	var status *repo.ProcessStatus
+// 	if statusStr != "" {
+// 		st := repo.ProcessStatus(statusStr)
+// 		status = &st
+// 	}
 
-	tasks, err := p.processService.ListProcessesTask(c.Request().Context(), id, status)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
+// 	tasks, err := p.processService.ListProcessesTask(c.Request().Context(), id, status)
+// 	if err != nil {
+// 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+// 	}
 
-	return c.JSON(http.StatusOK, tasks)
-}
+// 	return c.JSON(http.StatusOK, tasks)
+// }

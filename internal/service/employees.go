@@ -2,18 +2,17 @@ package service
 
 import (
 	"context"
-	"database/sql"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type EmployeeService struct {
 	querier repo.Querier
 }
 
-func NewEmployeeService(db *sql.DB) *EmployeeService {
+func NewEmployeeService(db *pgxpool.Pool) *EmployeeService {
 	return &EmployeeService{
 		querier: repo.New(db),
 	}
@@ -23,7 +22,7 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 	// 插入数据
 	employee, err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
 		Name:   req.Name,
-		TeamID: util.ToNullInt32(req.TeamID),
+		TeamID: req.TeamID,
 	})
 
 	if err != nil {
@@ -37,9 +36,9 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req mode
 	// 更新数据
 	employee, err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       id,
-		Name:     util.ToNullString(req.Name),
-		TeamID:   util.ToNullInt32(req.TeamID),
-		IsActive: util.ToNullBool(req.IsActive),
+		Name:     req.Name,
+		TeamID:   req.TeamID,
+		IsActive: req.IsActive,
 	})
 
 	if err != nil {

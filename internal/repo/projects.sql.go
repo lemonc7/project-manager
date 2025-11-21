@@ -7,7 +7,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
 
@@ -33,7 +32,7 @@ type CreateProjectParams struct {
 }
 
 func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error) {
-	row := q.db.QueryRowContext(ctx, createProject,
+	row := q.db.QueryRow(ctx, createProject,
 		arg.Name,
 		arg.Description,
 		arg.ManagerID,
@@ -61,7 +60,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteProject(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteProject, id)
+	_, err := q.db.Exec(ctx, deleteProject, id)
 	return err
 }
 
@@ -99,10 +98,10 @@ ORDER BY
 `
 
 type ListProjectsFilteredParams struct {
-	Status    NullProjectStatus `json:"status"`
-	ManagerID sql.NullInt32     `json:"managerId"`
-	StartTime sql.NullTime      `json:"startTime"`
-	EndTime   sql.NullTime      `json:"endTime"`
+	Status    *ProjectStatus `json:"status"`
+	ManagerID *int32         `json:"managerId"`
+	StartTime *time.Time     `json:"startTime"`
+	EndTime   *time.Time     `json:"endTime"`
 }
 
 type ListProjectsFilteredRow struct {
@@ -112,14 +111,14 @@ type ListProjectsFilteredRow struct {
 	Description string        `json:"description"`
 	Remark      string        `json:"remark"`
 	Status      ProjectStatus `json:"status"`
-	StartTime   sql.NullTime  `json:"startTime"`
+	StartTime   *time.Time    `json:"startTime"`
 	Duration    int32         `json:"duration"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
 }
 
 func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error) {
-	rows, err := q.db.QueryContext(ctx, listProjectsFiltered,
+	rows, err := q.db.Query(ctx, listProjectsFiltered,
 		arg.Status,
 		arg.ManagerID,
 		arg.StartTime,
@@ -148,9 +147,6 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -172,18 +168,18 @@ RETURNING id, name, description, status, manager_id, start_time, duration, creat
 `
 
 type UpdateProjectParams struct {
-	Name        sql.NullString    `json:"name"`
-	Description sql.NullString    `json:"description"`
-	Status      NullProjectStatus `json:"status"`
-	ManagerID   sql.NullInt32     `json:"managerId"`
-	StartTime   sql.NullTime      `json:"startTime"`
-	Duration    sql.NullInt32     `json:"duration"`
-	Remark      sql.NullString    `json:"remark"`
-	ID          int32             `json:"id"`
+	Name        *string        `json:"name"`
+	Description *string        `json:"description"`
+	Status      *ProjectStatus `json:"status"`
+	ManagerID   *int32         `json:"managerId"`
+	StartTime   *time.Time     `json:"startTime"`
+	Duration    *int32         `json:"duration"`
+	Remark      *string        `json:"remark"`
+	ID          int32          `json:"id"`
 }
 
 func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error) {
-	row := q.db.QueryRowContext(ctx, updateProject,
+	row := q.db.QueryRow(ctx, updateProject,
 		arg.Name,
 		arg.Description,
 		arg.Status,

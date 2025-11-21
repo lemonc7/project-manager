@@ -7,7 +7,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
 
@@ -22,12 +21,12 @@ INSERT INTO employees (
 `
 
 type CreateEmployeeParams struct {
-	Name   string        `json:"name"`
-	TeamID sql.NullInt32 `json:"teamId"`
+	Name   string `json:"name"`
+	TeamID *int32 `json:"teamId"`
 }
 
 func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (Employee, error) {
-	row := q.db.QueryRowContext(ctx, createEmployee, arg.Name, arg.TeamID)
+	row := q.db.QueryRow(ctx, createEmployee, arg.Name, arg.TeamID)
 	var i Employee
 	err := row.Scan(
 		&i.ID,
@@ -46,7 +45,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteEmployee(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteEmployee, id)
+	_, err := q.db.Exec(ctx, deleteEmployee, id)
 	return err
 }
 
@@ -72,7 +71,7 @@ type ListEmployeesRow struct {
 }
 
 func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error) {
-	rows, err := q.db.QueryContext(ctx, listEmployees)
+	rows, err := q.db.Query(ctx, listEmployees)
 	if err != nil {
 		return nil, err
 	}
@@ -92,9 +91,6 @@ func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -112,14 +108,14 @@ RETURNING id, name, team_id, created_at, updated_at, is_active
 `
 
 type UpdateEmployeeParams struct {
-	Name     sql.NullString `json:"name"`
-	TeamID   sql.NullInt32  `json:"teamId"`
-	IsActive sql.NullBool   `json:"isActive"`
-	ID       int32          `json:"id"`
+	Name     *string `json:"name"`
+	TeamID   *int32  `json:"teamId"`
+	IsActive *bool   `json:"isActive"`
+	ID       int32   `json:"id"`
 }
 
 func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error) {
-	row := q.db.QueryRowContext(ctx, updateEmployee,
+	row := q.db.QueryRow(ctx, updateEmployee,
 		arg.Name,
 		arg.TeamID,
 		arg.IsActive,
