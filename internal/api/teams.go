@@ -15,7 +15,7 @@ type TeamService interface {
 	CreateTeam(ctx context.Context, req model.CreateTeamRequest) (repo.Team, error)
 	UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) (repo.Team, error)
 	DeleteTeam(ctx context.Context, id int32) error
-	ListTeams(ctx context.Context) ([]repo.Team, error)
+	ListTeams(ctx context.Context) ([]repo.ListTeamsRow, error)
 }
 
 var _ TeamService = (*service.TeamService)(nil)

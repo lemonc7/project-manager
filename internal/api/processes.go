@@ -14,13 +14,13 @@ import (
 
 type ProcessService interface {
 	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.Process, error)
-	InsertProcessAt(ctx context.Context, id int32, req model.InsertProcessRequest) error
+	InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error
 	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.Process, error)
 	DeleteProcess(ctx context.Context, id int32) error
-	ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error)
-	ListTasksTodo(ctx context.Context, id int32) ([]repo.ListTasksTodoRow, error)
-	ListTasksReady(ctx context.Context, id int32) ([]repo.ListTasksReadyRow, error)
-	ListTasksDoing(ctx context.Context, id int32) ([]model.Task, error)
+	ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error)
+	ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error)
+	ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error)
+	ListTasksDoing(ctx context.Context, employeeID int32) ([]model.Task, error)
 }
 
 var _ ProcessService = (*service.ProcessService)(nil)
@@ -122,15 +122,14 @@ func (p *ProcessHandler) DeleteProcess(c echo.Context) error {
 	})
 }
 
-func (p *ProcessHandler) ListProcessesFiltered(c echo.Context) error {
-	// 绑定请求
-	var req model.ListProcessesRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+func (p *ProcessHandler) ListProcesses(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
 	}
 
 	// 获取数据
-	processes, err := p.processService.ListProcessesFiltered(c.Request().Context(), req)
+	processes, err := p.processService.ListProcesses(c.Request().Context(), id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}

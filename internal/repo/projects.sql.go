@@ -14,42 +14,47 @@ const createProject = `-- name: CreateProject :one
 INSERT INTO projects (
   name,
   description,
+  remark,
   manager_id,
-  remark
+  duration
 ) VALUES (
   $1,
   $2,
   $3,
-  $4
-) RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at, remark
+  $4,
+  $5
+) RETURNING id, name, description, remark, status, manager_id, started_at, duration, finished_at, created_at, updated_at
 `
 
 type CreateProjectParams struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	ManagerID   int32  `json:"managerId"`
-	Remark      string `json:"remark"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Remark      *string `json:"remark"`
+	ManagerID   int32   `json:"managerId"`
+	Duration    *int32  `json:"duration"`
 }
 
 func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error) {
 	row := q.db.QueryRow(ctx, createProject,
 		arg.Name,
 		arg.Description,
-		arg.ManagerID,
 		arg.Remark,
+		arg.ManagerID,
+		arg.Duration,
 	)
 	var i Project
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Description,
+		&i.Remark,
 		&i.Status,
 		&i.ManagerID,
-		&i.StartTime,
+		&i.StartedAt,
 		&i.Duration,
+		&i.FinishedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Remark,
 	)
 	return i, err
 }
@@ -68,21 +73,20 @@ const listProjectsFiltered = `-- name: ListProjectsFiltered :many
 SELECT
   p.id,
   p.name,
-  COALESCE(e.name,'') AS manager_name,
   p.description,
   p.remark,
   p.status,
-  p.start_time,
+  COALESCE(e.name,'') AS manager_name,
+  p.started_at,
   p.duration,
-  p.created_at,
-  p.updated_at
+  p.finished_at
 FROM projects p
 LEFT JOIN employees e ON p.manager_id = e.id
 WHERE 
-  p.status = COALESCE($1, p.status)
-  AND p.manager_id = COALESCE($2, p.manager_id)
-  AND p.created_at >= COALESCE($3, p.created_at)
-  AND p.created_at <= COALESCE($4, p.created_at)
+  (p.status = $1 OR $1 IS NULL)
+  AND (p.manager_id = $2 OR $2 IS NULL)
+  AND (p.started_at >= $3 OR $3 IS NULL)
+  AND (p.started_at <= $4 OR $4 IS NULL)
 ORDER BY
   CASE p.status
     WHEN '进行' THEN 1
@@ -90,39 +94,37 @@ ORDER BY
     WHEN '暂停' THEN 3
     WHEN '完成' THEN 4
     WHEN '终止' THEN 5
-    WHEN '归档' THEN 6
     ELSE 7
   END,
-  (p.start_time + (p.duration || 'days')::interval) NULLS LAST,
+  (p.started_at + (p.duration || 'days')::interval) NULLS LAST,
   p.id
 `
 
 type ListProjectsFilteredParams struct {
 	Status    *ProjectStatus `json:"status"`
 	ManagerID *int32         `json:"managerId"`
-	StartTime *time.Time     `json:"startTime"`
-	EndTime   *time.Time     `json:"endTime"`
+	StartAt   *time.Time     `json:"startAt"`
+	EndAt     *time.Time     `json:"endAt"`
 }
 
 type ListProjectsFilteredRow struct {
 	ID          int32         `json:"id"`
 	Name        string        `json:"name"`
-	ManagerName string        `json:"managerName"`
-	Description string        `json:"description"`
-	Remark      string        `json:"remark"`
+	Description *string       `json:"description"`
+	Remark      *string       `json:"remark"`
 	Status      ProjectStatus `json:"status"`
-	StartTime   *time.Time    `json:"startTime"`
-	Duration    int32         `json:"duration"`
-	CreatedAt   time.Time     `json:"createdAt"`
-	UpdatedAt   time.Time     `json:"updatedAt"`
+	ManagerName string        `json:"managerName"`
+	StartedAt   *time.Time    `json:"startedAt"`
+	Duration    *int32        `json:"duration"`
+	FinishedAt  *time.Time    `json:"finishedAt"`
 }
 
 func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error) {
 	rows, err := q.db.Query(ctx, listProjectsFiltered,
 		arg.Status,
 		arg.ManagerID,
-		arg.StartTime,
-		arg.EndTime,
+		arg.StartAt,
+		arg.EndAt,
 	)
 	if err != nil {
 		return nil, err
@@ -134,14 +136,13 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.ManagerName,
 			&i.Description,
 			&i.Remark,
 			&i.Status,
-			&i.StartTime,
+			&i.ManagerName,
+			&i.StartedAt,
 			&i.Duration,
-			&i.CreatedAt,
-			&i.UpdatedAt,
+			&i.FinishedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -158,23 +159,25 @@ UPDATE projects
 SET
   name = COALESCE($1,name),
   description = COALESCE($2,description),
-  status = COALESCE($3,status),
-  manager_id = COALESCE($4,manager_id),
-  start_time = COALESCE($5,start_time),
-  duration = COALESCE($6,duration),
-  remark = COALESCE($7,remark)
-WHERE id = $8
-RETURNING id, name, description, status, manager_id, start_time, duration, created_at, updated_at, remark
+  remark = COALESCE($3,remark),
+  status = COALESCE($4,status),
+  manager_id = COALESCE($5,manager_id),
+  started_at = COALESCE($6,started_at),
+  duration = COALESCE($7,duration),
+  finished_at = COALESCE($8,finished_at)
+WHERE id = $9
+RETURNING id, name, description, remark, status, manager_id, started_at, duration, finished_at, created_at, updated_at
 `
 
 type UpdateProjectParams struct {
 	Name        *string        `json:"name"`
 	Description *string        `json:"description"`
+	Remark      *string        `json:"remark"`
 	Status      *ProjectStatus `json:"status"`
 	ManagerID   *int32         `json:"managerId"`
-	StartTime   *time.Time     `json:"startTime"`
+	StartedAt   *time.Time     `json:"startedAt"`
 	Duration    *int32         `json:"duration"`
-	Remark      *string        `json:"remark"`
+	FinishedAt  *time.Time     `json:"finishedAt"`
 	ID          int32          `json:"id"`
 }
 
@@ -182,11 +185,12 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (P
 	row := q.db.QueryRow(ctx, updateProject,
 		arg.Name,
 		arg.Description,
+		arg.Remark,
 		arg.Status,
 		arg.ManagerID,
-		arg.StartTime,
+		arg.StartedAt,
 		arg.Duration,
-		arg.Remark,
+		arg.FinishedAt,
 		arg.ID,
 	)
 	var i Project
@@ -194,13 +198,14 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (P
 		&i.ID,
 		&i.Name,
 		&i.Description,
+		&i.Remark,
 		&i.Status,
 		&i.ManagerID,
-		&i.StartTime,
+		&i.StartedAt,
 		&i.Duration,
+		&i.FinishedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Remark,
 	)
 	return i, err
 }

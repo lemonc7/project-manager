@@ -1,8 +1,8 @@
 package model
 
 type CreateTeamRequest struct {
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description"`
+	Name        string  `json:"name" validate:"required"`
+	Description *string `json:"description"`
 }
 
 type UpdateTeamRequest struct {

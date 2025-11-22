@@ -25,6 +25,7 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 		Description: req.Description,
 		ManagerID:   req.ManagerID,
 		Remark:      req.Remark,
+		Duration:    req.Duration,
 	})
 
 	if err != nil {
@@ -40,11 +41,12 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.
 		ID:          id,
 		Name:        req.Name,
 		Description: req.Description,
+		Remark:      req.Remark,
 		Status:      req.Status,
 		ManagerID:   req.ManagerID,
-		StartTime:   req.StartTime,
+		StartedAt:   req.StartedAt,
 		Duration:    req.Duration,
-		Remark:      req.Remark,
+		FinishedAt:  req.FinishedAt,
 	})
 
 	if err != nil {
@@ -68,22 +70,12 @@ func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.Lis
 	projects, err := p.querier.ListProjectsFiltered(ctx, repo.ListProjectsFilteredParams{
 		Status:    req.Status,
 		ManagerID: req.ManagerID,
-		StartTime: req.StartTime,
-		EndTime:   req.EndTime,
+		StartAt:   req.StartAt,
+		EndAt:     req.EndAt,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return projects, nil
-}
-
-func (p *ProjectService) ListProcesses(ctx context.Context, id int32) ([]repo.ListProcessesFilteredRow, error) {
-	processes, err := p.querier.ListProcessesFiltered(ctx, repo.ListProcessesFilteredParams{
-		ProjectID: &id,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return processes, nil
 }

@@ -1,24 +1,39 @@
--- name: ListProcessesFiltered :many
+-- -- name: ListProcessesFiltered :many
+-- SELECT
+--   p.id,
+--   COALESCE(pr.name,'') AS project_name,
+--   p.name,
+--   p.description,
+--   p.remark,
+--   p.status,
+--   e.name AS employee_name,
+--   p.sequence,
+--   p.started_at,
+--   p.finished_at
+-- FROM processes p
+-- LEFT JOIN employees e ON p.employee_id = e.id
+-- LEFT JOIN projects pr ON p.project_id = pr.id
+-- WHERE 
+--   (p.project_id = sqlc.narg('project_id') OR sqlc.narg('project_id') IS NULL)
+--   AND (p.status = sqlc.narg('status') OR sqlc.narg('status') IS NULL)
+--   AND (p.employee_id = sqlc.narg('employee_id') OR sqlc.narg('employee_id') IS NULL)
+-- ORDER BY p.sequence;
+
+-- name: ListProcesses :many
 SELECT
   p.id,
   p.name,
-  p.sequence,
-  p.status,
-  COALESCE(pr.name,'') AS project_name,
-  COALESCE(e.name,'') AS employee_name,
   p.description,
   p.remark,
-  p.start_time,
-  p.end_time,
-  p.created_at,
-  p.updated_at
+  p.status,
+  e.name AS employee_name,
+  p.sequence,
+  p.started_at,
+  p.finished_at
 FROM processes p
 LEFT JOIN employees e ON p.employee_id = e.id
-LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE 
-  p.project_id = COALESCE(sqlc.narg('project_id'), p.project_id)
-  AND p.status = COALESCE(sqlc.narg('status'), p.status)
-  AND p.employee_id = COALESCE(sqlc.narg('employee_id'), p.employee_id)
+  p.project_id = $1
 ORDER BY p.sequence;
 
 -- name: ListTasksTodo :many
@@ -31,7 +46,7 @@ FROM processes p
 LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
-  AND p.status NOT IN ('取消', '终止')
+  AND p.status NOT IN ('终止','完成')
 ORDER BY p.id;
 
 -- name: ListTasksReady :many
@@ -51,7 +66,7 @@ ORDER BY p.id;
 SELECT
   p.id,
   p.name,
-  p.start_time,
+  p.started_at,
   pr.duration,
   p.project_id,
   COALESCE(pr.name,'') AS project_name
@@ -59,7 +74,7 @@ FROM processes p
 LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
-  AND p.status IN ('进行', '返工')
+  AND p.status = '进行'
 ORDER BY p.id;
 
 -- name: UpdateProcess :one
@@ -67,9 +82,11 @@ UPDATE processes
 SET
   name = COALESCE(sqlc.narg('name'),name),
   description = COALESCE(sqlc.narg('description'),description),
+  remark = COALESCE(sqlc.narg('remark'),remark),
   status = COALESCE(sqlc.narg('status'),status),
   employee_id = COALESCE(sqlc.narg('employee_id'),employee_id),
-  remark = COALESCE(sqlc.narg('remark'),remark)
+  started_at = COALESCE(sqlc.narg('started_at'),started_at),
+  finished_at = COALESCE(sqlc.narg('finished_at'),finished_at)
 WHERE id = sqlc.arg('id')
 RETURNING *;
 
@@ -83,19 +100,19 @@ max_seq AS (
   WHERE project_id = $1
 )
 INSERT INTO processes (
-  name,
   project_id,
-  employee_id,
-  sequence,
+  name,
   description,
-  remark
+  remark,
+  employee_id,
+  sequence
 ) SELECT
-  $2,
   $1,
+  $2,
   $3,
-  m.val + 1,
   $4,
-  $5
+  $5,
+  m.val + 1
 FROM max_seq m, project_lock pl
 RETURNING *;
 
@@ -120,17 +137,17 @@ WHERE project_id = $1;
 
 -- name: InsertProcessAt :exec
 INSERT INTO processes (
-  name,
   project_id,
-  employee_id,
-  sequence,
+  name,
   description,
-  remark
+  remark,
+  employee_id,
+  sequence
 ) VALUES (
-  $3,
   $1,
-  $4,
   $2,
+  $3,
+  $4,
   $5,
   $6
 );

@@ -38,39 +38,39 @@ func (q *Queries) GetMaxSequence(ctx context.Context, projectID int32) (int32, e
 
 const insertProcessAt = `-- name: InsertProcessAt :exec
 INSERT INTO processes (
-  name,
   project_id,
-  employee_id,
-  sequence,
+  name,
   description,
-  remark
+  remark,
+  employee_id,
+  sequence
 ) VALUES (
-  $3,
   $1,
-  $4,
   $2,
+  $3,
+  $4,
   $5,
   $6
 )
 `
 
 type InsertProcessAtParams struct {
-	ProjectID   int32  `json:"projectId"`
-	Sequence    int32  `json:"sequence"`
-	Name        string `json:"name"`
-	EmployeeID  int32  `json:"employeeId"`
-	Description string `json:"description"`
-	Remark      string `json:"remark"`
+	ProjectID   int32   `json:"projectId"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Remark      *string `json:"remark"`
+	EmployeeID  *int32  `json:"employeeId"`
+	Sequence    int32   `json:"sequence"`
 }
 
 func (q *Queries) InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error {
 	_, err := q.db.Exec(ctx, insertProcessAt,
 		arg.ProjectID,
-		arg.Sequence,
 		arg.Name,
-		arg.EmployeeID,
 		arg.Description,
 		arg.Remark,
+		arg.EmployeeID,
+		arg.Sequence,
 	)
 	return err
 }
@@ -85,38 +85,38 @@ max_seq AS (
   WHERE project_id = $1
 )
 INSERT INTO processes (
-  name,
   project_id,
-  employee_id,
-  sequence,
+  name,
   description,
-  remark
+  remark,
+  employee_id,
+  sequence
 ) SELECT
-  $2,
   $1,
+  $2,
   $3,
-  m.val + 1,
   $4,
-  $5
+  $5,
+  m.val + 1
 FROM max_seq m, project_lock pl
-RETURNING id, project_id, name, description, status, employee_id, sequence, start_time, end_time, created_at, updated_at, remark
+RETURNING id, project_id, name, description, remark, status, employee_id, sequence, started_at, finished_at, created_at, updated_at
 `
 
 type InsertProcessLastParams struct {
-	ProjectID   int32  `json:"projectId"`
-	Name        string `json:"name"`
-	EmployeeID  int32  `json:"employeeId"`
-	Description string `json:"description"`
-	Remark      string `json:"remark"`
+	ProjectID   int32   `json:"projectId"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Remark      *string `json:"remark"`
+	EmployeeID  *int32  `json:"employeeId"`
 }
 
 func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) (Process, error) {
 	row := q.db.QueryRow(ctx, insertProcessLast,
 		arg.ProjectID,
 		arg.Name,
-		arg.EmployeeID,
 		arg.Description,
 		arg.Remark,
+		arg.EmployeeID,
 	)
 	var i Process
 	err := row.Scan(
@@ -124,85 +124,92 @@ func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastPa
 		&i.ProjectID,
 		&i.Name,
 		&i.Description,
+		&i.Remark,
 		&i.Status,
 		&i.EmployeeID,
 		&i.Sequence,
-		&i.StartTime,
-		&i.EndTime,
+		&i.StartedAt,
+		&i.FinishedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Remark,
 	)
 	return i, err
 }
 
-const listProcessesFiltered = `-- name: ListProcessesFiltered :many
+const listProcesses = `-- name: ListProcesses :many
+
 SELECT
   p.id,
   p.name,
-  p.sequence,
-  p.status,
-  COALESCE(pr.name,'') AS project_name,
-  COALESCE(e.name,'') AS employee_name,
   p.description,
   p.remark,
-  p.start_time,
-  p.end_time,
-  p.created_at,
-  p.updated_at
+  p.status,
+  e.name AS employee_name,
+  p.sequence,
+  p.started_at,
+  p.finished_at
 FROM processes p
 LEFT JOIN employees e ON p.employee_id = e.id
-LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE 
-  p.project_id = COALESCE($1, p.project_id)
-  AND p.status = COALESCE($2, p.status)
-  AND p.employee_id = COALESCE($3, p.employee_id)
+  p.project_id = $1
 ORDER BY p.sequence
 `
 
-type ListProcessesFilteredParams struct {
-	ProjectID  *int32         `json:"projectId"`
-	Status     *ProcessStatus `json:"status"`
-	EmployeeID *int32         `json:"employeeId"`
-}
-
-type ListProcessesFilteredRow struct {
+type ListProcessesRow struct {
 	ID           int32         `json:"id"`
 	Name         string        `json:"name"`
-	Sequence     int32         `json:"sequence"`
+	Description  *string       `json:"description"`
+	Remark       *string       `json:"remark"`
 	Status       ProcessStatus `json:"status"`
-	ProjectName  string        `json:"projectName"`
-	EmployeeName string        `json:"employeeName"`
-	Description  string        `json:"description"`
-	Remark       string        `json:"remark"`
-	StartTime    *time.Time    `json:"startTime"`
-	EndTime      *time.Time    `json:"endTime"`
-	CreatedAt    time.Time     `json:"createdAt"`
-	UpdatedAt    time.Time     `json:"updatedAt"`
+	EmployeeName *string       `json:"employeeName"`
+	Sequence     int32         `json:"sequence"`
+	StartedAt    *time.Time    `json:"startedAt"`
+	FinishedAt   *time.Time    `json:"finishedAt"`
 }
 
-func (q *Queries) ListProcessesFiltered(ctx context.Context, arg ListProcessesFilteredParams) ([]ListProcessesFilteredRow, error) {
-	rows, err := q.db.Query(ctx, listProcessesFiltered, arg.ProjectID, arg.Status, arg.EmployeeID)
+// -- name: ListProcessesFiltered :many
+// SELECT
+//
+//	p.id,
+//	COALESCE(pr.name,'') AS project_name,
+//	p.name,
+//	p.description,
+//	p.remark,
+//	p.status,
+//	e.name AS employee_name,
+//	p.sequence,
+//	p.started_at,
+//	p.finished_at
+//
+// FROM processes p
+// LEFT JOIN employees e ON p.employee_id = e.id
+// LEFT JOIN projects pr ON p.project_id = pr.id
+// WHERE
+//
+//	(p.project_id = sqlc.narg('project_id') OR sqlc.narg('project_id') IS NULL)
+//	AND (p.status = sqlc.narg('status') OR sqlc.narg('status') IS NULL)
+//	AND (p.employee_id = sqlc.narg('employee_id') OR sqlc.narg('employee_id') IS NULL)
+//
+// ORDER BY p.sequence;
+func (q *Queries) ListProcesses(ctx context.Context, projectID int32) ([]ListProcessesRow, error) {
+	rows, err := q.db.Query(ctx, listProcesses, projectID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListProcessesFilteredRow
+	var items []ListProcessesRow
 	for rows.Next() {
-		var i ListProcessesFilteredRow
+		var i ListProcessesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Sequence,
-			&i.Status,
-			&i.ProjectName,
-			&i.EmployeeName,
 			&i.Description,
 			&i.Remark,
-			&i.StartTime,
-			&i.EndTime,
-			&i.CreatedAt,
-			&i.UpdatedAt,
+			&i.Status,
+			&i.EmployeeName,
+			&i.Sequence,
+			&i.StartedAt,
+			&i.FinishedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -218,7 +225,7 @@ const listTasksDoing = `-- name: ListTasksDoing :many
 SELECT
   p.id,
   p.name,
-  p.start_time,
+  p.started_at,
   pr.duration,
   p.project_id,
   COALESCE(pr.name,'') AS project_name
@@ -226,20 +233,20 @@ FROM processes p
 LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
-  AND p.status IN ('进行', '返工')
+  AND p.status = '进行'
 ORDER BY p.id
 `
 
 type ListTasksDoingRow struct {
 	ID          int32      `json:"id"`
 	Name        string     `json:"name"`
-	StartTime   *time.Time `json:"startTime"`
+	StartedAt   *time.Time `json:"startedAt"`
 	Duration    *int32     `json:"duration"`
 	ProjectID   int32      `json:"projectId"`
 	ProjectName string     `json:"projectName"`
 }
 
-func (q *Queries) ListTasksDoing(ctx context.Context, employeeID int32) ([]ListTasksDoingRow, error) {
+func (q *Queries) ListTasksDoing(ctx context.Context, employeeID *int32) ([]ListTasksDoingRow, error) {
 	rows, err := q.db.Query(ctx, listTasksDoing, employeeID)
 	if err != nil {
 		return nil, err
@@ -251,7 +258,7 @@ func (q *Queries) ListTasksDoing(ctx context.Context, employeeID int32) ([]ListT
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.StartTime,
+			&i.StartedAt,
 			&i.Duration,
 			&i.ProjectID,
 			&i.ProjectName,
@@ -287,7 +294,7 @@ type ListTasksReadyRow struct {
 	ProjectName string `json:"projectName"`
 }
 
-func (q *Queries) ListTasksReady(ctx context.Context, employeeID int32) ([]ListTasksReadyRow, error) {
+func (q *Queries) ListTasksReady(ctx context.Context, employeeID *int32) ([]ListTasksReadyRow, error) {
 	rows, err := q.db.Query(ctx, listTasksReady, employeeID)
 	if err != nil {
 		return nil, err
@@ -322,7 +329,7 @@ FROM processes p
 LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
-  AND p.status NOT IN ('取消', '终止')
+  AND p.status NOT IN ('终止','完成')
 ORDER BY p.id
 `
 
@@ -333,7 +340,7 @@ type ListTasksTodoRow struct {
 	ProjectName string `json:"projectName"`
 }
 
-func (q *Queries) ListTasksTodo(ctx context.Context, employeeID int32) ([]ListTasksTodoRow, error) {
+func (q *Queries) ListTasksTodo(ctx context.Context, employeeID *int32) ([]ListTasksTodoRow, error) {
 	rows, err := q.db.Query(ctx, listTasksTodo, employeeID)
 	if err != nil {
 		return nil, err
@@ -407,19 +414,23 @@ UPDATE processes
 SET
   name = COALESCE($1,name),
   description = COALESCE($2,description),
-  status = COALESCE($3,status),
-  employee_id = COALESCE($4,employee_id),
-  remark = COALESCE($5,remark)
-WHERE id = $6
-RETURNING id, project_id, name, description, status, employee_id, sequence, start_time, end_time, created_at, updated_at, remark
+  remark = COALESCE($3,remark),
+  status = COALESCE($4,status),
+  employee_id = COALESCE($5,employee_id),
+  started_at = COALESCE($6,started_at),
+  finished_at = COALESCE($7,finished_at)
+WHERE id = $8
+RETURNING id, project_id, name, description, remark, status, employee_id, sequence, started_at, finished_at, created_at, updated_at
 `
 
 type UpdateProcessParams struct {
 	Name        *string        `json:"name"`
 	Description *string        `json:"description"`
+	Remark      *string        `json:"remark"`
 	Status      *ProcessStatus `json:"status"`
 	EmployeeID  *int32         `json:"employeeId"`
-	Remark      *string        `json:"remark"`
+	StartedAt   *time.Time     `json:"startedAt"`
+	FinishedAt  *time.Time     `json:"finishedAt"`
 	ID          int32          `json:"id"`
 }
 
@@ -427,9 +438,11 @@ func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) (P
 	row := q.db.QueryRow(ctx, updateProcess,
 		arg.Name,
 		arg.Description,
+		arg.Remark,
 		arg.Status,
 		arg.EmployeeID,
-		arg.Remark,
+		arg.StartedAt,
+		arg.FinishedAt,
 		arg.ID,
 	)
 	var i Process
@@ -438,14 +451,14 @@ func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) (P
 		&i.ProjectID,
 		&i.Name,
 		&i.Description,
+		&i.Remark,
 		&i.Status,
 		&i.EmployeeID,
 		&i.Sequence,
-		&i.StartTime,
-		&i.EndTime,
+		&i.StartedAt,
+		&i.FinishedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Remark,
 	)
 	return i, err
 }

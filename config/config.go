@@ -12,6 +12,7 @@ type Config struct {
 	Database DatabaseConfig `yaml:"database"`
 	Server   ServerConfig   `yaml:"server"`
 	Logger   LoggerConfig   `yaml:"logger"`
+	JWT      JWTConfig      `yaml:"jwt"`
 }
 
 type DatabaseConfig struct {
@@ -35,6 +36,11 @@ type ServerConfig struct {
 	Port         int           `yaml:"port"`
 	ReadTimeout  time.Duration `yaml:"read_timeout"`
 	WriteTimeout time.Duration `yaml:"write_timeout"`
+}
+
+type JWTConfig struct {
+	Secret   string        `yaml:"secret"`
+	Duration time.Duration `yaml:"duration"`
 }
 
 type LoggerConfig struct {

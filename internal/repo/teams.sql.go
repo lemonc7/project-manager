@@ -20,8 +20,8 @@ INSERT INTO teams (
 `
 
 type CreateTeamParams struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
 }
 
 func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error) {
@@ -51,29 +51,27 @@ const listTeams = `-- name: ListTeams :many
 SELECT
   id,
   name,
-  description,
-  created_at,
-  updated_at
+  description
 FROM teams
 ORDER BY name
 `
 
-func (q *Queries) ListTeams(ctx context.Context) ([]Team, error) {
+type ListTeamsRow struct {
+	ID          int32   `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+}
+
+func (q *Queries) ListTeams(ctx context.Context) ([]ListTeamsRow, error) {
 	rows, err := q.db.Query(ctx, listTeams)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Team
+	var items []ListTeamsRow
 	for rows.Next() {
-		var i Team
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
+		var i ListTeamsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Description); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

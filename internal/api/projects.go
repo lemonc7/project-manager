@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -18,7 +16,6 @@ type ProjectService interface {
 	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.Project, error)
 	DeleteProject(ctx context.Context, id int32) error
 	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
-	ListProcesses(ctx context.Context, id int32) ([]repo.ListProcessesFilteredRow, error)
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)
@@ -65,8 +62,6 @@ func (p *ProjectHandler) UpdateProject(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	jsonData, _ := json.MarshalIndent(&req, "", "  ")
-	fmt.Println(string(jsonData))
 
 	// 业务函数
 	project, err := p.projectService.UpdateProject(c.Request().Context(), id, req)
@@ -102,9 +97,6 @@ func (p *ProjectHandler) ListProjectsFiltered(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	json, _ := json.MarshalIndent(&req, "", "  ")
-	fmt.Println(string(json))
-
 	// 获取数据
 	projects, err := p.projectService.ListProjectsFiltered(c.Request().Context(), req)
 	if err != nil {
@@ -113,19 +105,4 @@ func (p *ProjectHandler) ListProjectsFiltered(c echo.Context) error {
 
 	// 返回响应
 	return c.JSON(http.StatusOK, projects)
-}
-
-func (p *ProjectHandler) ListProcesses(c echo.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
-
-	// 获取数据
-	processes, err := p.projectService.ListProcesses(c.Request().Context(), id)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
-	}
-
-	return c.JSON(http.StatusOK, processes)
 }

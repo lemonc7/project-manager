@@ -57,7 +57,7 @@ func (t *TeamService) DeleteTeam(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (t *TeamService) ListTeams(ctx context.Context) ([]repo.Team, error) {
+func (t *TeamService) ListTeams(ctx context.Context) ([]repo.ListTeamsRow, error) {
 	// 获取数据
 	teams, err := t.querier.ListTeams(ctx)
 	if err != nil {

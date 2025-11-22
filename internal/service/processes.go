@@ -91,9 +91,11 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.
 	process, err := p.queries.UpdateProcess(ctx, repo.UpdateProcessParams{
 		Name:        req.Name,
 		Description: req.Description,
+		Remark:      req.Remark,
 		Status:      req.Status,
 		EmployeeID:  req.EmployeeID,
-		Remark:      req.Remark,
+		StartedAt:   req.StartedAt,
+		FinishedAt:  req.FinishedAt,
 		ID:          id,
 	})
 
@@ -135,12 +137,8 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (p *ProcessService) ListProcessesFiltered(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesFilteredRow, error) {
-	processes, err := p.queries.ListProcessesFiltered(ctx, repo.ListProcessesFilteredParams{
-		ProjectID:  req.ProjectID,
-		Status:     req.Status,
-		EmployeeID: req.EmployeeID,
-	})
+func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error) {
+	processes, err := p.queries.ListProcesses(ctx, projectID)
 
 	if err != nil {
 		return nil, err
@@ -150,7 +148,7 @@ func (p *ProcessService) ListProcessesFiltered(ctx context.Context, req model.Li
 }
 
 func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error) {
-	tasks, err := p.queries.ListTasksTodo(ctx, employeeID)
+	tasks, err := p.queries.ListTasksTodo(ctx, &employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +156,7 @@ func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([
 }
 
 func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error) {
-	tasks, err := p.queries.ListTasksReady(ctx, employeeID)
+	tasks, err := p.queries.ListTasksReady(ctx, &employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +164,7 @@ func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) (
 }
 
 func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) ([]model.Task, error) {
-	ts, err := p.queries.ListTasksDoing(ctx, employeeID)
+	ts, err := p.queries.ListTasksDoing(ctx, &employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -178,13 +176,13 @@ func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) (
 		tasks[i] = model.Task{
 			ID:          t.ID,
 			Name:        t.Name,
-			StartTime:   t.StartTime,
+			StartedAt:   t.StartedAt,
 			ProjectID:   t.ProjectID,
 			ProjectName: t.ProjectName,
 		}
 
-		if t.Duration != nil && *t.Duration > 0 && t.StartTime != nil {
-			endDate := t.StartTime.AddDate(0, 0, int(*t.Duration))
+		if t.Duration != nil && *t.Duration > 0 && t.StartedAt != nil {
+			endDate := t.StartedAt.AddDate(0, 0, int(*t.Duration))
 			remainingTime := endDate.Sub(today)
 
 			days := int32(math.Ceil(remainingTime.Hours() / 24))

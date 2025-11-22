@@ -17,10 +17,8 @@ const (
 	ProcessStatusValue1 ProcessStatus = "准备"
 	ProcessStatusValue2 ProcessStatus = "进行"
 	ProcessStatusValue3 ProcessStatus = "完成"
-	ProcessStatusValue4 ProcessStatus = "返工"
+	ProcessStatusValue4 ProcessStatus = "暂停"
 	ProcessStatusValue5 ProcessStatus = "终止"
-	ProcessStatusValue6 ProcessStatus = "取消"
-	ProcessStatusValue7 ProcessStatus = "暂停"
 )
 
 func (e *ProcessStatus) Scan(src interface{}) error {
@@ -63,10 +61,9 @@ type ProjectStatus string
 const (
 	ProjectStatusValue0 ProjectStatus = "排单"
 	ProjectStatusValue1 ProjectStatus = "进行"
-	ProjectStatusValue2 ProjectStatus = "暂停"
-	ProjectStatusValue3 ProjectStatus = "完成"
+	ProjectStatusValue2 ProjectStatus = "完成"
+	ProjectStatusValue3 ProjectStatus = "暂停"
 	ProjectStatusValue4 ProjectStatus = "终止"
-	ProjectStatusValue5 ProjectStatus = "归档"
 )
 
 func (e *ProjectStatus) Scan(src interface{}) error {
@@ -105,46 +102,50 @@ func (ns NullProjectStatus) Value() (driver.Value, error) {
 }
 
 type Employee struct {
-	ID        int32     `json:"id"`
-	Name      string    `json:"name"`
-	TeamID    *int32    `json:"teamId"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	IsActive  bool      `json:"isActive"`
+	ID           int32     `json:"id"`
+	Name         string    `json:"name"`
+	Username     string    `json:"username"`
+	PasswordHash string    `json:"passwordHash"`
+	Roles        []string  `json:"roles"`
+	TeamID       *int32    `json:"teamId"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+	IsActive     bool      `json:"isActive"`
 }
 
 type Process struct {
 	ID          int32         `json:"id"`
 	ProjectID   int32         `json:"projectId"`
 	Name        string        `json:"name"`
-	Description string        `json:"description"`
+	Description *string       `json:"description"`
+	Remark      *string       `json:"remark"`
 	Status      ProcessStatus `json:"status"`
-	EmployeeID  int32         `json:"employeeId"`
+	EmployeeID  *int32        `json:"employeeId"`
 	Sequence    int32         `json:"sequence"`
-	StartTime   *time.Time    `json:"startTime"`
-	EndTime     *time.Time    `json:"endTime"`
+	StartedAt   *time.Time    `json:"startedAt"`
+	FinishedAt  *time.Time    `json:"finishedAt"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
-	Remark      string        `json:"remark"`
 }
 
 type Project struct {
 	ID          int32         `json:"id"`
 	Name        string        `json:"name"`
-	Description string        `json:"description"`
+	Description *string       `json:"description"`
+	Remark      *string       `json:"remark"`
 	Status      ProjectStatus `json:"status"`
 	ManagerID   int32         `json:"managerId"`
-	StartTime   *time.Time    `json:"startTime"`
-	Duration    int32         `json:"duration"`
+	StartedAt   *time.Time    `json:"startedAt"`
+	Duration    *int32        `json:"duration"`
+	FinishedAt  *time.Time    `json:"finishedAt"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
-	Remark      string        `json:"remark"`
 }
 
 type Team struct {
 	ID          int32     `json:"id"`
 	Name        string    `json:"name"`
-	Description string    `json:"description"`
+	Description *string   `json:"description"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }

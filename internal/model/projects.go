@@ -7,25 +7,27 @@ import (
 )
 
 type CreateProjectRequest struct {
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description"`
-	ManagerID   int32  `json:"managerID" validate:"required"`
-	Remark      string `json:"remark"`
+	Name        string  `json:"name" validate:"required"`
+	Description *string `json:"description"`
+	ManagerID   int32   `json:"managerID" validate:"required"`
+	Remark      *string `json:"remark"`
+	Duration    *int32  `json:"duration"`
 }
 
 type UpdateProjectRequest struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
+	Remark      *string             `json:"remark"`
 	Status      *repo.ProjectStatus `json:"status"`
 	ManagerID   *int32              `json:"managerID"`
-	StartTime   *time.Time          `json:"startTime"`
+	StartedAt   *time.Time          `json:"startedAt"`
 	Duration    *int32              `json:"duration"`
-	Remark      *string             `json:"remark"`
+	FinishedAt  *time.Time          `json:"finishedAt"`
 }
 
 type ListProjectsRequest struct {
 	Status    *repo.ProjectStatus `query:"status"`
 	ManagerID *int32              `query:"managerID"`
-	StartTime *time.Time          `query:"startTime"`
-	EndTime   *time.Time          `query:"endTime"`
+	StartAt   *time.Time          `query:"startAt"`
+	EndAt     *time.Time          `query:"endAt"`
 }

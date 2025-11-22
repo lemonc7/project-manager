@@ -9,20 +9,40 @@ import (
 )
 
 type EmployeeService struct {
-	querier repo.Querier
+	querier        repo.Querier
+	passwordHasher PasswordHasher
+	jwter          JWTer
 }
 
-func NewEmployeeService(db *pgxpool.Pool) *EmployeeService {
+type PasswordHasher interface {
+	HashPassword(password string) (string, error)
+	ComparePassword(hashedPassword string, password string) bool
+}
+
+type JWTer interface {
+	Generate(username string, id int32, roles []string) (string, error)
+}
+
+func NewEmployeeService(db *pgxpool.Pool, ph PasswordHasher, j JWTer) *EmployeeService {
 	return &EmployeeService{
-		querier: repo.New(db),
+		querier:        repo.New(db),
+		passwordHasher: ph,
+		jwter:          j,
 	}
 }
 
 func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (repo.Employee, error) {
+	passwordHash, err := e.passwordHasher.HashPassword(req.Password)
+	if err != nil {
+		return repo.Employee{}, err
+	}
 	// 插入数据
 	employee, err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
-		Name:   req.Name,
-		TeamID: req.TeamID,
+		Name:         req.Name,
+		Username:     req.Username,
+		PasswordHash: passwordHash,
+		Roles:        req.Roles,
+		TeamID:       req.TeamID,
 	})
 
 	if err != nil {
@@ -37,6 +57,7 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req mode
 	employee, err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       id,
 		Name:     req.Name,
+		Roles:    req.Roles,
 		TeamID:   req.TeamID,
 		IsActive: req.IsActive,
 	})

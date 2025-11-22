@@ -2,9 +2,7 @@
 SELECT
   id,
   name,
-  description,
-  created_at,
-  updated_at
+  description
 FROM teams
 ORDER BY name;
 

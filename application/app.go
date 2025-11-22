@@ -16,6 +16,8 @@ import (
 	"github.com/lemonc7/project-manager/database"
 	"github.com/lemonc7/project-manager/internal/api"
 	"github.com/lemonc7/project-manager/internal/service"
+	"github.com/lemonc7/project-manager/pkg/hasher"
+	"github.com/lemonc7/project-manager/pkg/jwt"
 	"github.com/lemonc7/project-manager/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -61,8 +63,10 @@ func InitApp(filePath string) (*Application, error) {
 	e := NewEcho(cfg.Server, validator)
 
 	// handler
+	passwordHash := hasher.NewPasswordHash()
+	jwt := jwt.NewJWT(cfg.JWT)
 	employeeHandler := api.NewEmployeeHandler(
-		service.NewEmployeeService(dbPool),
+		service.NewEmployeeService(dbPool, passwordHash, jwt),
 	)
 	teamHandler := api.NewTeamHandler(
 		service.NewTeamService(dbPool),
