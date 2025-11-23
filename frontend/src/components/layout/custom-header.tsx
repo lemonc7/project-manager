@@ -6,7 +6,7 @@ import { Button } from "../ui/button"
 import { ArrowLeft, ArrowRight, HomeIcon, RefreshCw } from "lucide-react"
 import { HEADER_ACTIONS_ID } from "../common/header-actions"
 
-function CustomHeader({ onRefresh }: { onRefresh: () => void }) {
+export default function CustomHeader({ onRefresh }: { onRefresh: () => void }) {
   const matches = useMatches()
   const handle = matches[matches.length - 1]?.handle as
     | { title?: string }
@@ -63,4 +63,3 @@ function CustomHeader({ onRefresh }: { onRefresh: () => void }) {
     </header>
   )
 }
-export default CustomHeader

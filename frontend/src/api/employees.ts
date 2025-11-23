@@ -1,13 +1,19 @@
 import type {
   CreateEmployeeRequest,
   Employee,
+  EmployeeMe,
   UpdateEmployeeRequest
-} from "@/models/employees"
+} from "@/model/employees"
 import service from "./request"
 
 export async function listEmployees() {
   const res = await service.get<Employee[]>("/employee")
   return Array.isArray(res.data) ? res.data : []
+}
+
+export async function getEmployeeMe() {
+  const res = await service.get<EmployeeMe>("/employee/me")
+  return res.data
 }
 
 export async function createEmployee(req: CreateEmployeeRequest) {

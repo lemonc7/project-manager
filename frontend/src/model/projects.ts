@@ -1,4 +1,4 @@
-type ProjectStatus = "排单" | "进行" | "暂停" | "完成" | "终止" | "归档"
+type ProjectStatus = "排单" | "进行" | "暂停" | "完成" | "终止"
 type TaskStatus = "todo" | "ready" | "doing"
 
 interface CreateProjectRequest {
@@ -6,36 +6,37 @@ interface CreateProjectRequest {
   description?: string
   managerID: number
   remark?: string
+  duration?: number
 }
 
 interface UpdateProjectRequest {
   name?: string
   description?: string
+  remark?: string
   status?: ProjectStatus
   managerID?: number
-  startTime?: string
+  startedAt?: string
   duration?: number
-  remark?: string
+  finishedAt?: string
 }
 
 interface ListProjectsRequest {
   status?: ProjectStatus
   managerID?: number
-  startTime?: string
-  endTime?: string
+  startAt?: string
+  endAt?: string
 }
 
 interface Project {
   id: number
   name: string
-  managerName: string
-  description: string
-  remark: string
+  description: string | null
+  remark: string | null
   status: ProjectStatus
-  startTime: string | null
-  duration: number
-  createdAt: string
-  updatedAt: string
+  managerId: number
+  startedAt: string | null
+  duration: number | null
+  finishedAt: string | null
 }
 
 export type {

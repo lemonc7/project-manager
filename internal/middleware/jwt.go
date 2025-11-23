@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/pkg/jwt"
 )
 
@@ -23,10 +25,15 @@ func JWTAuther(jwt *jwt.JWT) func(next echo.HandlerFunc) echo.HandlerFunc {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
 			}
+
 			c.Set("userID", claims.UserID)
 			c.Set("username", claims.Username)
 			c.Set("roles", claims.Roles)
-
+			if !slices.Contains(claims.Roles, "admin") &&
+				!slices.Contains(claims.Roles, "manager") &&
+				!slices.Contains(claims.Roles, "user") {
+				return echo.NewHTTPError(http.StatusForbidden, model.ErrNoPermission)
+			}
 			return next(c)
 		}
 	}

@@ -22,7 +22,7 @@ INSERT INTO employees (
   $3,
   $4,
   $5
-) RETURNING id, name, username, password_hash, roles, team_id, created_at, updated_at, is_active
+) RETURNING id, name, roles, team_id
 `
 
 type CreateEmployeeParams struct {
@@ -33,7 +33,14 @@ type CreateEmployeeParams struct {
 	TeamID       *int32   `json:"teamId"`
 }
 
-func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (Employee, error) {
+type CreateEmployeeRow struct {
+	ID     int32    `json:"id"`
+	Name   string   `json:"name"`
+	Roles  []string `json:"roles"`
+	TeamID *int32   `json:"teamId"`
+}
+
+func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (CreateEmployeeRow, error) {
 	row := q.db.QueryRow(ctx, createEmployee,
 		arg.Name,
 		arg.Username,
@@ -41,17 +48,12 @@ func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) 
 		arg.Roles,
 		arg.TeamID,
 	)
-	var i Employee
+	var i CreateEmployeeRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Username,
-		&i.PasswordHash,
 		&i.Roles,
 		&i.TeamID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.IsActive,
 	)
 	return i, err
 }
@@ -69,9 +71,11 @@ func (q *Queries) DeleteEmployee(ctx context.Context, id int32) error {
 const getEmployeeByUsername = `-- name: GetEmployeeByUsername :one
 SELECT
   id,
+  name,
   username,
   password_hash,
-  roles
+  roles,
+  team_id
 FROM employees
 WHERE 
   username = $1
@@ -80,9 +84,11 @@ WHERE
 
 type GetEmployeeByUsernameRow struct {
 	ID           int32    `json:"id"`
+	Name         string   `json:"name"`
 	Username     string   `json:"username"`
 	PasswordHash string   `json:"passwordHash"`
 	Roles        []string `json:"roles"`
+	TeamID       *int32   `json:"teamId"`
 }
 
 func (q *Queries) GetEmployeeByUsername(ctx context.Context, username string) (GetEmployeeByUsernameRow, error) {
@@ -90,30 +96,31 @@ func (q *Queries) GetEmployeeByUsername(ctx context.Context, username string) (G
 	var i GetEmployeeByUsernameRow
 	err := row.Scan(
 		&i.ID,
+		&i.Name,
 		&i.Username,
 		&i.PasswordHash,
 		&i.Roles,
+		&i.TeamID,
 	)
 	return i, err
 }
 
 const listEmployees = `-- name: ListEmployees :many
 SELECT
-  e.id,
-  e.name AS employee_name,
-  t.name AS team_name,
-  e.roles
-FROM employees e
-LEFT JOIN teams t ON e.team_id = t.id
-WHERE e.is_active = true
-ORDER BY e.name
+  id,
+  name,
+  roles,
+  team_id
+FROM employees
+WHERE is_active = true
+ORDER BY name
 `
 
 type ListEmployeesRow struct {
-	ID           int32    `json:"id"`
-	EmployeeName string   `json:"employeeName"`
-	TeamName     *string  `json:"teamName"`
-	Roles        []string `json:"roles"`
+	ID     int32    `json:"id"`
+	Name   string   `json:"name"`
+	Roles  []string `json:"roles"`
+	TeamID *int32   `json:"teamId"`
 }
 
 func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error) {
@@ -127,9 +134,9 @@ func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 		var i ListEmployeesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.EmployeeName,
-			&i.TeamName,
+			&i.Name,
 			&i.Roles,
+			&i.TeamID,
 		); err != nil {
 			return nil, err
 		}
@@ -149,7 +156,7 @@ SET
   team_id = COALESCE($3,team_id),
   is_active = COALESCE($4,is_active)
 WHERE id = $5
-RETURNING id, name, username, password_hash, roles, team_id, created_at, updated_at, is_active
+RETURNING id, name, roles, team_id
 `
 
 type UpdateEmployeeParams struct {
@@ -160,7 +167,14 @@ type UpdateEmployeeParams struct {
 	ID       int32    `json:"id"`
 }
 
-func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error) {
+type UpdateEmployeeRow struct {
+	ID     int32    `json:"id"`
+	Name   string   `json:"name"`
+	Roles  []string `json:"roles"`
+	TeamID *int32   `json:"teamId"`
+}
+
+func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (UpdateEmployeeRow, error) {
 	row := q.db.QueryRow(ctx, updateEmployee,
 		arg.Name,
 		arg.Roles,
@@ -168,17 +182,12 @@ func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) 
 		arg.IsActive,
 		arg.ID,
 	)
-	var i Employee
+	var i UpdateEmployeeRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.Username,
-		&i.PasswordHash,
 		&i.Roles,
 		&i.TeamID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.IsActive,
 	)
 	return i, err
 }

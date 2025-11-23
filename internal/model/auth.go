@@ -9,7 +9,7 @@ type LoginResponse struct {
 	AccessToken string   `json:"accessToken"`
 	UserID      int32    `json:"userID"`
 	Username    string   `json:"username"`
-	Roles       []string `json:"roles"`
+	Roles       []string `json:"roles,omitempty"`
 }
 
 type ResetPasswordRequest struct {

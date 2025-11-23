@@ -1,4 +1,6 @@
-import { deleteEmployee, listEmployees } from "@/api/employees"
+import { deleteEmployee, listEmployees, updateEmployee } from "@/api/employees"
+import { listTeams } from "@/api/teams"
+import EditableCell from "@/components/common/editable-cell"
 import { HeaderActions } from "@/components/common/header-actions"
 import { Loading } from "@/components/common/loading"
 import {
@@ -28,7 +30,8 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import type { Employee } from "@/models/employees"
+import type { Employee, UpdateEmployeeRequest } from "@/model/employees"
+import type { Team } from "@/model/teams"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   flexRender,
@@ -40,32 +43,32 @@ import { MoreHorizontal } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
-function EmployeePage() {
+export default function EmployeePage() {
   // 获取employees数据
-  const { data, isError, isLoading } = useQuery<Employee[], Error>({
-    queryKey: ["employees"],
-    queryFn: () => {
-      const api = listEmployees()
-      toast.promise(api, {
-        loading: "成员加载中...",
-        success: "成员加载成功",
-        error: "加载失败"
-      })
-      return api
-    },
-    select: (data) => data.filter((employee) => employee.isActive === true)
+  const {
+    data: employees,
+    isError,
+    isLoading
+  } = useQuery<Employee[], Error>({
+    queryKey: ["employees", "overview"],
+    queryFn: listEmployees
   })
 
+  // 获取teams数据
+  const { data: teams } = useQuery<Team[], Error>({
+    queryKey: ["teams", "overview"],
+    queryFn: listTeams
+  })
   const queryClient = useQueryClient()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [employeeToDelete, setEmployeeToDelete] = useState<number | null>(null)
 
-  // 删除employee函数
+  // 删除employee
   const deleteEmployeeMutation = useMutation({
     mutationFn: (id: number) => deleteEmployee(id),
     onSuccess: (_, deleteEmployeeID) => {
       queryClient.setQueryData<Employee[]>(
-        ["employees"],
+        ["employees", "overview"],
         (currentEmployees) => {
           if (!currentEmployees) {
             return currentEmployees
@@ -86,6 +89,34 @@ function EmployeePage() {
     }
   })
 
+  // 更新employee
+  const updateEmployeeMutation = useMutation({
+    mutationFn: ({
+      id,
+      fields
+    }: {
+      id: number
+      fields: Partial<UpdateEmployeeRequest>
+    }) => updateEmployee(id, fields),
+    onSuccess: (updatedEmployee) => {
+      // 更新缓存，只更新当前成员的数据
+      queryClient.setQueryData<Employee[]>(
+        ["employees", "overview"],
+        (currentEmployees) =>
+          currentEmployees
+            ? currentEmployees.map((employee) =>
+                employee.id === updatedEmployee.id
+                  ? { ...employee, ...updatedEmployee }
+                  : employee
+              )
+            : [updatedEmployee]
+      )
+    },
+    onError: () => {
+      toast.error("更新失败")
+    }
+  })
+
   const handleDeleteConfirm = () => {
     if (employeeToDelete !== null) {
       deleteEmployeeMutation.mutate(employeeToDelete)
@@ -95,18 +126,31 @@ function EmployeePage() {
   // table列定义
   const columns: ColumnDef<Employee>[] = [
     {
-      accessorKey: "employeeName",
+      accessorKey: "name",
       header: "成员"
     },
     {
-      accessorKey: "teamName",
-      header: "小组"
-    },
-    {
-      header: "添加时间",
+      header: "小组",
       cell: ({ row }) => {
-        const createdAt = row.original.createdAt
-        return createdAt ? formatDate(createdAt) : "-"
+        if (!teams) {
+          return <span>{row.original.teamId}</span>
+        }
+        return (
+          <EditableCell
+            value={row.original.teamId ?? undefined}
+            type="select"
+            options={teams.map((t) => ({
+              label: t.name,
+              value: t.id
+            }))}
+            onSave={(value) =>
+              updateEmployeeMutation.mutate({
+                id: row.original.id,
+                fields: { teamID: Number(value) }
+              })
+            }
+          />
+        )
       }
     },
     {
@@ -147,7 +191,7 @@ function EmployeePage() {
   ]
 
   const table = useReactTable({
-    data: data || [],
+    data: employees || [],
     columns,
     getCoreRowModel: getCoreRowModel()
   })
@@ -247,13 +291,3 @@ function EmployeePage() {
     </>
   )
 }
-
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr)
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  return `${year}-${month}-${day}`
-}
-
-export default EmployeePage

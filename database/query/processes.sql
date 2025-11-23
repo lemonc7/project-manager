@@ -1,45 +1,25 @@
--- -- name: ListProcessesFiltered :many
--- SELECT
---   p.id,
---   COALESCE(pr.name,'') AS project_name,
---   p.name,
---   p.description,
---   p.remark,
---   p.status,
---   e.name AS employee_name,
---   p.sequence,
---   p.started_at,
---   p.finished_at
--- FROM processes p
--- LEFT JOIN employees e ON p.employee_id = e.id
--- LEFT JOIN projects pr ON p.project_id = pr.id
--- WHERE 
---   (p.project_id = sqlc.narg('project_id') OR sqlc.narg('project_id') IS NULL)
---   AND (p.status = sqlc.narg('status') OR sqlc.narg('status') IS NULL)
---   AND (p.employee_id = sqlc.narg('employee_id') OR sqlc.narg('employee_id') IS NULL)
--- ORDER BY p.sequence;
-
 -- name: ListProcesses :many
 SELECT
-  p.id,
-  p.name,
-  p.description,
-  p.remark,
-  p.status,
-  e.name AS employee_name,
-  p.sequence,
-  p.started_at,
-  p.finished_at
+  id,
+  project_id,
+  name,
+  description,
+  remark,
+  status,
+  employee_id,
+  sequence,
+  started_at,
+  finished_at
 FROM processes p
-LEFT JOIN employees e ON p.employee_id = e.id
 WHERE 
-  p.project_id = $1
-ORDER BY p.sequence;
+  project_id = $1
+ORDER BY sequence;
 
 -- name: ListTasksTodo :many
 SELECT
   p.id,
   p.name,
+  p.description,
   p.project_id,
   COALESCE(pr.name,'') AS project_name
 FROM processes p
@@ -53,6 +33,7 @@ ORDER BY p.id;
 SELECT
   p.id,
   p.name,
+  p.description,
   p.project_id,
   COALESCE(pr.name,'') AS project_name
 FROM processes p
@@ -66,6 +47,7 @@ ORDER BY p.id;
 SELECT
   p.id,
   p.name,
+  p.description,
   p.started_at,
   pr.duration,
   p.project_id,
@@ -88,7 +70,17 @@ SET
   started_at = COALESCE(sqlc.narg('started_at'),started_at),
   finished_at = COALESCE(sqlc.narg('finished_at'),finished_at)
 WHERE id = sqlc.arg('id')
-RETURNING *;
+RETURNING
+  id,
+  project_id,
+  name,
+  description,
+  remark,
+  status,
+  employee_id,
+  sequence,
+  started_at,
+  finished_at;
 
 -- name: InsertProcessLast :one
 WITH project_lock AS (
@@ -114,7 +106,17 @@ INSERT INTO processes (
   $5,
   m.val + 1
 FROM max_seq m, project_lock pl
-RETURNING *;
+RETURNING
+  id,
+  project_id,
+  name,
+  description,
+  remark,
+  status,
+  employee_id,
+  sequence,
+  started_at,
+  finished_at;
 
 -- name: ShiftProcessesUp :exec
 WITH project_lock AS (

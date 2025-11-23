@@ -1,17 +1,9 @@
-type ProcessStatus =
-  | "等待"
-  | "准备"
-  | "进行"
-  | "完成"
-  | "返工"
-  | "终止"
-  | "取消"
-  | "暂停"
+type ProcessStatus = "等待" | "准备" | "进行" | "完成" | "暂停" | "终止"
 
 interface InsertProcessRequest {
   name: string
   projectID: number
-  employeeID: number
+  employeeID?: number
   description?: string
   remark?: string
 }
@@ -19,37 +11,32 @@ interface InsertProcessRequest {
 interface UpdateProcessRequest {
   name?: string
   description?: string
-  status?: ProcessStatus
-  employeeID?: number
   remark?: string
-}
-
-interface ListProcessesRequest {
-  projectID?: number
   status?: ProcessStatus
   employeeID?: number
+  startedAt?: string
+  finishedAt?: string
 }
 
 interface Process {
   id: number
+  projectId: number
   name: string
-  sequence: number
+  description: string | null
+  remark: string | null
   status: ProcessStatus
-  projectName: string
-  employeeName: string
-  description: string
-  remark: string
-  startTime: string | null
-  endTime: string | null
-  createdAt: string
-  updatedAt: string
+  employeeId: number | null
+  sequence: number
+  startedAt: string | null
+  finishedAt: string | null
 }
 
 interface Task {
   id: number
   name: string
-  startTime?: string
-  duration?: number
+  description?: string
+  startedAt?: string
+  remainingDays?: number
   projectId: number
   projectName: string
 }
@@ -58,7 +45,6 @@ export type {
   ProcessStatus,
   InsertProcessRequest,
   UpdateProcessRequest,
-  ListProcessesRequest,
   Process,
   Task
 }

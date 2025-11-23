@@ -1,21 +1,20 @@
 import type {
   InsertProcessRequest,
-  ListProcessesRequest,
   Process,
   Task,
   UpdateProcessRequest
-} from "@/models/processes"
+} from "@/model/processes"
 import service from "./request"
-import type { TaskStatus } from "@/models/projects"
+import type { TaskStatus } from "@/model/projects"
 
-export async function listProcessesFilter(req: ListProcessesRequest) {
-  const res = await service.get<Process[]>("/process/filter", { params: req })
+export async function listProcesses(projectID: number) {
+  const res = await service.get<Process[]>(`/project/${projectID}`)
   return Array.isArray(res.data) ? res.data : []
 }
 
 export async function listTasks(id: number, status: TaskStatus) {
-  const res = await service.get<Task[]>(`/process/${id}`, {
-    params: { status }
+  const res = await service.get<Task[]>(`/process/task/${id}`, {
+    params: { status: status }
   })
   return Array.isArray(res.data) ? res.data : []
 }

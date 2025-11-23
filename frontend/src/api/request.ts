@@ -1,3 +1,4 @@
+import { getToken, removeToken } from "@/util/auth"
 import axios from "axios"
 
 const service = axios.create({
@@ -8,6 +9,21 @@ const service = axios.create({
   }
 })
 
+// 请求拦截
+service.interceptors.request.use(
+  (config) => {
+    const token = getToken()
+    if (token) {
+      const headers = config.headers || {}
+      headers.Authorization = `Bearer ${token}`
+      config.headers = headers
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// 响应拦截
 service.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -16,30 +32,12 @@ service.interceptors.response.use(
     }
 
     const code = error.response.status
-    let message = "未知错误"
-
-    switch (code) {
-      case 400:
-        message = "请求错误"
-        break
-      case 401:
-        message = "未授权"
-        break
-      case 403:
-        message = "拒绝访问"
-        break
-      case 404:
-        message = "资源未找到"
-        break
-      case 422:
-        message = "请求参数验证错误"
-        break
-      case 500:
-        message = "服务器异常"
-        break
+    if (code === 401) {
+      removeToken()
+      window.location.href = "/login"
     }
 
-    return Promise.reject(new Error(`${message} (${code})`))
+    return Promise.reject(error)
   }
 )
 

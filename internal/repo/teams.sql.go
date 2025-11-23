@@ -16,7 +16,10 @@ INSERT INTO teams (
 ) VALUES (
   $1,
   $2
-) RETURNING id, name, description, created_at, updated_at
+) RETURNING
+  id,
+  name,
+  description
 `
 
 type CreateTeamParams struct {
@@ -24,16 +27,16 @@ type CreateTeamParams struct {
 	Description *string `json:"description"`
 }
 
-func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error) {
+type CreateTeamRow struct {
+	ID          int32   `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+}
+
+func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (CreateTeamRow, error) {
 	row := q.db.QueryRow(ctx, createTeam, arg.Name, arg.Description)
-	var i Team
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
+	var i CreateTeamRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err
 }
 
@@ -88,7 +91,10 @@ SET
   name = COALESCE($1,name),
   description = COALESCE($2,description)
 WHERE id = $3
-RETURNING id, name, description, created_at, updated_at
+RETURNING
+  id,
+  name,
+  description
 `
 
 type UpdateTeamParams struct {
@@ -97,15 +103,15 @@ type UpdateTeamParams struct {
 	ID          int32   `json:"id"`
 }
 
-func (q *Queries) UpdateTeam(ctx context.Context, arg UpdateTeamParams) (Team, error) {
+type UpdateTeamRow struct {
+	ID          int32   `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+}
+
+func (q *Queries) UpdateTeam(ctx context.Context, arg UpdateTeamParams) (UpdateTeamRow, error) {
 	row := q.db.QueryRow(ctx, updateTeam, arg.Name, arg.Description, arg.ID)
-	var i Team
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
+	var i UpdateTeamRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err
 }

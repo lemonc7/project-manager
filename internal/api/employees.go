@@ -12,10 +12,11 @@ import (
 )
 
 type EmployeeService interface {
-	CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (repo.Employee, error)
-	UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (repo.Employee, error)
+	CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (repo.CreateEmployeeRow, error)
+	UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (repo.UpdateEmployeeRow, error)
 	DeleteEmployee(ctx context.Context, id int32) error
 	ListEmployees(ctx context.Context) ([]repo.ListEmployeesRow, error)
+	GetEmployee(ctx context.Context, username string) (model.Employee, error)
 }
 
 var _ EmployeeService = (*service.EmployeeService)(nil)
@@ -104,4 +105,18 @@ func (e *EmployeeHandler) ListEmployees(c echo.Context) error {
 
 	// 返回响应
 	return c.JSON(http.StatusOK, employees)
+}
+
+// 获取用户
+func (e *EmployeeHandler) GetEmployee(c echo.Context) error {
+	username, ok := c.Get("username").(string)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized, "header username not found")
+	}
+	employee, err := e.employeeService.GetEmployee(c.Request().Context(), username)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, employee)
 }

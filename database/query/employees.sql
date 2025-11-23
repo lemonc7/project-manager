@@ -1,13 +1,12 @@
 -- name: ListEmployees :many
 SELECT
-  e.id,
-  e.name AS employee_name,
-  t.name AS team_name,
-  e.roles
-FROM employees e
-LEFT JOIN teams t ON e.team_id = t.id
-WHERE e.is_active = true
-ORDER BY e.name;
+  id,
+  name,
+  roles,
+  team_id
+FROM employees
+WHERE is_active = true
+ORDER BY name;
 
 -- name: CreateEmployee :one
 INSERT INTO employees (
@@ -22,7 +21,7 @@ INSERT INTO employees (
   $3,
   $4,
   $5
-) RETURNING *;
+) RETURNING id, name, roles, team_id;
 
 -- name: UpdateEmployee :one
 UPDATE employees
@@ -32,7 +31,7 @@ SET
   team_id = COALESCE(sqlc.narg('team_id'),team_id),
   is_active = COALESCE(sqlc.narg('is_active'),is_active)
 WHERE id = sqlc.arg('id')
-RETURNING *;
+RETURNING id, name, roles, team_id;
 
 -- name: DeleteEmployee :exec
 DELETE FROM employees
@@ -41,9 +40,11 @@ WHERE id = $1;
 -- name: GetEmployeeByUsername :one
 SELECT
   id,
+  name,
   username,
   password_hash,
-  roles
+  roles,
+  team_id
 FROM employees
 WHERE 
   username = $1

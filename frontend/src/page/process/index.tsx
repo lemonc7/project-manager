@@ -1,5 +1,4 @@
-import { updateProcess } from "@/api/processes"
-import { listProcesses } from "@/api/projects"
+import { listProcesses, updateProcess } from "@/api/processes"
 import EditableCell from "@/components/common/editable-cell"
 import { Loading } from "@/components/common/loading"
 import {
@@ -14,7 +13,7 @@ import type {
   Process,
   ProcessStatus,
   UpdateProcessRequest
-} from "@/models/processes"
+} from "@/model/processes"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   flexRender,
@@ -30,27 +29,19 @@ const processStatusOptions = [
   "准备",
   "进行",
   "完成",
-  "返工",
   "终止",
-  "取消",
   "暂停"
 ] satisfies ProcessStatus[]
 
-function ProcessPage() {
-  const params = useParams<{ id: string }>()
+export default function ProcessPage() {
+  const { id } = useParams<{ id: string }>()
   const { data, isError, isPending } = useQuery({
-    queryKey: ["processes", params.id],
+    queryKey: ["processes", id],
     queryFn: () => {
-      if (params.id) {
-        const api = listProcesses(+params.id)
-        toast.promise(api, {
-          loading: "流程加载中...",
-          success: "流程加载成功",
-          error: "加载失败"
-        })
-        return api
+      if (!id) {
+        throw new Error("缺少流程ID")
       }
-      return []
+      return listProcesses(+id)
     }
   })
 
@@ -66,7 +57,7 @@ function ProcessPage() {
     }) => updateProcess(id, fields),
     onSuccess: (updatedProcess) => {
       queryClient.setQueryData<Process[]>(
-        ["processes", params.id],
+        ["processes", id],
         (currentProcesses) =>
           currentProcesses
             ? currentProcesses.map((process) =>
@@ -109,7 +100,7 @@ function ProcessPage() {
       cell: ({ row }) => {
         return (
           <EditableCell
-            value={row.original.description}
+            value={row.original.description ?? undefined}
             onSave={(value) =>
               updateProcessMutation.mutate({
                 id: row.original.id,
@@ -148,22 +139,22 @@ function ProcessPage() {
     {
       header: "完成时间",
       cell: ({ row }) => {
-        const startTime = row.original.startTime
-        const endTime = row.original.endTime
+        const startedAt = row.original.startedAt
+        const finishedAt = row.original.finishedAt
 
-        if (!endTime) {
+        if (!finishedAt) {
           return "-"
         }
 
-        const endDate = new Date(endTime)
+        const endDate = new Date(finishedAt)
         const endDateFormat = `${endDate.getFullYear()}-${
           endDate.getMonth() + 1
         }-${endDate.getDate()} ${endDate.getHours()}:${endDate.getMinutes()}`
-        if (!startTime) {
+        if (!startedAt) {
           return endDateFormat
         }
 
-        const startDate = new Date(startTime)
+        const startDate = new Date(startedAt)
         const timeDiff = endDate.getTime() - startDate.getTime()
         const diffDays = Math.floor((timeDiff / 1000) * 3600 * 24)
         const diffHours = Math.floor(
@@ -182,7 +173,7 @@ function ProcessPage() {
       cell: ({ row }) => {
         return (
           <EditableCell
-            value={row.original.remark}
+            value={row.original.remark ?? undefined}
             onSave={(value) =>
               updateProcessMutation.mutate({
                 id: row.original.id,
@@ -257,4 +248,3 @@ function ProcessPage() {
     </div>
   )
 }
-export default ProcessPage

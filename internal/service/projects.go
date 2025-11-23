@@ -18,7 +18,7 @@ func NewProjectService(db *pgxpool.Pool) *ProjectService {
 	}
 }
 
-func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProjectRequest) (repo.Project, error) {
+func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProjectRequest) (repo.CreateProjectRow, error) {
 	// 插入数据
 	project, err := p.querier.CreateProject(ctx, repo.CreateProjectParams{
 		Name:        req.Name,
@@ -29,13 +29,13 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 	})
 
 	if err != nil {
-		return repo.Project{}, err
+		return repo.CreateProjectRow{}, err
 	}
 
 	return project, nil
 }
 
-func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.Project, error) {
+func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.UpdateProjectRow, error) {
 	// 更新数据
 	project, err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
 		ID:          id,
@@ -50,7 +50,7 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.
 	})
 
 	if err != nil {
-		return repo.Project{}, err
+		return repo.UpdateProjectRow{}, err
 	}
 
 	return project, nil

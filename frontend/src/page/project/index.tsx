@@ -3,7 +3,7 @@ import type {
   Project,
   ProjectStatus,
   UpdateProjectRequest
-} from "@/models/projects"
+} from "@/model/projects"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
@@ -27,34 +27,16 @@ import { Loading } from "@/components/common/loading"
 const projectStatusOptions = [
   "排单",
   "进行",
-  "暂停",
   "完成",
-  "终止",
-  "归档"
+  "暂停",
+  "终止"
 ] satisfies ProjectStatus[]
 
-function ProjectPage() {
+export default function ProjectPage() {
   const { data, isError, isPending } = useQuery<Project[], Error>({
     queryKey: ["projects", "overview"],
-    queryFn: () => {
-      const api = listProjectsFilter({})
-      toast.promise(api, {
-        loading: "项目加载中...",
-        success: "项目加载成功",
-        error: "加载失败"
-      })
-      return api
-    }
+    queryFn: () => listProjectsFilter({})
   })
-
-  // const {
-  //   data: employees = [],
-  //   isError: isEmployeeError,
-  //   isPending: isEmployeePending
-  // } = useQuery<Employee[], Error>({
-  //   queryKey: ["employees"],
-  //   queryFn: listEmployees
-  // })
 
   const queryClient = useQueryClient()
 
@@ -102,7 +84,7 @@ function ProjectPage() {
       header: "描述",
       cell: ({ row }) => (
         <EditableCell
-          value={row.original.description}
+          value={row.original.description ?? undefined}
           onSave={(value) =>
             updateProjectMutation.mutate({
               id: row.original.id,
@@ -112,25 +94,25 @@ function ProjectPage() {
         />
       )
     },
-    {
-      accessorKey: "employeeName",
-      header: "负责人"
-    },
+    // {
+    //   accessorKey: "employeeName",
+    //   header: "负责人"
+    // },
     {
       header: "剩余时间",
       cell: ({ row }) => {
-        const startTime = row.original.startTime
+        const startedAt = row.original.startedAt
         const duration = row.original.duration
 
-        // 没设置startTime或duration为0时，说明没设置时间
-        if (!startTime || duration === 0) {
-          return "-"
+        // 没设置startTime或duration为空时，说明没设置时间
+        if (!startedAt || !duration) {
+          return undefined
         }
         // 计算剩余天数
-        const startDate = new Date(startTime)
+        const startDate = new Date(startedAt)
         const currentDate = new Date()
 
-        const endDate = new Date(startTime)
+        const endDate = new Date(startedAt)
         endDate.setDate(startDate.getDate() + duration)
 
         const timeDiff = endDate.getTime() - currentDate.getTime()
@@ -164,7 +146,7 @@ function ProjectPage() {
       header: "备注",
       cell: ({ row }) => (
         <EditableCell
-          value={row.original.remark}
+          value={row.original.remark ?? undefined}
           onSave={(value) =>
             updateProjectMutation.mutate({
               id: row.original.id,
@@ -238,4 +220,3 @@ function ProjectPage() {
     </div>
   )
 }
-export default ProjectPage

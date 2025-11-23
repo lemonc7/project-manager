@@ -13,9 +13,9 @@ import (
 )
 
 type ProcessService interface {
-	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.Process, error)
+	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.InsertProcessLastRow, error)
 	InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error
-	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.Process, error)
+	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.UpdateProcessRow, error)
 	DeleteProcess(ctx context.Context, id int32) error
 	ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error)
 	ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error)

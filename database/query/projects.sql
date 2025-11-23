@@ -1,23 +1,22 @@
 -- name: ListProjectsFiltered :many
 SELECT
-  p.id,
-  p.name,
-  p.description,
-  p.remark,
-  p.status,
-  COALESCE(e.name,'') AS manager_name,
-  p.started_at,
-  p.duration,
-  p.finished_at
-FROM projects p
-LEFT JOIN employees e ON p.manager_id = e.id
+  id,
+  name,
+  description,
+  remark,
+  status,
+  manager_id,
+  started_at,
+  duration,
+  finished_at
+FROM projects
 WHERE 
-  (p.status = sqlc.narg('status') OR sqlc.narg('status') IS NULL)
-  AND (p.manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
-  AND (p.started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
-  AND (p.started_at <= sqlc.narg('end_at') OR sqlc.narg('end_at') IS NULL)
+  (status = sqlc.narg('status') OR sqlc.narg('status') IS NULL)
+  AND (manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
+  AND (started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
+  AND (started_at <= sqlc.narg('end_at') OR sqlc.narg('end_at') IS NULL)
 ORDER BY
-  CASE p.status
+  CASE status
     WHEN '进行' THEN 1
     WHEN '排单' THEN 2
     WHEN '暂停' THEN 3
@@ -25,8 +24,8 @@ ORDER BY
     WHEN '终止' THEN 5
     ELSE 7
   END,
-  (p.started_at + (p.duration || 'days')::interval) NULLS LAST,
-  p.id;
+  (started_at + (duration || 'days')::interval) NULLS LAST,
+  id;
 
 -- name: CreateProject :one
 INSERT INTO projects (
@@ -41,7 +40,16 @@ INSERT INTO projects (
   $3,
   $4,
   $5
-) RETURNING *;
+) RETURNING
+  id,
+  name,
+  description,
+  remark,
+  status,
+  manager_id,
+  started_at,
+  duration,
+  finished_at;
 
 -- name: UpdateProject :one
 UPDATE projects
@@ -55,7 +63,16 @@ SET
   duration = COALESCE(sqlc.narg('duration'),duration),
   finished_at = COALESCE(sqlc.narg('finished_at'),finished_at)
 WHERE id = sqlc.arg('id')
-RETURNING *;
+RETURNING
+  id,
+  name,
+  description,
+  remark,
+  status,
+  manager_id,
+  started_at,
+  duration,
+  finished_at;
 
 -- name: DeleteProject :exec
 DELETE FROM projects

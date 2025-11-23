@@ -1,16 +1,26 @@
-import NotFoundPage from "@/pages/404"
-import TaskPage from "@/pages/task"
+import NotFoundPage from "@/page/404"
+import TaskPage from "@/page/task"
 import CustomLayout from "@/components/layout/custom-layout"
 import { createBrowserRouter, redirect } from "react-router"
-import ProjectPage from "@/pages/project"
+import ProjectPage from "@/page/project"
 import ProjectLayout from "@/components/layout/project-layout"
-import ProcessPage from "@/pages/process"
-import EmployeePage from "@/pages/employee"
+import ProcessPage from "@/page/process"
+import EmployeePage from "@/page/employee"
+import Login from "@/page/login"
+import ProtectElement from "@/components/common/protect_element"
 
 const router = createBrowserRouter([
   {
+    path: "/login",
+    element: <Login />
+  },
+  {
     path: "/",
-    element: <CustomLayout />,
+    element: (
+      <ProtectElement>
+        <CustomLayout />
+      </ProtectElement>
+    ),
     children: [
       {
         index: true,

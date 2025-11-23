@@ -21,8 +21,9 @@ func (a *Application) initRouter() {
 	processRouter := api.Group("/process")
 
 	// 员工
-	employeeRouter.POST("", a.employeeHandler.CreateEmployee)
 	employeeRouter.GET("", a.employeeHandler.ListEmployees)
+	employeeRouter.GET("/me",a.employeeHandler.GetEmployee)
+	employeeRouter.POST("", a.employeeHandler.CreateEmployee)
 	employeeRouter.PUT("/:id", a.employeeHandler.UpdateEmployee)
 	employeeRouter.DELETE("/:id", a.employeeHandler.DeleteEmployee)
 

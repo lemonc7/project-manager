@@ -13,7 +13,10 @@ INSERT INTO teams (
 ) VALUES (
   $1,
   $2
-) RETURNING *;
+) RETURNING
+  id,
+  name,
+  description;
 
 -- name: UpdateTeam :one
 UPDATE teams
@@ -21,7 +24,10 @@ SET
   name = COALESCE(sqlc.narg('name'),name),
   description = COALESCE(sqlc.narg('description'),description)
 WHERE id = sqlc.arg('id')
-RETURNING *;
+RETURNING
+  id,
+  name,
+  description;
 
 -- name: DeleteTeam :exec
 DELETE FROM teams

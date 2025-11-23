@@ -1,10 +1,9 @@
 import { Outlet } from "react-router"
 
-function ProjectLayout() {
+export default function ProjectLayout() {
   return (
     <>
       <Outlet />
     </>
   )
 }
-export default ProjectLayout

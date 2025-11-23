@@ -5,7 +5,7 @@ import CustomHeader from "./custom-header"
 import { Toaster } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 
-function CustomLayout() {
+export default function CustomLayout() {
   const queryClient = useQueryClient()
 
   const handlerRefresh = async () => {
@@ -35,4 +35,3 @@ function CustomLayout() {
   )
 }
 
-export default CustomLayout

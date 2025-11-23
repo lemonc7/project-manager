@@ -19,7 +19,7 @@ func NewTeamService(db *pgxpool.Pool) *TeamService {
 
 }
 
-func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamRequest) (repo.Team, error) {
+func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamRequest) (repo.CreateTeamRow, error) {
 	// 插入数据
 	team, err := t.querier.CreateTeam(ctx, repo.CreateTeamParams{
 		Name:        req.Name,
@@ -27,13 +27,13 @@ func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamReques
 	})
 
 	if err != nil {
-		return repo.Team{}, err
+		return repo.CreateTeamRow{}, err
 	}
 
 	return team, nil
 }
 
-func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) (repo.Team, error) {
+func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) (repo.UpdateTeamRow, error) {
 	// 更新数据
 	team, err := t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
 		ID:          id,
@@ -42,7 +42,7 @@ func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.Update
 	})
 
 	if err != nil {
-		return repo.Team{}, err
+		return repo.UpdateTeamRow{}, err
 	}
 
 	return team, err

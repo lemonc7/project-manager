@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -10,8 +11,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "@/components/ui/sidebar"
-import { Users, ListTodo, Sheet, User } from "lucide-react"
+import { Users, ListTodo, Sheet, User, LogOut } from "lucide-react"
 import { Link, useNavigate } from "react-router"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "../ui/dropdown-menu"
+import { useQuery } from "@tanstack/react-query"
+import { getEmployeeMe } from "@/api/employees"
+import { removeToken } from "@/util/auth"
+import type { EmployeeMe } from "@/model/employees"
 
 const items = [
   {
@@ -31,8 +42,18 @@ const items = [
   }
 ]
 
-function CustomAside() {
+export default function CustomAside() {
+  const { data } = useQuery<EmployeeMe, Error>({
+    queryKey: ["user"],
+    queryFn: getEmployeeMe
+  })
+
   const navigate = useNavigate()
+  const logout = () => {
+    removeToken()
+    navigate("/login", { replace: true })
+  }
+
   return (
     <div className="[&_div[data-slot=sidebar-inner]]:bg-gray-50">
       <Sidebar className="border-none!">
@@ -61,10 +82,23 @@ function CustomAside() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        {/* <SidebarFooter>设置</SidebarFooter> */}
+        <SidebarFooter className="flex justify-start py-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost">
+                <User />
+                <span>{data?.name || "未知"}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={logout}>
+                <LogOut />
+                登出
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarFooter>
       </Sidebar>
     </div>
   )
 }
-
-export default CustomAside

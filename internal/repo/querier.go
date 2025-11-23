@@ -9,9 +9,9 @@ import (
 )
 
 type Querier interface {
-	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (Employee, error)
-	CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error)
-	CreateTeam(ctx context.Context, arg CreateTeamParams) (Team, error)
+	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (CreateEmployeeRow, error)
+	CreateProject(ctx context.Context, arg CreateProjectParams) (CreateProjectRow, error)
+	CreateTeam(ctx context.Context, arg CreateTeamParams) (CreateTeamRow, error)
 	DeleteEmployee(ctx context.Context, id int32) error
 	DeleteProcess(ctx context.Context, id int32) (int32, error)
 	DeleteProject(ctx context.Context, id int32) error
@@ -19,28 +19,8 @@ type Querier interface {
 	GetEmployeeByUsername(ctx context.Context, username string) (GetEmployeeByUsernameRow, error)
 	GetMaxSequence(ctx context.Context, projectID int32) (int32, error)
 	InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error
-	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) (Process, error)
+	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) (InsertProcessLastRow, error)
 	ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
-	// -- name: ListProcessesFiltered :many
-	// SELECT
-	//   p.id,
-	//   COALESCE(pr.name,'') AS project_name,
-	//   p.name,
-	//   p.description,
-	//   p.remark,
-	//   p.status,
-	//   e.name AS employee_name,
-	//   p.sequence,
-	//   p.started_at,
-	//   p.finished_at
-	// FROM processes p
-	// LEFT JOIN employees e ON p.employee_id = e.id
-	// LEFT JOIN projects pr ON p.project_id = pr.id
-	// WHERE
-	//   (p.project_id = sqlc.narg('project_id') OR sqlc.narg('project_id') IS NULL)
-	//   AND (p.status = sqlc.narg('status') OR sqlc.narg('status') IS NULL)
-	//   AND (p.employee_id = sqlc.narg('employee_id') OR sqlc.narg('employee_id') IS NULL)
-	// ORDER BY p.sequence;
 	ListProcesses(ctx context.Context, projectID int32) ([]ListProcessesRow, error)
 	ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error)
 	ListTasksDoing(ctx context.Context, employeeID *int32) ([]ListTasksDoingRow, error)
@@ -49,11 +29,11 @@ type Querier interface {
 	ListTeams(ctx context.Context) ([]ListTeamsRow, error)
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error
-	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error)
+	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (UpdateEmployeeRow, error)
 	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error
-	UpdateProcess(ctx context.Context, arg UpdateProcessParams) (Process, error)
-	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
-	UpdateTeam(ctx context.Context, arg UpdateTeamParams) (Team, error)
+	UpdateProcess(ctx context.Context, arg UpdateProcessParams) (UpdateProcessRow, error)
+	UpdateProject(ctx context.Context, arg UpdateProjectParams) (UpdateProjectRow, error)
+	UpdateTeam(ctx context.Context, arg UpdateTeamParams) (UpdateTeamRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

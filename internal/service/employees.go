@@ -20,10 +20,10 @@ func NewEmployeeService(db *pgxpool.Pool, ph PasswordHasher) *EmployeeService {
 	}
 }
 
-func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (repo.Employee, error) {
+func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (repo.CreateEmployeeRow, error) {
 	passwordHash, err := e.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return repo.Employee{}, err
+		return repo.CreateEmployeeRow{}, err
 	}
 	// 插入数据
 	employee, err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
@@ -35,13 +35,13 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 	})
 
 	if err != nil {
-		return repo.Employee{}, err
+		return repo.CreateEmployeeRow{}, err
 	}
 
 	return employee, nil
 }
 
-func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (repo.Employee, error) {
+func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (repo.UpdateEmployeeRow, error) {
 	// 更新数据
 	employee, err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       id,
@@ -52,7 +52,7 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req mode
 	})
 
 	if err != nil {
-		return repo.Employee{}, err
+		return repo.UpdateEmployeeRow{}, err
 	}
 
 	return employee, nil
@@ -75,4 +75,18 @@ func (e *EmployeeService) ListEmployees(ctx context.Context) ([]repo.ListEmploye
 	}
 
 	return employees, nil
+}
+
+func (e *EmployeeService) GetEmployee(ctx context.Context, username string) (model.Employee, error) {
+	// 获取数据
+	employee, err := e.querier.GetEmployeeByUsername(ctx, username)
+	if err != nil {
+		return model.Employee{},nil
+	}
+
+	return model.Employee{
+		ID:     employee.ID,
+		Name:   employee.Name,
+		Roles:  employee.Roles,
+	}, nil
 }

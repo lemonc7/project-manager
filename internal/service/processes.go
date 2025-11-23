@@ -24,7 +24,7 @@ func NewProcessService(db *pgxpool.Pool) *ProcessService {
 	}
 }
 
-func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.Process, error) {
+func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.InsertProcessLastRow, error) {
 	process, err := p.queries.InsertProcessLast(ctx, repo.InsertProcessLastParams{
 		Name:        req.Name,
 		ProjectID:   req.ProjectID,
@@ -34,7 +34,7 @@ func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.Insert
 	})
 
 	if err != nil {
-		return repo.Process{}, err
+		return repo.InsertProcessLastRow{}, err
 	}
 
 	return process, nil
@@ -87,7 +87,7 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 	return tx.Commit(ctx)
 }
 
-func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.Process, error) {
+func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.UpdateProcessRow, error) {
 	process, err := p.queries.UpdateProcess(ctx, repo.UpdateProcessParams{
 		Name:        req.Name,
 		Description: req.Description,
@@ -100,7 +100,7 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.
 	})
 
 	if err != nil {
-		return repo.Process{}, err
+		return repo.UpdateProcessRow{}, err
 	}
 
 	return process, nil
@@ -176,6 +176,7 @@ func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) (
 		tasks[i] = model.Task{
 			ID:          t.ID,
 			Name:        t.Name,
+			Description: t.Description,
 			StartedAt:   t.StartedAt,
 			ProjectID:   t.ProjectID,
 			ProjectName: t.ProjectName,

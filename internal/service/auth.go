@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
@@ -33,15 +34,25 @@ func NewAuthService(db *pgxpool.Pool, ph PasswordHasher, j JWTer) *AuthService {
 }
 
 func (a *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error) {
+	// 从数据库中获取数据
 	user, err := a.querier.GetEmployeeByUsername(ctx, req.Username)
 	if err != nil {
-		return nil, fmt.Errorf("username not found: %w", err)
+		return nil, model.ErrUsernameOrPasswordInvalid
 	}
 
+	// 验证密码
 	if !a.passwordHasher.ComparePassword(user.PasswordHash, req.Password) {
 		return nil, model.ErrUsernameOrPasswordInvalid
 	}
 
+	// 验证权限
+	if !slices.Contains(user.Roles,"admin") &&
+		!slices.Contains(user.Roles,"manager") &&
+		!slices.Contains(user.Roles,"user") {
+		return nil, model.ErrNoPermission
+	}
+
+	// 生成token
 	accessToken, err := a.jwter.Generate(req.Username, user.ID, user.Roles)
 	if err != nil {
 		return nil, fmt.Errorf("generate access token: %w", err)

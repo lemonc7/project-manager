@@ -1,4 +1,4 @@
-import type { CreateTeamRequest, Team, UpdateTeamRequest } from "@/models/teams"
+import type { CreateTeamRequest, Team, UpdateTeamRequest } from "@/model/teams"
 import service from "./request"
 
 export async function listTeams() {

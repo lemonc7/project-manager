@@ -3,17 +3,11 @@ import type {
   ListProjectsRequest,
   Project,
   UpdateProjectRequest
-} from "@/models/projects"
+} from "@/model/projects"
 import service from "./request"
-import type { Process } from "@/models/processes"
 
 export async function listProjectsFilter(req: ListProjectsRequest) {
   const res = await service.get<Project[]>("/project/filter", { params: req })
-  return Array.isArray(res.data) ? res.data : []
-}
-
-export async function listProcesses(id: number) {
-  const res = await service.get<Process[]>(`/project/${id}`)
   return Array.isArray(res.data) ? res.data : []
 }
 

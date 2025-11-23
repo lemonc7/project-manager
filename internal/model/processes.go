@@ -27,8 +27,9 @@ type UpdateProcessRequest struct {
 type Task struct {
 	ID            int32      `json:"id"`
 	Name          string     `json:"name"`
+	Description   *string    `json:"description,omitempty"`
 	StartedAt     *time.Time `json:"startedAt,omitempty"`
 	RemainingDays *int32     `json:"remainingDays,omitempty"`
-	ProjectID     int32      `json:"projectID"`
+	ProjectID     int32      `json:"projectId"`
 	ProjectName   string     `json:"projectName"`
 }

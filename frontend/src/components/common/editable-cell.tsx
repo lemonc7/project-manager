@@ -44,7 +44,7 @@ function EditableCell<T>({
         }}
       >
         <SelectTrigger>
-          <SelectValue />
+          <SelectValue placeholder="请选择" />
         </SelectTrigger>
         <SelectContent>
           {options?.map((opt) => (

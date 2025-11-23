@@ -12,8 +12,8 @@ import (
 )
 
 type ProjectService interface {
-	CreateProject(ctx context.Context, req model.CreateProjectRequest) (repo.Project, error)
-	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.Project, error)
+	CreateProject(ctx context.Context, req model.CreateProjectRequest) (repo.CreateProjectRow, error)
+	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.UpdateProjectRow, error)
 	DeleteProject(ctx context.Context, id int32) error
 	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
 }
