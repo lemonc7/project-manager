@@ -26,7 +26,9 @@ type Application struct {
 	e      *echo.Echo
 	dbPool *pgxpool.Pool
 	cfg    *config.Config
+	jwt    *jwt.JWT
 
+	authHandler     *api.AuthHandler
 	employeeHandler *api.EmployeeHandler
 	teamHandler     *api.TeamHandler
 	projectHandler  *api.ProjectHandler
@@ -65,8 +67,12 @@ func InitApp(filePath string) (*Application, error) {
 	// handler
 	passwordHash := hasher.NewPasswordHash()
 	jwt := jwt.NewJWT(cfg.JWT)
+
+	authHandler := api.NewAuthHandler(
+		service.NewAuthService(dbPool, passwordHash, jwt),
+	)
 	employeeHandler := api.NewEmployeeHandler(
-		service.NewEmployeeService(dbPool, passwordHash, jwt),
+		service.NewEmployeeService(dbPool, passwordHash),
 	)
 	teamHandler := api.NewTeamHandler(
 		service.NewTeamService(dbPool),
@@ -82,6 +88,8 @@ func InitApp(filePath string) (*Application, error) {
 		e:               e,
 		dbPool:          dbPool,
 		cfg:             cfg,
+		jwt:             jwt,
+		authHandler:     authHandler,
 		employeeHandler: employeeHandler,
 		teamHandler:     teamHandler,
 		projectHandler:  projectHandler,

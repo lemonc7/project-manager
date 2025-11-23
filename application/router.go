@@ -1,10 +1,24 @@
 package application
 
+import "github.com/lemonc7/project-manager/internal/middleware"
+
 func (a *Application) initRouter() {
-	employeeRouter := a.e.Group("/api/employee")
-	teamRouter := a.e.Group("/api/team")
-	projectRouter := a.e.Group("/api/project")
-	processRouter := a.e.Group("/api/process")
+	jwtMW := middleware.JWTAuther(a.jwt)
+	// 用户认证
+	auth := a.e.Group("/api/auth")
+	authJWT := auth.Group("", jwtMW)
+
+	auth.POST("/login", a.authHandler.Login)
+	authJWT.POST("/password", a.authHandler.ResetPassword)
+	authJWT.PUT("/password", a.authHandler.ChangePassword)
+
+	// 业务
+	api := a.e.Group("/api", jwtMW)
+
+	employeeRouter := api.Group("/employee")
+	teamRouter := api.Group("/team")
+	projectRouter := api.Group("/project")
+	processRouter := api.Group("/process")
 
 	// 员工
 	employeeRouter.POST("", a.employeeHandler.CreateEmployee)

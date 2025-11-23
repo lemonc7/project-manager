@@ -3,9 +3,9 @@ import type {
   ListProjectsRequest,
   Project,
   UpdateProjectRequest
-} from "@/model/projects"
+} from "@/models/projects"
 import service from "./request"
-import type { Process } from "@/model/processes"
+import type { Process } from "@/models/processes"
 
 export async function listProjectsFilter(req: ListProjectsRequest) {
   const res = await service.get<Project[]>("/project/filter", { params: req })

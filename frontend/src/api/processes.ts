@@ -4,9 +4,9 @@ import type {
   Process,
   Task,
   UpdateProcessRequest
-} from "@/model/processes"
+} from "@/models/processes"
 import service from "./request"
-import type { TaskStatus } from "@/model/projects"
+import type { TaskStatus } from "@/models/projects"
 
 export async function listProcessesFilter(req: ListProcessesRequest) {
   const res = await service.get<Process[]>("/process/filter", { params: req })

@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import type { Employee } from "@/model/employees"
+import type { Employee } from "@/models/employees"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   flexRender,

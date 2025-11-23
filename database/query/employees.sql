@@ -9,17 +9,6 @@ LEFT JOIN teams t ON e.team_id = t.id
 WHERE e.is_active = true
 ORDER BY e.name;
 
--- name: GetEmployeeByUsername :one
-SELECT
-  id,
-  username,
-  password_hash,
-  roles
-FROM employees
-WHERE 
-  username = $1
-  AND is_active = true;
-
 -- name: CreateEmployee :one
 INSERT INTO employees (
   name,
@@ -47,4 +36,20 @@ RETURNING *;
 
 -- name: DeleteEmployee :exec
 DELETE FROM employees
+WHERE id = $1;
+
+-- name: GetEmployeeByUsername :one
+SELECT
+  id,
+  username,
+  password_hash,
+  roles
+FROM employees
+WHERE 
+  username = $1
+  AND is_active = true;
+
+-- name: UpdatePassword :exec
+UPDATE employees
+SET password_hash = $2
 WHERE id = $1;

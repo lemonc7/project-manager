@@ -11,23 +11,12 @@ import (
 type EmployeeService struct {
 	querier        repo.Querier
 	passwordHasher PasswordHasher
-	jwter          JWTer
 }
 
-type PasswordHasher interface {
-	HashPassword(password string) (string, error)
-	ComparePassword(hashedPassword string, password string) bool
-}
-
-type JWTer interface {
-	Generate(username string, id int32, roles []string) (string, error)
-}
-
-func NewEmployeeService(db *pgxpool.Pool, ph PasswordHasher, j JWTer) *EmployeeService {
+func NewEmployeeService(db *pgxpool.Pool, ph PasswordHasher) *EmployeeService {
 	return &EmployeeService{
 		querier:        repo.New(db),
 		passwordHasher: ph,
-		jwter:          j,
 	}
 }
 

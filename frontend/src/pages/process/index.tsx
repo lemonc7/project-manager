@@ -14,7 +14,7 @@ import type {
   Process,
   ProcessStatus,
   UpdateProcessRequest
-} from "@/model/processes"
+} from "@/models/processes"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   flexRender,

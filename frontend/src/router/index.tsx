@@ -1,11 +1,11 @@
-import NotFoundPage from "@/page/404"
-import TaskPage from "@/page/task"
+import NotFoundPage from "@/pages/404"
+import TaskPage from "@/pages/task"
 import CustomLayout from "@/components/layout/custom-layout"
 import { createBrowserRouter, redirect } from "react-router"
-import ProjectPage from "@/page/project"
+import ProjectPage from "@/pages/project"
 import ProjectLayout from "@/components/layout/project-layout"
-import ProcessPage from "@/page/process"
-import EmployeePage from "@/page/employee"
+import ProcessPage from "@/pages/process"
+import EmployeePage from "@/pages/employee"
 
 const router = createBrowserRouter([
   {

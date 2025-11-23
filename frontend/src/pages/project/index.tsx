@@ -3,7 +3,7 @@ import type {
   Project,
   ProjectStatus,
   UpdateProjectRequest
-} from "@/model/projects"
+} from "@/models/projects"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
@@ -65,7 +65,7 @@ function ProjectPage() {
     }: {
       id: number
       fields: Partial<UpdateProjectRequest>
-    }) => updateProject( id, fields ),
+    }) => updateProject(id, fields),
     onSuccess: (updatedProject) => {
       // 更新缓存: 只更新当前项目的数据
       queryClient.setQueryData<Project[]>(

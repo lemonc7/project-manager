@@ -50,6 +50,7 @@ type Querier interface {
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error
 	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error)
+	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error
 	UpdateProcess(ctx context.Context, arg UpdateProcessParams) (Process, error)
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
 	UpdateTeam(ctx context.Context, arg UpdateTeamParams) (Team, error)

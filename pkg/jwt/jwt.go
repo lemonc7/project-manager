@@ -55,6 +55,10 @@ func (j *JWT) ParseToken(tokenString string) (*UserClaims, error) {
 		return nil, err
 	}
 
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
 	claims, ok := token.Claims.(*UserClaims)
 	if !ok {
 		return nil, fmt.Errorf("invalid token claims")
