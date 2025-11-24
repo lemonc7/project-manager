@@ -1,5 +1,14 @@
-type ProjectStatus = "排单" | "进行" | "暂停" | "完成" | "终止"
-type TaskStatus = "todo" | "ready" | "doing"
+export type TaskStatus = "todo" | "ready" | "doing"
+
+export const ProjectStatusOptions = [
+  "排单",
+  "进行",
+  "暂停",
+  "完成",
+  "终止"
+] as const
+
+export type ProjectStatus = (typeof ProjectStatusOptions)[number]
 
 interface CreateProjectRequest {
   name: string
@@ -40,8 +49,6 @@ interface Project {
 }
 
 export type {
-  ProjectStatus,
-  TaskStatus,
   CreateProjectRequest,
   UpdateProjectRequest,
   ListProjectsRequest,

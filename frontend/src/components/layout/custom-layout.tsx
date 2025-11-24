@@ -2,14 +2,15 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { Outlet } from "react-router"
 import CustomAside from "./custom-aside"
 import CustomHeader from "./custom-header"
-import { Toaster } from "sonner"
+import { toast, Toaster } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 
 export default function CustomLayout() {
   const queryClient = useQueryClient()
 
   const handlerRefresh = async () => {
-    await queryClient.invalidateQueries({ type: "active" })
+    await queryClient.refetchQueries({ type: "active" })
+    toast.success("页面已刷新")
   }
 
   return (
@@ -34,4 +35,3 @@ export default function CustomLayout() {
     </SidebarProvider>
   )
 }
-

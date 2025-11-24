@@ -1,6 +1,6 @@
 import { listProcesses, updateProcess } from "@/api/processes"
 import EditableCell from "@/components/common/editable-cell"
-import { Loading } from "@/components/common/loading"
+import Loading from "@/components/common/loading"
 import {
   Table,
   TableBody,
@@ -9,10 +9,10 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import type {
-  Process,
-  ProcessStatus,
-  UpdateProcessRequest
+import {
+  ProcessStatusOptions,
+  type Process,
+  type UpdateProcessRequest
 } from "@/model/processes"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
@@ -23,15 +23,6 @@ import {
 } from "@tanstack/react-table"
 import { useParams } from "react-router"
 import { toast } from "sonner"
-
-const processStatusOptions = [
-  "等待",
-  "准备",
-  "进行",
-  "完成",
-  "终止",
-  "暂停"
-] satisfies ProcessStatus[]
 
 export default function ProcessPage() {
   const { id } = useParams<{ id: string }>()
@@ -122,7 +113,7 @@ export default function ProcessPage() {
           <EditableCell
             value={row.original.status}
             type="select"
-            options={processStatusOptions.map((s) => ({
+            options={ProcessStatusOptions.map((s) => ({
               label: s,
               value: s
             }))}

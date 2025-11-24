@@ -1,8 +1,8 @@
 import { deleteEmployee, listEmployees, updateEmployee } from "@/api/employees"
 import { listTeams } from "@/api/teams"
 import EditableCell from "@/components/common/editable-cell"
-import { HeaderActions } from "@/components/common/header-actions"
-import { Loading } from "@/components/common/loading"
+import HeaderActions from "@/components/common/header-actions"
+import Loading from "@/components/common/loading"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -197,9 +197,9 @@ export default function EmployeePage() {
   })
 
   if (isError) {
-      <div className="flex items-center justify-center h-full">
-        <span>加载失败</span>
-      </div>
+    ;<div className="flex items-center justify-center h-full">
+      <span>加载失败</span>
+    </div>
   }
 
   if (isLoading) {

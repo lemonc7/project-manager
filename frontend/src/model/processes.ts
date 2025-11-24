@@ -1,4 +1,13 @@
-type ProcessStatus = "等待" | "准备" | "进行" | "完成" | "暂停" | "终止"
+export const ProcessStatusOptions = [
+  "等待",
+  "准备",
+  "进行",
+  "完成",
+  "暂停",
+  "终止"
+] as const
+
+export type ProcessStatus = (typeof ProcessStatusOptions)[number]
 
 interface InsertProcessRequest {
   name: string
@@ -41,10 +50,4 @@ interface Task {
   projectName: string
 }
 
-export type {
-  ProcessStatus,
-  InsertProcessRequest,
-  UpdateProcessRequest,
-  Process,
-  Task
-}
+export type { InsertProcessRequest, UpdateProcessRequest, Process, Task }

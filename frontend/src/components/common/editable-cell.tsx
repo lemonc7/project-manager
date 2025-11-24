@@ -17,7 +17,7 @@ interface EditableCellProps<T> {
   onSave: (value: T) => void
 }
 
-function EditableCell<T>({
+export default function EditableCell<T>({
   value,
   type = "text",
   options,
@@ -106,5 +106,3 @@ function EditableCell<T>({
     />
   )
 }
-
-export default EditableCell

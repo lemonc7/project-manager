@@ -1,8 +1,8 @@
 import { listProjectsFilter, updateProject } from "@/api/projects"
-import type {
-  Project,
-  ProjectStatus,
-  UpdateProjectRequest
+import {
+  ProjectStatusOptions,
+  type Project,
+  type UpdateProjectRequest
 } from "@/model/projects"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -22,15 +22,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import EditableCell from "@/components/common/editable-cell"
-import { Loading } from "@/components/common/loading"
-
-const projectStatusOptions = [
-  "排单",
-  "进行",
-  "完成",
-  "暂停",
-  "终止"
-] satisfies ProjectStatus[]
+import Loading from "@/components/common/loading"
 
 export default function ProjectPage() {
   const { data, isError, isPending } = useQuery<Project[], Error>({
@@ -129,7 +121,7 @@ export default function ProjectPage() {
         <EditableCell
           value={row.original.status}
           type="select"
-          options={projectStatusOptions.map((s) => ({
+          options={ProjectStatusOptions.map((s) => ({
             label: s,
             value: s
           }))}

@@ -1,5 +1,5 @@
 import { listTasks } from "@/api/processes"
-import { Loading } from "@/components/common/loading"
+import Loading from "@/components/common/loading"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -126,9 +126,9 @@ export default function TaskPage() {
         <TaskOverview />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Task taskStatus="doing" className="block"/>
-        <Task taskStatus="ready" className="hidden sm:block" />
-        <Task taskStatus="todo" className="hidden sm:block" />
+        <Task taskStatus="doing" />
+        <Task taskStatus="ready" className="hidden sm:flex" />
+        <Task taskStatus="todo" className="hidden sm:flex" />
       </div>
     </main>
   )
