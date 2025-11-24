@@ -126,7 +126,7 @@ export default function TaskPage() {
         <TaskOverview />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Task taskStatus="doing" />
+        <Task taskStatus="doing" className="block"/>
         <Task taskStatus="ready" className="hidden sm:block" />
         <Task taskStatus="todo" className="hidden sm:block" />
       </div>

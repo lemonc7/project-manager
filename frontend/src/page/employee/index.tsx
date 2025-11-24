@@ -197,7 +197,9 @@ export default function EmployeePage() {
   })
 
   if (isError) {
-    return null
+      <div className="flex items-center justify-center h-full">
+        <span>加载失败</span>
+      </div>
   }
 
   if (isLoading) {

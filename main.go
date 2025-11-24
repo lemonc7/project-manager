@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	app, err := application.InitApp("./config/config.yaml")
+	app, err := application.InitApp("./config.yaml")
 	if err != nil {
 		panic(err)
 	}

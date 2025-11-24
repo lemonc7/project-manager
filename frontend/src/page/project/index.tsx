@@ -173,7 +173,11 @@ export default function ProjectPage() {
   }
 
   if (isError) {
-    return null
+    return (
+      <div className="flex items-center justify-center h-full">
+        <span>加载失败</span>
+      </div>
+    )
   }
   return (
     <div className="overflow-hidden rounded-md border">

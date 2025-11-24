@@ -14,18 +14,18 @@ import (
 
 type ProcessService struct {
 	db      *pgxpool.Pool
-	queries *repo.Queries
+	querier repo.Querier
 }
 
 func NewProcessService(db *pgxpool.Pool) *ProcessService {
 	return &ProcessService{
 		db:      db,
-		queries: repo.New(db),
+		querier: repo.New(db),
 	}
 }
 
 func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.InsertProcessLastRow, error) {
-	process, err := p.queries.InsertProcessLast(ctx, repo.InsertProcessLastParams{
+	process, err := p.querier.InsertProcessLast(ctx, repo.InsertProcessLastParams{
 		Name:        req.Name,
 		ProjectID:   req.ProjectID,
 		EmployeeID:  req.EmployeeID,
@@ -42,7 +42,7 @@ func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.Insert
 
 func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error {
 	// 验证sequence
-	maxSeq, err := p.queries.GetMaxSequence(ctx, req.ProjectID)
+	maxSeq, err := p.querier.GetMaxSequence(ctx, req.ProjectID)
 	if err != nil {
 		return fmt.Errorf("fail to get max sequence: %w", err)
 	}
@@ -60,7 +60,7 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 	defer tx.Rollback(ctx)
 
 	// 使用事务
-	qtx := p.queries.WithTx(tx)
+	qtx := repo.New(p.db).WithTx(tx)
 
 	// 先将后续的process sequence加1
 	err = qtx.ShiftProcessesUp(ctx, repo.ShiftProcessesUpParams{
@@ -88,7 +88,7 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 }
 
 func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.UpdateProcessRow, error) {
-	process, err := p.queries.UpdateProcess(ctx, repo.UpdateProcessParams{
+	process, err := p.querier.UpdateProcess(ctx, repo.UpdateProcessParams{
 		Name:        req.Name,
 		Description: req.Description,
 		Remark:      req.Remark,
@@ -115,7 +115,7 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 	defer tx.Rollback(ctx)
 
 	// 使用事务
-	qtx := p.queries.WithTx(tx)
+	qtx := repo.New(p.db).WithTx(tx)
 
 	// 先删除process
 	projectID, err := qtx.DeleteProcess(ctx, id)
@@ -138,7 +138,7 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 }
 
 func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error) {
-	processes, err := p.queries.ListProcesses(ctx, projectID)
+	processes, err := p.querier.ListProcesses(ctx, projectID)
 
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]
 }
 
 func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error) {
-	tasks, err := p.queries.ListTasksTodo(ctx, &employeeID)
+	tasks, err := p.querier.ListTasksTodo(ctx, &employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([
 }
 
 func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error) {
-	tasks, err := p.queries.ListTasksReady(ctx, &employeeID)
+	tasks, err := p.querier.ListTasksReady(ctx, &employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) (
 }
 
 func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) ([]model.Task, error) {
-	ts, err := p.queries.ListTasksDoing(ctx, &employeeID)
+	ts, err := p.querier.ListTasksDoing(ctx, &employeeID)
 	if err != nil {
 		return nil, err
 	}

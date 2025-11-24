@@ -9,6 +9,7 @@ func (a *Application) initRouter() {
 	authJWT := auth.Group("", jwtMW)
 
 	auth.POST("/login", a.authHandler.Login)
+	auth.POST("/init_admin", a.authHandler.InitAdmin)
 	authJWT.POST("/password", a.authHandler.ResetPassword)
 	authJWT.PUT("/password", a.authHandler.ChangePassword)
 
@@ -22,7 +23,7 @@ func (a *Application) initRouter() {
 
 	// 员工
 	employeeRouter.GET("", a.employeeHandler.ListEmployees)
-	employeeRouter.GET("/me",a.employeeHandler.GetEmployee)
+	employeeRouter.GET("/me", a.employeeHandler.GetEmployee)
 	employeeRouter.POST("", a.employeeHandler.CreateEmployee)
 	employeeRouter.PUT("/:id", a.employeeHandler.UpdateEmployee)
 	employeeRouter.DELETE("/:id", a.employeeHandler.DeleteEmployee)

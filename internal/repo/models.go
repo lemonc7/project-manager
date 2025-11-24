@@ -142,6 +142,14 @@ type Project struct {
 	UpdatedAt   time.Time     `json:"updatedAt"`
 }
 
+type SystemSetting struct {
+	Key         string    `json:"key"`
+	Value       *string   `json:"value"`
+	Description *string   `json:"description"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
 type Team struct {
 	ID          int32     `json:"id"`
 	Name        string    `json:"name"`

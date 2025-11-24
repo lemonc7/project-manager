@@ -31,7 +31,7 @@ CREATE TABLE employees (
   name VARCHAR(10) NOT NULL,
   username VARCHAR(20) NOT NULL UNIQUE,
   password_hash VARCHAR(60) NOT NULL,
-  roles TEXT[],
+  roles TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
   team_id INT REFERENCES teams(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -69,6 +69,15 @@ CREATE TABLE processes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT unique_project_sequence UNIQUE(project_id, sequence)
   DEFERRABLE INITIALLY DEFERRED
+);
+
+-- 系统设置表
+CREATE TABLE system_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  description TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -112,5 +121,11 @@ EXECUTE FUNCTION update_updated_at();
 -- 应用到processes表
 CREATE TRIGGER trigger_update_updated_at_processes
 BEFORE UPDATE ON processes
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
+
+-- 应用到system_settings表
+CREATE TRIGGER trigger_update_updated_at_system_settings
+BEFORE UPDATE ON system_settings
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();

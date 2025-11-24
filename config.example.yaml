@@ -1,0 +1,21 @@
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: password
+  dbname: dbname
+  ssl_mode: disable
+  max_idle_conns: 10
+  max_open_conns: 20
+
+server:
+  port: 5001
+  read_timeout: 5s
+  write_timeout: 5s
+
+logger:
+  level: info
+
+jwt:
+  secret: secret
+  duration: 24h

@@ -9,8 +9,10 @@ import (
 )
 
 type Querier interface {
+	AllowInitAdmin(ctx context.Context) (bool, error)
 	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (CreateEmployeeRow, error)
 	CreateProject(ctx context.Context, arg CreateProjectParams) (CreateProjectRow, error)
+	CreateSetting(ctx context.Context, arg CreateSettingParams) (CreateSettingRow, error)
 	CreateTeam(ctx context.Context, arg CreateTeamParams) (CreateTeamRow, error)
 	DeleteEmployee(ctx context.Context, id int32) error
 	DeleteProcess(ctx context.Context, id int32) (int32, error)

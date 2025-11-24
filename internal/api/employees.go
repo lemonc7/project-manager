@@ -44,6 +44,11 @@ func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
 	}
 
+	// 没传roles设置为空数组
+	if req.Roles == nil {
+		req.Roles = []string{}
+	}
+
 	// 业务函数
 	employee, err := e.employeeService.CreateEmployee(c.Request().Context(), req)
 	if err != nil {

@@ -15,6 +15,7 @@ type AuthService interface {
 	Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error)
 	ResetPassword(ctx context.Context, req model.ResetPasswordRequest) error
 	ChangePassword(ctx context.Context, username string, req model.ChangePasswordRequest) error
+	InitAdmin(ctx context.Context, req model.InitAdminRequest) error
 }
 
 var _ AuthService = (*service.AuthService)(nil)
@@ -97,5 +98,23 @@ func (a *AuthHandler) ChangePassword(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "成功修改密码",
+	})
+}
+
+func (a *AuthHandler) InitAdmin(c echo.Context) error {
+	var req model.InitAdminRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	if err := c.Validate(req); err != nil {
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
+	}
+
+	if err := a.authService.InitAdmin(c.Request().Context(), req); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "成功初始化管理员",
 	})
 }

@@ -23,7 +23,7 @@ func JWTAuther(jwt *jwt.JWT) func(next echo.HandlerFunc) echo.HandlerFunc {
 			tokenString := ls[1]
 			claims, err := jwt.ParseToken(tokenString)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
+				return echo.NewHTTPError(http.StatusUnauthorized, err)
 			}
 
 			c.Set("userID", claims.UserID)

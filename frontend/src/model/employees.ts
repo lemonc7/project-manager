@@ -16,14 +16,14 @@ interface UpdateEmployeeRequest {
 interface Employee {
   id: number
   name: string
-  roles: string[] | null
+  roles: string[]
   teamId: number | null
 }
 
 interface EmployeeMe {
   id: number
   name: string
-  roles?: string[]
+  roles: string[]
 }
 
 export type {

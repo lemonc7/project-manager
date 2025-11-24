@@ -16,7 +16,6 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	Driver       string `yaml:"driver"`
 	Host         string `yaml:"host"`
 	Port         int    `yaml:"port"`
 	User         string `yaml:"user"`
@@ -28,8 +27,8 @@ type DatabaseConfig struct {
 }
 
 func (d *DatabaseConfig) DSN() string {
-	return fmt.Sprintf("%s://%s:%s@%s:%d/%s?sslmode=%s",
-		d.Driver, d.User, d.Password, d.Host, d.Port, d.DBname, d.SSLMode)
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+		d.User, d.Password, d.Host, d.Port, d.DBname, d.SSLMode)
 }
 
 type ServerConfig struct {

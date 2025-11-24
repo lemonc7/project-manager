@@ -81,12 +81,12 @@ func (e *EmployeeService) GetEmployee(ctx context.Context, username string) (mod
 	// 获取数据
 	employee, err := e.querier.GetEmployeeByUsername(ctx, username)
 	if err != nil {
-		return model.Employee{},nil
+		return model.Employee{}, nil
 	}
 
 	return model.Employee{
-		ID:     employee.ID,
-		Name:   employee.Name,
-		Roles:  employee.Roles,
+		ID:    employee.ID,
+		Name:  employee.Name,
+		Roles: employee.Roles,
 	}, nil
 }

@@ -193,7 +193,11 @@ export default function ProcessPage() {
   })
 
   if (isError) {
-    return null
+    return (
+      <div className="flex items-center justify-center h-full">
+        <span>加载失败</span>
+      </div>
+    )
   }
 
   if (isPending && !data) {
