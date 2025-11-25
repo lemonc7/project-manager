@@ -20,10 +20,10 @@ func NewEmployeeService(db *pgxpool.Pool, ph PasswordHasher) *EmployeeService {
 	}
 }
 
-func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (repo.CreateEmployeeRow, error) {
+func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (model.Employee, error) {
 	passwordHash, err := e.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return repo.CreateEmployeeRow{}, err
+		return model.Employee{}, err
 	}
 	// 插入数据
 	employee, err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
@@ -35,13 +35,18 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 	})
 
 	if err != nil {
-		return repo.CreateEmployeeRow{}, err
+		return model.Employee{}, err
 	}
 
-	return employee, nil
+	return model.Employee{
+		ID:     employee.ID,
+		Name:   employee.Name,
+		Roles:  employee.Roles,
+		TeamID: employee.TeamID,
+	}, nil
 }
 
-func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (repo.UpdateEmployeeRow, error) {
+func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (model.Employee, error) {
 	// 更新数据
 	employee, err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       id,
@@ -52,10 +57,15 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req mode
 	})
 
 	if err != nil {
-		return repo.UpdateEmployeeRow{}, err
+		return model.Employee{}, err
 	}
 
-	return employee, nil
+	return model.Employee{
+		ID:     employee.ID,
+		Name:   employee.Name,
+		Roles:  employee.Roles,
+		TeamID: employee.TeamID,
+	}, nil
 }
 
 func (e *EmployeeService) DeleteEmployee(ctx context.Context, id int32) error {
@@ -67,11 +77,21 @@ func (e *EmployeeService) DeleteEmployee(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (e *EmployeeService) ListEmployees(ctx context.Context) ([]repo.ListEmployeesRow, error) {
+func (e *EmployeeService) ListEmployees(ctx context.Context) ([]model.Employee, error) {
 	// 获取数据
-	employees, err := e.querier.ListEmployees(ctx)
+	data, err := e.querier.ListEmployees(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	employees := make([]model.Employee, len(data))
+	for i, e := range data {
+		employees[i] = model.Employee{
+			ID:     e.ID,
+			Name:   e.Name,
+			Roles:  e.Roles,
+			TeamID: e.TeamID,
+		}
 	}
 
 	return employees, nil
@@ -85,8 +105,9 @@ func (e *EmployeeService) GetEmployee(ctx context.Context, username string) (mod
 	}
 
 	return model.Employee{
-		ID:    employee.ID,
-		Name:  employee.Name,
-		Roles: employee.Roles,
+		ID:     employee.ID,
+		Name:   employee.Name,
+		Roles:  employee.Roles,
+		TeamID: employee.TeamID,
 	}, nil
 }

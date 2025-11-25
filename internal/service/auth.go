@@ -85,6 +85,7 @@ func (a *AuthService) ResetPassword(ctx context.Context, req model.ResetPassword
 	}
 	return nil
 }
+
 func (a *AuthService) ChangePassword(ctx context.Context, username string, req model.ChangePasswordRequest) error {
 	// 获取用户
 	user, err := a.querier.GetEmployeeByUsername(ctx, username)

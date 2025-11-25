@@ -39,13 +39,13 @@ interface ListProjectsRequest {
 interface Project {
   id: number
   name: string
-  description: string | null
-  remark: string | null
+  description?: string
+  remark?: string
   status: ProjectStatus
-  managerId: number
-  startedAt: string | null
-  duration: number | null
-  finishedAt: string | null
+  managerID: number
+  startedAt?: string
+  duration?: number
+  finishedAt?: string
 }
 
 export type {

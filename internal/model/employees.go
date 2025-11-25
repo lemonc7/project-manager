@@ -18,5 +18,6 @@ type UpdateEmployeeRequest struct {
 type Employee struct {
 	ID     int32    `json:"id"`
 	Name   string   `json:"name"`
-	Roles  []string `json:"roles"`
+	Roles  []string `json:"roles,omitempty"`
+	TeamID *int32   `json:"teamID,omitempty"`
 }

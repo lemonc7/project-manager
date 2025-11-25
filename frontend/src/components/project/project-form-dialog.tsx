@@ -2,7 +2,6 @@ import {
   ProjectStatusOptions,
   type CreateProjectRequest,
   type Project,
-  type ProjectStatus,
   type UpdateProjectRequest
 } from "@/model/projects"
 import { Dialog, DialogContent } from "../ui/dialog"
@@ -22,31 +21,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "../ui/select"
-import { useForm } from "react-hook-form"
-
-interface ProjectFormValues {
-  name: string
-  description?: string
-  remark?: string
-  status: ProjectStatus
-  managerID: number
-  startedAt?: string
-  duration?: number
-  finishedAt?: string
-}
-
-function mapProjectToFormValues(project: Project): ProjectFormValues {
-  return {
-    name: project.name,
-    description: project.description ?? "",
-    remark: project.remark ?? "",
-    status: project.status,
-    managerID: project.managerId,
-    startedAt: project.startedAt ?? "",
-    duration: project.duration ?? undefined,
-    finishedAt: project.finishedAt ?? ""
-  }
-}
+import { Controller, useForm } from "react-hook-form"
 
 type ProjectFormDialogProps =
   | {
@@ -73,15 +48,12 @@ export default function ProjectFormDialog({
 }: ProjectFormDialogProps) {
   const {
     register,
+    control,
     handleSubmit,
     formState: { dirtyFields }
-  } = useForm({
-    defaultValues: defaultValues
-      ? mapProjectToFormValues(defaultValues)
-      : undefined
-  })
+  } = useForm<Project>({ defaultValues })
 
-  const onSubmit = (data: ProjectFormValues) => {
+  const onSubmit = (data: Project) => {
     if (mode === "create") {
       const req: CreateProjectRequest = {
         name: data.name,
@@ -91,64 +63,81 @@ export default function ProjectFormDialog({
         duration: data.duration
       }
       submit(req)
-    } else {
-      const req: UpdateProjectRequest = {}
-
-      submit(req)
+      return
     }
+    const req: UpdateProjectRequest = {}
+    if (dirtyFields.name) req.name = data.name
+    if (dirtyFields.description) req.description = data.description
+    if (dirtyFields.remark) req.remark = data.remark
+    if (dirtyFields.status) req.status = data.status
+    if (dirtyFields.managerID) req.managerID = data.managerID
+    if (dirtyFields.startedAt) req.startedAt = data.startedAt
+    if (dirtyFields.duration) req.duration = data.duration
+    if (dirtyFields.finishedAt) req.finishedAt = data.finishedAt
+    submit(req)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <div className="w-full max-w-md">
-          <form>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
               <FieldSet>
                 <FieldLegend>
                   {mode === "create" ? "创建项目" : "编辑项目"}
                 </FieldLegend>
                 {defaultValues && <FieldDescription></FieldDescription>}
-
                 <FieldGroup>
+                  {/* 项目名称 */}
                   <Field>
                     <FieldLabel htmlFor="project-name">名称</FieldLabel>
                     <Input
                       id="project-name"
-                      name="name"
                       placeholder="请输入项目名称"
-                      value={defaultValues?.name}
-                      required
+                      {...register("name", { required: true })}
                     />
                   </Field>
+                  {/* 项目细节 */}
                   <Field>
                     <FieldLabel htmlFor="project-description">
                       细节描述
                     </FieldLabel>
                     <Input
                       id="project-description"
-                      name="description"
                       placeholder="项目细节描述"
-                      value={defaultValues?.description ?? undefined}
+                      {...register("description")}
                     />
                   </Field>
+                  {/* 状态：编辑模式才显示状态 */}
+                  {mode === "edit" && (
+                    <Field>
+                      <FieldLabel>状态</FieldLabel>
+                      <Controller
+                        control={control}
+                        name="status"
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="请选择" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ProjectStatusOptions.map((s) => (
+                                <SelectItem key={s} value={s}>
+                                  {s}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </Field>
+                  )}
                   <Field>
-                    <FieldLabel>状态</FieldLabel>
-                    <Select
-                      name="status"
-                      value={mode === "edit" ? defaultValues?.status : "排单"}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="请选择" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ProjectStatusOptions.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FieldLabel>负责人</FieldLabel>
                   </Field>
                 </FieldGroup>
               </FieldSet>

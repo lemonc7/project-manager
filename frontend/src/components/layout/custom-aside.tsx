@@ -22,7 +22,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { getEmployeeMe } from "@/api/employees"
 import { removeToken } from "@/util/auth"
-import type { EmployeeMe } from "@/model/employees"
+import type { Employee } from "@/model/employees"
 
 const items = [
   {
@@ -43,7 +43,7 @@ const items = [
 ]
 
 export default function CustomAside() {
-  const { data } = useQuery<EmployeeMe, Error>({
+  const { data } = useQuery<Employee, Error>({
     queryKey: ["user"],
     queryFn: getEmployeeMe
   })
@@ -87,7 +87,7 @@ export default function CustomAside() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost">
                 <User />
-                <span>{data?.name || "未知"}</span>
+                <span>{data?.name ?? "未登录"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

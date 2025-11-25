@@ -91,7 +91,7 @@ export default function ProcessPage() {
       cell: ({ row }) => {
         return (
           <EditableCell
-            value={row.original.description ?? undefined}
+            value={row.original.description}
             onSave={(value) =>
               updateProcessMutation.mutate({
                 id: row.original.id,
@@ -164,7 +164,7 @@ export default function ProcessPage() {
       cell: ({ row }) => {
         return (
           <EditableCell
-            value={row.original.remark ?? undefined}
+            value={row.original.remark}
             onSave={(value) =>
               updateProcessMutation.mutate({
                 id: row.original.id,

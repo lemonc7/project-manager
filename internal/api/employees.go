@@ -6,16 +6,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
-	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type EmployeeService interface {
-	CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (repo.CreateEmployeeRow, error)
-	UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (repo.UpdateEmployeeRow, error)
+	CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (model.Employee, error)
+	UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (model.Employee, error)
 	DeleteEmployee(ctx context.Context, id int32) error
-	ListEmployees(ctx context.Context) ([]repo.ListEmployeesRow, error)
+	ListEmployees(ctx context.Context) ([]model.Employee, error)
 	GetEmployee(ctx context.Context, username string) (model.Employee, error)
 }
 

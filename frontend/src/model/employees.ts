@@ -16,19 +16,8 @@ interface UpdateEmployeeRequest {
 interface Employee {
   id: number
   name: string
-  roles: string[]
-  teamId: number | null
+  roles?: string[]
+  teamID?: number
 }
 
-interface EmployeeMe {
-  id: number
-  name: string
-  roles: string[]
-}
-
-export type {
-  CreateEmployeeRequest,
-  UpdateEmployeeRequest,
-  Employee,
-  EmployeeMe
-}
+export type { CreateEmployeeRequest, UpdateEmployeeRequest, Employee }

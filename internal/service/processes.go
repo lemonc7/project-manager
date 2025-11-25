@@ -24,7 +24,7 @@ func NewProcessService(db *pgxpool.Pool) *ProcessService {
 	}
 }
 
-func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (repo.InsertProcessLastRow, error) {
+func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (model.Process, error) {
 	process, err := p.querier.InsertProcessLast(ctx, repo.InsertProcessLastParams{
 		Name:        req.Name,
 		ProjectID:   req.ProjectID,
@@ -34,10 +34,21 @@ func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.Insert
 	})
 
 	if err != nil {
-		return repo.InsertProcessLastRow{}, err
+		return model.Process{}, err
 	}
 
-	return process, nil
+	return model.Process{
+		ID:          process.ID,
+		ProjectID:   process.ProjectID,
+		Name:        process.Name,
+		Description: process.Description,
+		Remark:      process.Remark,
+		Status:      process.Status,
+		EmployeeID:  process.EmployeeID,
+		Sequence:    process.Sequence,
+		StartedAt:   process.StartedAt,
+		FinishedAt:  process.FinishedAt,
+	}, nil
 }
 
 func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error {
@@ -87,7 +98,7 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 	return tx.Commit(ctx)
 }
 
-func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (repo.UpdateProcessRow, error) {
+func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (model.Process, error) {
 	process, err := p.querier.UpdateProcess(ctx, repo.UpdateProcessParams{
 		Name:        req.Name,
 		Description: req.Description,
@@ -100,10 +111,21 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.
 	})
 
 	if err != nil {
-		return repo.UpdateProcessRow{}, err
+		return model.Process{}, err
 	}
 
-	return process, nil
+	return model.Process{
+		ID:          process.ID,
+		ProjectID:   process.ProjectID,
+		Name:        process.Name,
+		Description: process.Description,
+		Remark:      process.Remark,
+		Status:      process.Status,
+		EmployeeID:  process.EmployeeID,
+		Sequence:    process.Sequence,
+		StartedAt:   process.StartedAt,
+		FinishedAt:  process.FinishedAt,
+	}, nil
 }
 
 func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
@@ -137,29 +159,69 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error) {
-	processes, err := p.querier.ListProcesses(ctx, projectID)
+func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]model.Process, error) {
+	data, err := p.querier.ListProcesses(ctx, projectID)
 
 	if err != nil {
 		return nil, err
 	}
+	processes := make([]model.Process, len(data))
 
+	for i, p := range data {
+		processes[i] = model.Process{
+			ID:          p.ID,
+			ProjectID:   p.ProjectID,
+			Name:        p.Name,
+			Description: p.Description,
+			Remark:      p.Remark,
+			Status:      p.Status,
+			EmployeeID:  p.EmployeeID,
+			Sequence:    p.Sequence,
+			StartedAt:   p.StartedAt,
+			FinishedAt:  p.FinishedAt,
+		}
+	}
 	return processes, nil
+
 }
 
-func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error) {
-	tasks, err := p.querier.ListTasksTodo(ctx, &employeeID)
+func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([]model.Task, error) {
+	data, err := p.querier.ListTasksTodo(ctx, &employeeID)
 	if err != nil {
 		return nil, err
 	}
+	tasks := make([]model.Task, len(data))
+
+	for i, t := range data {
+		tasks[i] = model.Task{
+			ID:          t.ID,
+			Name:        t.Name,
+			Description: t.Description,
+			ProjectID:   t.ProjectID,
+			ProjectName: t.ProjectName,
+		}
+	}
+
 	return tasks, nil
 }
 
-func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error) {
-	tasks, err := p.querier.ListTasksReady(ctx, &employeeID)
+func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) ([]model.Task, error) {
+	data, err := p.querier.ListTasksReady(ctx, &employeeID)
 	if err != nil {
 		return nil, err
 	}
+
+	tasks := make([]model.Task, len(data))
+	for i, t := range data {
+		tasks[i] = model.Task{
+			ID:          t.ID,
+			Name:        t.Name,
+			Description: t.Description,
+			ProjectID:   t.ProjectID,
+			ProjectName: t.ProjectName,
+		}
+	}
+
 	return tasks, nil
 }
 

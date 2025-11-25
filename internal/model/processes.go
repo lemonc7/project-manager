@@ -24,6 +24,19 @@ type UpdateProcessRequest struct {
 	FinishedAt  *time.Time          `json:"finishedAt"`
 }
 
+type Process struct {
+	ID          int32              `json:"id"`
+	ProjectID   int32              `json:"projectID"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description,omitempty"`
+	Remark      *string            `json:"remark,omitempty"`
+	Status      repo.ProcessStatus `json:"status"`
+	EmployeeID  *int32             `json:"employeeID,omitempty"`
+	Sequence    int32              `json:"sequence"`
+	StartedAt   *time.Time         `json:"startedAt,omitempty"`
+	FinishedAt  *time.Time         `json:"finishedAt,omitempty"`
+}
+
 type Task struct {
 	ID            int32      `json:"id"`
 	Name          string     `json:"name"`

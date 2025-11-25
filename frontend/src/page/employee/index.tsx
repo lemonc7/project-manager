@@ -1,5 +1,4 @@
 import { deleteEmployee, listEmployees, updateEmployee } from "@/api/employees"
-import { listTeams } from "@/api/teams"
 import EditableCell from "@/components/common/editable-cell"
 import HeaderActions from "@/components/common/header-actions"
 import Loading from "@/components/common/loading"
@@ -30,8 +29,8 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import useTeams from "@/hooks/use-teams"
 import type { Employee, UpdateEmployeeRequest } from "@/model/employees"
-import type { Team } from "@/model/teams"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   flexRender,
@@ -55,10 +54,8 @@ export default function EmployeePage() {
   })
 
   // 获取teams数据
-  const { data: teams } = useQuery<Team[], Error>({
-    queryKey: ["teams", "overview"],
-    queryFn: listTeams
-  })
+  const { data: teams } = useTeams()
+
   const queryClient = useQueryClient()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [employeeToDelete, setEmployeeToDelete] = useState<number | null>(null)
@@ -133,11 +130,11 @@ export default function EmployeePage() {
       header: "小组",
       cell: ({ row }) => {
         if (!teams) {
-          return <span>{row.original.teamId}</span>
+          return <span>加载失败</span>
         }
         return (
           <EditableCell
-            value={row.original.teamId ?? undefined}
+            value={row.original.teamID}
             type="select"
             options={teams.map((t) => ({
               label: t.name,
@@ -146,7 +143,7 @@ export default function EmployeePage() {
             onSave={(value) =>
               updateEmployeeMutation.mutate({
                 id: row.original.id,
-                fields: { teamID: Number(value) }
+                fields: { teamID: value }
               })
             }
           />
@@ -197,9 +194,11 @@ export default function EmployeePage() {
   })
 
   if (isError) {
-    ;<div className="flex items-center justify-center h-full">
-      <span>加载失败</span>
-    </div>
+    return (
+      <div className="flex items-center justify-center h-full">
+        <span>加载失败</span>
+      </div>
+    )
   }
 
   if (isLoading) {

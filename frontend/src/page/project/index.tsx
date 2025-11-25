@@ -76,7 +76,7 @@ export default function ProjectPage() {
       header: "描述",
       cell: ({ row }) => (
         <EditableCell
-          value={row.original.description ?? undefined}
+          value={row.original.description}
           onSave={(value) =>
             updateProjectMutation.mutate({
               id: row.original.id,
@@ -138,7 +138,7 @@ export default function ProjectPage() {
       header: "备注",
       cell: ({ row }) => (
         <EditableCell
-          value={row.original.remark ?? undefined}
+          value={row.original.remark}
           onSave={(value) =>
             updateProjectMutation.mutate({
               id: row.original.id,

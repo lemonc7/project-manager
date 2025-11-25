@@ -6,16 +6,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
-	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type ProjectService interface {
-	CreateProject(ctx context.Context, req model.CreateProjectRequest) (repo.CreateProjectRow, error)
-	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (repo.UpdateProjectRow, error)
+	CreateProject(ctx context.Context, req model.CreateProjectRequest) (model.Project, error)
+	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) (model.Project, error)
 	DeleteProject(ctx context.Context, id int32) error
-	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
+	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error)
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)

@@ -29,15 +29,15 @@ interface UpdateProcessRequest {
 
 interface Process {
   id: number
-  projectId: number
+  projectID: number
   name: string
-  description: string | null
-  remark: string | null
+  description?: string
+  remark?: string
   status: ProcessStatus
-  employeeId: number | null
+  employeeID?: number
   sequence: number
-  startedAt: string | null
-  finishedAt: string | null
+  startedAt?: string
+  finishedAt?: string
 }
 
 interface Task {
