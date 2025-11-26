@@ -6,7 +6,7 @@ SELECT NOT EXISTS (
     AND value = 'true'
 ) AS allow_init;
 
--- name: CreateSetting :one
+-- name: CreateSetting :exec
 INSERT INTO system_settings (
   key,
   value,
@@ -15,5 +15,5 @@ INSERT INTO system_settings (
   $1,
   $2,
   $3
-) RETURNING key, value, description;
+);
 

@@ -11,8 +11,8 @@ import (
 )
 
 type EmployeeService interface {
-	CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (model.Employee, error)
-	UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (model.Employee, error)
+	CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error
+	UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) error
 	DeleteEmployee(ctx context.Context, id int32) error
 	ListEmployees(ctx context.Context) ([]model.Employee, error)
 	GetEmployee(ctx context.Context, username string) (model.Employee, error)
@@ -49,13 +49,15 @@ func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
 	}
 
 	// 业务函数
-	employee, err := e.employeeService.CreateEmployee(c.Request().Context(), req)
+	err := e.employeeService.CreateEmployee(c.Request().Context(), req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusCreated, employee)
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "成功创建员工",
+	})
 }
 
 // 更新员工
@@ -71,13 +73,15 @@ func (e *EmployeeHandler) UpdateEmployee(c echo.Context) error {
 	}
 
 	// 业务函数
-	employee, err := e.employeeService.UpdateEmployee(c.Request().Context(), id, req)
+	err = e.employeeService.UpdateEmployee(c.Request().Context(), id, req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusOK, employee)
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "成功更新员工",
+	})
 }
 
 // 删除员工

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const createProject = `-- name: CreateProject :one
+const createProject = `-- name: CreateProject :exec
 INSERT INTO projects (
   name,
   description,
@@ -23,16 +23,7 @@ INSERT INTO projects (
   $3,
   $4,
   $5
-) RETURNING
-  id,
-  name,
-  description,
-  remark,
-  status,
-  manager_id,
-  started_at,
-  duration,
-  finished_at
+)
 `
 
 type CreateProjectParams struct {
@@ -43,39 +34,15 @@ type CreateProjectParams struct {
 	Duration    *int32  `json:"duration"`
 }
 
-type CreateProjectRow struct {
-	ID          int32         `json:"id"`
-	Name        string        `json:"name"`
-	Description *string       `json:"description"`
-	Remark      *string       `json:"remark"`
-	Status      ProjectStatus `json:"status"`
-	ManagerID   int32         `json:"managerId"`
-	StartedAt   *time.Time    `json:"startedAt"`
-	Duration    *int32        `json:"duration"`
-	FinishedAt  *time.Time    `json:"finishedAt"`
-}
-
-func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (CreateProjectRow, error) {
-	row := q.db.QueryRow(ctx, createProject,
+func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) error {
+	_, err := q.db.Exec(ctx, createProject,
 		arg.Name,
 		arg.Description,
 		arg.Remark,
 		arg.ManagerID,
 		arg.Duration,
 	)
-	var i CreateProjectRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.Remark,
-		&i.Status,
-		&i.ManagerID,
-		&i.StartedAt,
-		&i.Duration,
-		&i.FinishedAt,
-	)
-	return i, err
+	return err
 }
 
 const deleteProject = `-- name: DeleteProject :exec
@@ -114,7 +81,6 @@ ORDER BY
     WHEN '终止' THEN 5
     ELSE 7
   END,
-  (started_at + (duration || 'days')::interval) NULLS LAST,
   id
 `
 
@@ -172,7 +138,7 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 	return items, nil
 }
 
-const updateProject = `-- name: UpdateProject :one
+const updateProject = `-- name: UpdateProject :exec
 UPDATE projects
 SET
   name = COALESCE($1,name),
@@ -184,16 +150,6 @@ SET
   duration = COALESCE($7,duration),
   finished_at = COALESCE($8,finished_at)
 WHERE id = $9
-RETURNING
-  id,
-  name,
-  description,
-  remark,
-  status,
-  manager_id,
-  started_at,
-  duration,
-  finished_at
 `
 
 type UpdateProjectParams struct {
@@ -208,20 +164,8 @@ type UpdateProjectParams struct {
 	ID          int32          `json:"id"`
 }
 
-type UpdateProjectRow struct {
-	ID          int32         `json:"id"`
-	Name        string        `json:"name"`
-	Description *string       `json:"description"`
-	Remark      *string       `json:"remark"`
-	Status      ProjectStatus `json:"status"`
-	ManagerID   int32         `json:"managerId"`
-	StartedAt   *time.Time    `json:"startedAt"`
-	Duration    *int32        `json:"duration"`
-	FinishedAt  *time.Time    `json:"finishedAt"`
-}
-
-func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (UpdateProjectRow, error) {
-	row := q.db.QueryRow(ctx, updateProject,
+func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) error {
+	_, err := q.db.Exec(ctx, updateProject,
 		arg.Name,
 		arg.Description,
 		arg.Remark,
@@ -232,17 +176,5 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (U
 		arg.FinishedAt,
 		arg.ID,
 	)
-	var i UpdateProjectRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.Remark,
-		&i.Status,
-		&i.ManagerID,
-		&i.StartedAt,
-		&i.Duration,
-		&i.FinishedAt,
-	)
-	return i, err
+	return err
 }

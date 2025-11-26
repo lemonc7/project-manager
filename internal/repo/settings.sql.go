@@ -25,7 +25,7 @@ func (q *Queries) AllowInitAdmin(ctx context.Context) (bool, error) {
 	return allow_init, err
 }
 
-const createSetting = `-- name: CreateSetting :one
+const createSetting = `-- name: CreateSetting :exec
 INSERT INTO system_settings (
   key,
   value,
@@ -34,7 +34,7 @@ INSERT INTO system_settings (
   $1,
   $2,
   $3
-) RETURNING key, value, description
+)
 `
 
 type CreateSettingParams struct {
@@ -43,15 +43,7 @@ type CreateSettingParams struct {
 	Description *string `json:"description"`
 }
 
-type CreateSettingRow struct {
-	Key         string  `json:"key"`
-	Value       *string `json:"value"`
-	Description *string `json:"description"`
-}
-
-func (q *Queries) CreateSetting(ctx context.Context, arg CreateSettingParams) (CreateSettingRow, error) {
-	row := q.db.QueryRow(ctx, createSetting, arg.Key, arg.Value, arg.Description)
-	var i CreateSettingRow
-	err := row.Scan(&i.Key, &i.Value, &i.Description)
-	return i, err
+func (q *Queries) CreateSetting(ctx context.Context, arg CreateSettingParams) error {
+	_, err := q.db.Exec(ctx, createSetting, arg.Key, arg.Value, arg.Description)
+	return err
 }

@@ -21,7 +21,7 @@ type UpdateProjectRequest struct {
 	Status      *repo.ProjectStatus `json:"status"`
 	ManagerID   *int32              `json:"managerID"`
 	StartedAt   *time.Time          `json:"startedAt"`
-	Duration    *int32              `json:"duration"`
+	Duration    *int32              `json:"duration" validate:"gt=0"`
 	FinishedAt  *time.Time          `json:"finishedAt"`
 }
 
@@ -33,13 +33,18 @@ type ListProjectsRequest struct {
 }
 
 type Project struct {
-	ID          int32              `json:"id"`
-	Name        string             `json:"name"`
-	Description *string            `json:"description,omitempty"`
-	Remark      *string            `json:"remark,omitempty"`
-	Status      repo.ProjectStatus `json:"status"`
-	ManagerID   int32              `json:"managerID"`
-	StartedAt   *time.Time         `json:"startedAt,omitempty"`
-	Duration    *int32             `json:"duration,omitempty"`
-	FinishedAt  *time.Time         `json:"finishedAt,omitempty"`
+	ID            int32              `json:"id"`
+	Name          string             `json:"name"`
+	Description   *string            `json:"description,omitempty"`
+	Remark        *string            `json:"remark,omitempty"`
+	Status        repo.ProjectStatus `json:"status"`
+	ManagerID     int32              `json:"managerID"`
+	StartedAt     *time.Time         `json:"startedAt,omitempty"`
+	RemainingDays *int32             `json:"remainingDays,omitempty"`
+	Duration      *int32             `json:"duration,omitempty"`
+	FinishedAt    *time.Time         `json:"finishedAt,omitempty"`
+}
+
+func (p Project) GetRemainingDays() *int32 {
+	return p.RemainingDays
 }

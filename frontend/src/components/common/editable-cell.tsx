@@ -14,14 +14,16 @@ interface EditableCellProps<T> {
   value: T
   type?: EditableType
   options?: { label: string; value: T }[]
-  onSave: (value: T) => void
+  onSave?: (value: T) => void
+  disabled?: boolean
 }
 
 export default function EditableCell<T>({
   value,
   type = "text",
   options,
-  onSave
+  onSave,
+  disabled = false
 }: EditableCellProps<T>) {
   const [editing, setEditing] = useState(false)
   const [tempValue, setTempValue] = useState<T>(value)
@@ -29,7 +31,7 @@ export default function EditableCell<T>({
   const handleSave = () => {
     setEditing(false)
     if (tempValue !== value) {
-      onSave(tempValue)
+      if (onSave) onSave(tempValue)
     }
   }
 
@@ -40,8 +42,9 @@ export default function EditableCell<T>({
         value={String(tempValue)}
         onValueChange={(v) => {
           const newValue = v as unknown as T
-          onSave(newValue)
+          if (onSave) onSave(newValue)
         }}
+        disabled={disabled}
       >
         <SelectTrigger>
           <SelectValue placeholder="请选择" />

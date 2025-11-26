@@ -50,7 +50,8 @@ CREATE TABLE projects (
   duration INT,
   finished_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT check_duration_positive CHECK (duration > 0)
 );
 
 -- 工艺流程表
@@ -68,7 +69,8 @@ CREATE TABLE processes (
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT unique_project_sequence UNIQUE(project_id, sequence)
-  DEFERRABLE INITIALLY DEFERRED
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT check_sequence_positive CHECK (sequence > 0)
 );
 
 -- 系统设置表

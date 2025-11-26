@@ -20,8 +20,7 @@ export async function listTasks(id: number, status: TaskStatus) {
 }
 
 export async function insertProcessLast(req: InsertProcessRequest) {
-  const res = await service.post<Process>("/process", req)
-  return res.data
+  return service.post<Process>("/process", req)
 }
 
 export async function insertProcessAt(
@@ -32,8 +31,7 @@ export async function insertProcessAt(
 }
 
 export async function updateProcess(id: number, req: UpdateProcessRequest) {
-  const res = await service.put<Process>(`/process/${id}`, req)
-  return res.data
+  return service.put<Process>(`/process/${id}`, req)
 }
 
 export async function deleteProcess(id: number) {

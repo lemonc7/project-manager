@@ -1,4 +1,3 @@
-import { listProcesses, updateProcess } from "@/api/processes"
 import EditableCell from "@/components/common/editable-cell"
 import Loading from "@/components/common/loading"
 import {
@@ -9,60 +8,20 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import {
-  ProcessStatusOptions,
-  type Process,
-  type UpdateProcessRequest
-} from "@/model/processes"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import useProcesses from "@/hooks/use-processes"
+import useUpdateProcess from "@/hooks/use-update-process"
+import { ProcessStatusOptions, type Process } from "@/model/processes"
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   type ColumnDef
 } from "@tanstack/react-table"
-import { useParams } from "react-router"
-import { toast } from "sonner"
 
 export default function ProcessPage() {
-  const { id } = useParams<{ id: string }>()
-  const { data, isError, isPending } = useQuery({
-    queryKey: ["processes", id],
-    queryFn: () => {
-      if (!id) {
-        throw new Error("缺少流程ID")
-      }
-      return listProcesses(+id)
-    }
-  })
+  const { data, isError, isPending } = useProcesses()
 
-  const queryClient = useQueryClient()
-
-  const updateProcessMutation = useMutation({
-    mutationFn: ({
-      id,
-      fields
-    }: {
-      id: number
-      fields: Partial<UpdateProcessRequest>
-    }) => updateProcess(id, fields),
-    onSuccess: (updatedProcess) => {
-      queryClient.setQueryData<Process[]>(
-        ["processes", id],
-        (currentProcesses) =>
-          currentProcesses
-            ? currentProcesses.map((process) =>
-                process.id === updatedProcess.id
-                  ? { ...process, ...updatedProcess }
-                  : process
-              )
-            : [updatedProcess]
-      )
-    },
-    onError: () => {
-      toast.error("更新失败")
-    }
-  })
+  const updateProcessMutation = useUpdateProcess()
 
   const columns: ColumnDef<Process>[] = [
     {
@@ -79,7 +38,7 @@ export default function ProcessPage() {
             onSave={(value) =>
               updateProcessMutation.mutate({
                 id: row.original.id,
-                fields: { name: value }
+                req: { name: value }
               })
             }
           />
@@ -95,7 +54,7 @@ export default function ProcessPage() {
             onSave={(value) =>
               updateProcessMutation.mutate({
                 id: row.original.id,
-                fields: { description: value }
+                req: { description: value }
               })
             }
           />
@@ -120,7 +79,7 @@ export default function ProcessPage() {
             onSave={(value) =>
               updateProcessMutation.mutate({
                 id: row.original.id,
-                fields: { status: value }
+                req: { status: value }
               })
             }
           />
@@ -168,7 +127,7 @@ export default function ProcessPage() {
             onSave={(value) =>
               updateProcessMutation.mutate({
                 id: row.original.id,
-                fields: { remark: value }
+                req: { remark: value }
               })
             }
           />

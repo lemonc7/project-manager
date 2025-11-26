@@ -80,10 +80,8 @@ func (a *AuthService) ResetPassword(ctx context.Context, req model.ResetPassword
 		ID:           req.ID,
 		PasswordHash: passwordHash,
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *AuthService) ChangePassword(ctx context.Context, username string, req model.ChangePasswordRequest) error {
@@ -140,7 +138,7 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 	qtx := repo.New(a.db).WithTx(tx)
 
 	// 注册管理员
-	_, err = qtx.CreateEmployee(ctx, repo.CreateEmployeeParams{
+	err = qtx.CreateEmployee(ctx, repo.CreateEmployeeParams{
 		Name:         req.Name,
 		Username:     req.Username,
 		PasswordHash: passwordHash,
@@ -153,7 +151,7 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 	// 添加admin_initialized设置为true
 	value := "true"
 	description := "管理员初始化状态"
-	_, err = qtx.CreateSetting(ctx, repo.CreateSettingParams{
+	err = qtx.CreateSetting(ctx, repo.CreateSettingParams{
 		Key:         ADMIN_INITIALIZED,
 		Value:       &value,
 		Description: &description,

@@ -8,7 +8,7 @@ FROM employees
 WHERE is_active = true
 ORDER BY name;
 
--- name: CreateEmployee :one
+-- name: CreateEmployee :exec
 INSERT INTO employees (
   name,
   username,
@@ -21,17 +21,16 @@ INSERT INTO employees (
   $3,
   $4,
   $5
-) RETURNING id, name, roles, team_id;
+);
 
--- name: UpdateEmployee :one
+-- name: UpdateEmployee :exec
 UPDATE employees
 SET
   name = COALESCE(sqlc.narg('name'),name),
   roles = COALESCE(sqlc.narg('roles'),roles),
   team_id = COALESCE(sqlc.narg('team_id'),team_id),
   is_active = COALESCE(sqlc.narg('is_active'),is_active)
-WHERE id = sqlc.arg('id')
-RETURNING id, name, roles, team_id;
+WHERE id = sqlc.arg('id');
 
 -- name: DeleteEmployee :exec
 DELETE FROM employees

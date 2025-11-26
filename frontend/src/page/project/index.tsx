@@ -1,11 +1,4 @@
-import { listProjectsFilter, updateProject } from "@/api/projects"
-import {
-  ProjectStatusOptions,
-  type Project,
-  type UpdateProjectRequest
-} from "@/model/projects"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
+import { ProjectStatusOptions, type Project } from "@/model/projects"
 import {
   flexRender,
   getCoreRowModel,
@@ -23,41 +16,21 @@ import {
 } from "@/components/ui/table"
 import EditableCell from "@/components/common/editable-cell"
 import Loading from "@/components/common/loading"
+import HeaderActions from "@/components/common/header-actions"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import ProjectFormDialog from "@/components/project/project-form-dialog"
+import useUpdateProject from "@/hooks/use-update-project"
+import useProjects from "@/hooks/use-projects"
+import useEmployees from "@/hooks/use-employees"
 
 export default function ProjectPage() {
-  const { data, isError, isPending } = useQuery<Project[], Error>({
-    queryKey: ["projects", "overview"],
-    queryFn: () => listProjectsFilter({})
-  })
+  const { data, isError, isPending } = useProjects({})
+  const [createDialog, setCreateDialog] = useState(false)
 
-  const queryClient = useQueryClient()
+  const updateProjectMutation = useUpdateProject()
+  const { data: employees } = useEmployees()
 
-  const updateProjectMutation = useMutation({
-    mutationFn: ({
-      id,
-      fields
-    }: {
-      id: number
-      fields: Partial<UpdateProjectRequest>
-    }) => updateProject(id, fields),
-    onSuccess: (updatedProject) => {
-      // 更新缓存: 只更新当前项目的数据
-      queryClient.setQueryData<Project[]>(
-        ["projects", "overview"],
-        (currentProjects) =>
-          currentProjects
-            ? currentProjects.map((project) =>
-                project.id === updatedProject.id
-                  ? { ...project, ...updatedProject }
-                  : project
-              )
-            : [updatedProject]
-      )
-    },
-    onError: () => {
-      toast.error("更新失败")
-    }
-  })
   const navigate = useNavigate()
 
   const columns: ColumnDef<Project>[] = [
@@ -80,39 +53,41 @@ export default function ProjectPage() {
           onSave={(value) =>
             updateProjectMutation.mutate({
               id: row.original.id,
-              fields: { description: value }
+              req: { description: value }
             })
           }
         />
       )
     },
-    // {
-    //   accessorKey: "employeeName",
-    //   header: "负责人"
-    // },
     {
-      header: "剩余时间",
+      header: "负责人",
+      cell: ({ row }) => (
+        <EditableCell
+          value={row.original.managerID}
+          type="select"
+          options={employees?.map((emp) => ({
+            label: emp.name,
+            value: emp.id
+          }))}
+          disabled
+        />
+      )
+    },
+    {
+      header: "开始时间",
       cell: ({ row }) => {
-        const startedAt = row.original.startedAt
-        const duration = row.original.duration
-
-        // 没设置startTime或duration为空时，说明没设置时间
-        if (!startedAt || !duration) {
-          return undefined
+        let value = ""
+        if (row.original.startedAt) {
+          value = new Date(row.original.startedAt).toISOString().split("T")[0]
         }
-        // 计算剩余天数
-        const startDate = new Date(startedAt)
-        const currentDate = new Date()
-
-        const endDate = new Date(startedAt)
-        endDate.setDate(startDate.getDate() + duration)
-
-        const timeDiff = endDate.getTime() - currentDate.getTime()
-        const remainingDays = Math.ceil(timeDiff / (1000 * 3600 * 24))
-
-        return remainingDays >= 0
-          ? `剩余${remainingDays}天`
-          : `超时${-remainingDays}天`
+        if (row.original.remainingDays) {
+          if (row.original.remainingDays < 0) {
+            value += ` (超时${-row.original.remainingDays}天)`
+          } else {
+            value += ` (剩余${row.original.remainingDays}天)`
+          }
+        }
+        return <span>{value}</span>
       }
     },
     {
@@ -128,7 +103,7 @@ export default function ProjectPage() {
           onSave={(value) =>
             updateProjectMutation.mutate({
               id: row.original.id,
-              fields: { status: value }
+              req: { status: value }
             })
           }
         />
@@ -142,7 +117,7 @@ export default function ProjectPage() {
           onSave={(value) =>
             updateProjectMutation.mutate({
               id: row.original.id,
-              fields: { remark: value }
+              req: { remark: value }
             })
           }
         />
@@ -172,47 +147,63 @@ export default function ProjectPage() {
     )
   }
   return (
-    <div className="overflow-hidden rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+    <>
+      <HeaderActions>
+        <Button onClick={() => setCreateDialog(true)}>新建项目</Button>
+      </HeaderActions>
+      <ProjectFormDialog
+        open={createDialog}
+        onOpenChange={setCreateDialog}
+        mode="create"
+      />
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                无数据
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  无数据
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   )
 }

@@ -16,13 +16,11 @@ export async function getEmployeeMe() {
 }
 
 export async function createEmployee(req: CreateEmployeeRequest) {
-  const res = await service.post<Employee>("/employee", req)
-  return res.data
+  return service.post<Employee>("/employee", req)
 }
 
 export async function updateEmployee(id: number, req: UpdateEmployeeRequest) {
-  const res = await service.put<Employee>(`/employee/${id}`, req)
-  return res.data
+  return service.put<Employee>(`/employee/${id}`, req)
 }
 
 export async function deleteEmployee(id: number) {

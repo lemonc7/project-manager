@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"math"
 	"slices"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
+	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type ProcessService struct {
@@ -24,31 +23,14 @@ func NewProcessService(db *pgxpool.Pool) *ProcessService {
 	}
 }
 
-func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (model.Process, error) {
-	process, err := p.querier.InsertProcessLast(ctx, repo.InsertProcessLastParams{
+func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) error {
+	return p.querier.InsertProcessLast(ctx, repo.InsertProcessLastParams{
 		Name:        req.Name,
 		ProjectID:   req.ProjectID,
 		EmployeeID:  req.EmployeeID,
 		Description: req.Description,
 		Remark:      req.Remark,
 	})
-
-	if err != nil {
-		return model.Process{}, err
-	}
-
-	return model.Process{
-		ID:          process.ID,
-		ProjectID:   process.ProjectID,
-		Name:        process.Name,
-		Description: process.Description,
-		Remark:      process.Remark,
-		Status:      process.Status,
-		EmployeeID:  process.EmployeeID,
-		Sequence:    process.Sequence,
-		StartedAt:   process.StartedAt,
-		FinishedAt:  process.FinishedAt,
-	}, nil
 }
 
 func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error {
@@ -98,8 +80,8 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 	return tx.Commit(ctx)
 }
 
-func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (model.Process, error) {
-	process, err := p.querier.UpdateProcess(ctx, repo.UpdateProcessParams{
+func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error {
+	return p.querier.UpdateProcess(ctx, repo.UpdateProcessParams{
 		Name:        req.Name,
 		Description: req.Description,
 		Remark:      req.Remark,
@@ -109,23 +91,6 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.
 		FinishedAt:  req.FinishedAt,
 		ID:          id,
 	})
-
-	if err != nil {
-		return model.Process{}, err
-	}
-
-	return model.Process{
-		ID:          process.ID,
-		ProjectID:   process.ProjectID,
-		Name:        process.Name,
-		Description: process.Description,
-		Remark:      process.Remark,
-		Status:      process.Status,
-		EmployeeID:  process.EmployeeID,
-		Sequence:    process.Sequence,
-		StartedAt:   process.StartedAt,
-		FinishedAt:  process.FinishedAt,
-	}, nil
 }
 
 func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
@@ -151,12 +116,7 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 		return err
 	}
 
-	// 提交事务
-	if err := tx.Commit(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return tx.Commit(ctx)
 }
 
 func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]model.Process, error) {
@@ -233,41 +193,21 @@ func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) (
 
 	tasks := make([]model.Task, len(ts))
 	// 计算剩余天数
-	today := time.Now().Truncate(24 * time.Hour)
 	for i, t := range ts {
 		tasks[i] = model.Task{
-			ID:          t.ID,
-			Name:        t.Name,
-			Description: t.Description,
-			StartedAt:   t.StartedAt,
-			ProjectID:   t.ProjectID,
-			ProjectName: t.ProjectName,
-		}
-
-		if t.Duration != nil && *t.Duration > 0 && t.StartedAt != nil {
-			endDate := t.StartedAt.AddDate(0, 0, int(*t.Duration))
-			remainingTime := endDate.Sub(today)
-
-			days := int32(math.Ceil(remainingTime.Hours() / 24))
-			tasks[i].RemainingDays = &days
+			ID:            t.ID,
+			Name:          t.Name,
+			Description:   t.Description,
+			StartedAt:     t.StartedAt,
+			RemainingDays: util.CalculateRemainingDays(t.StartedAt, t.Duration),
+			ProjectID:     t.ProjectID,
+			ProjectName:   t.ProjectName,
 		}
 	}
 
 	// 排序
 	slices.SortFunc(tasks, func(a, b model.Task) int {
-		switch {
-		case a.RemainingDays != nil && b.RemainingDays == nil:
-			return -1
-		case a.RemainingDays == nil && b.RemainingDays != nil:
-			return 1
-		case a.RemainingDays != nil && b.RemainingDays != nil:
-			if *a.RemainingDays < *b.RemainingDays {
-				return -1
-			} else if *a.RemainingDays > *b.RemainingDays {
-				return 1
-			}
-		}
-		return 0
+		return util.SortByRemaining(a, b)
 	})
 	return tasks, nil
 }

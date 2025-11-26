@@ -20,14 +20,12 @@ ORDER BY
     WHEN '进行' THEN 1
     WHEN '排单' THEN 2
     WHEN '暂停' THEN 3
-    WHEN '完成' THEN 4
-    WHEN '终止' THEN 5
-    ELSE 7
+    ELSE 4
   END,
-  (started_at + (duration || 'days')::interval) NULLS LAST,
+  started_at NULLS LAST,
   id;
 
--- name: CreateProject :one
+-- name: CreateProject :exec
 INSERT INTO projects (
   name,
   description,
@@ -40,18 +38,9 @@ INSERT INTO projects (
   $3,
   $4,
   $5
-) RETURNING
-  id,
-  name,
-  description,
-  remark,
-  status,
-  manager_id,
-  started_at,
-  duration,
-  finished_at;
+);
 
--- name: UpdateProject :one
+-- name: UpdateProject :exec
 UPDATE projects
 SET
   name = COALESCE(sqlc.narg('name'),name),
@@ -62,17 +51,7 @@ SET
   started_at = COALESCE(sqlc.narg('started_at'),started_at),
   duration = COALESCE(sqlc.narg('duration'),duration),
   finished_at = COALESCE(sqlc.narg('finished_at'),finished_at)
-WHERE id = sqlc.arg('id')
-RETURNING
-  id,
-  name,
-  description,
-  remark,
-  status,
-  manager_id,
-  started_at,
-  duration,
-  finished_at;
+WHERE id = sqlc.arg('id');
 
 -- name: DeleteProject :exec
 DELETE FROM projects

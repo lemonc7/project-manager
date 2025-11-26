@@ -10,10 +10,10 @@ import (
 
 type Querier interface {
 	AllowInitAdmin(ctx context.Context) (bool, error)
-	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (CreateEmployeeRow, error)
-	CreateProject(ctx context.Context, arg CreateProjectParams) (CreateProjectRow, error)
-	CreateSetting(ctx context.Context, arg CreateSettingParams) (CreateSettingRow, error)
-	CreateTeam(ctx context.Context, arg CreateTeamParams) (CreateTeamRow, error)
+	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) error
+	CreateProject(ctx context.Context, arg CreateProjectParams) error
+	CreateSetting(ctx context.Context, arg CreateSettingParams) error
+	CreateTeam(ctx context.Context, arg CreateTeamParams) error
 	DeleteEmployee(ctx context.Context, id int32) error
 	DeleteProcess(ctx context.Context, id int32) (int32, error)
 	DeleteProject(ctx context.Context, id int32) error
@@ -21,7 +21,7 @@ type Querier interface {
 	GetEmployeeByUsername(ctx context.Context, username string) (GetEmployeeByUsernameRow, error)
 	GetMaxSequence(ctx context.Context, projectID int32) (int32, error)
 	InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error
-	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) (InsertProcessLastRow, error)
+	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) error
 	ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 	ListProcesses(ctx context.Context, projectID int32) ([]ListProcessesRow, error)
 	ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error)
@@ -31,11 +31,11 @@ type Querier interface {
 	ListTeams(ctx context.Context) ([]ListTeamsRow, error)
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error
-	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (UpdateEmployeeRow, error)
+	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error
 	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error
-	UpdateProcess(ctx context.Context, arg UpdateProcessParams) (UpdateProcessRow, error)
-	UpdateProject(ctx context.Context, arg UpdateProjectParams) (UpdateProjectRow, error)
-	UpdateTeam(ctx context.Context, arg UpdateTeamParams) (UpdateTeamRow, error)
+	UpdateProcess(ctx context.Context, arg UpdateProcessParams) error
+	UpdateProject(ctx context.Context, arg UpdateProjectParams) error
+	UpdateTeam(ctx context.Context, arg UpdateTeamParams) error
 }
 
 var _ Querier = (*Queries)(nil)

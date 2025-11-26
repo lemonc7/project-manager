@@ -11,8 +11,8 @@ import (
 )
 
 type TeamService interface {
-	CreateTeam(ctx context.Context, req model.CreateTeamRequest) (model.Team, error)
-	UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) (model.Team, error)
+	CreateTeam(ctx context.Context, req model.CreateTeamRequest) error
+	UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) error
 	DeleteTeam(ctx context.Context, id int32) error
 	ListTeams(ctx context.Context) ([]model.Team, error)
 }
@@ -43,13 +43,15 @@ func (t *TeamHandler) CreateTeam(c echo.Context) error {
 	}
 
 	// 调用业务函数
-	team, err := t.teamService.CreateTeam(c.Request().Context(), req)
+	err := t.teamService.CreateTeam(c.Request().Context(), req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusCreated, team)
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "成功创建小组",
+	})
 }
 
 // 更新小组
@@ -65,13 +67,15 @@ func (t *TeamHandler) UpdateTeam(c echo.Context) error {
 	}
 
 	// 调用业务函数
-	team, err := t.teamService.UpdateTeam(c.Request().Context(), id, req)
+	err = t.teamService.UpdateTeam(c.Request().Context(), id, req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusOK, team)
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "成功更新小组",
+	})
 }
 
 // 删除小组

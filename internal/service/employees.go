@@ -20,13 +20,13 @@ func NewEmployeeService(db *pgxpool.Pool, ph PasswordHasher) *EmployeeService {
 	}
 }
 
-func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) (model.Employee, error) {
+func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error {
 	passwordHash, err := e.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return model.Employee{}, err
+		return err
 	}
 	// 插入数据
-	employee, err := e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
+	err = e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
 		Name:         req.Name,
 		Username:     req.Username,
 		PasswordHash: passwordHash,
@@ -34,47 +34,21 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 		TeamID:       req.TeamID,
 	})
 
-	if err != nil {
-		return model.Employee{}, err
-	}
-
-	return model.Employee{
-		ID:     employee.ID,
-		Name:   employee.Name,
-		Roles:  employee.Roles,
-		TeamID: employee.TeamID,
-	}, nil
+	return err
 }
 
-func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) (model.Employee, error) {
-	// 更新数据
-	employee, err := e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
+func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) error {
+	return e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 		ID:       id,
 		Name:     req.Name,
 		Roles:    req.Roles,
 		TeamID:   req.TeamID,
 		IsActive: req.IsActive,
 	})
-
-	if err != nil {
-		return model.Employee{}, err
-	}
-
-	return model.Employee{
-		ID:     employee.ID,
-		Name:   employee.Name,
-		Roles:  employee.Roles,
-		TeamID: employee.TeamID,
-	}, nil
 }
 
 func (e *EmployeeService) DeleteEmployee(ctx context.Context, id int32) error {
-	// 删除数据
-	if err := e.querier.DeleteEmployee(ctx, id); err != nil {
-		return err
-	}
-
-	return nil
+	return e.querier.DeleteEmployee(ctx, id)
 }
 
 func (e *EmployeeService) ListEmployees(ctx context.Context) ([]model.Employee, error) {

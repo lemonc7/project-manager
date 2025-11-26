@@ -12,13 +12,11 @@ export async function listProjectsFilter(req: ListProjectsRequest) {
 }
 
 export async function createProject(req: CreateProjectRequest) {
-  const res = await service.post<Project>("/project", req)
-  return res.data
+  return service.post<Project>("/project", req)
 }
 
 export async function updateProject(id: number, req: UpdateProjectRequest) {
-  const res = await service.put<Project>(`/project/${id}`, req)
-  return res.data
+  return service.put<Project>(`/project/${id}`, req)
 }
 
 export async function deleteProject(id: number) {

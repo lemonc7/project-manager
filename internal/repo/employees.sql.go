@@ -9,7 +9,7 @@ import (
 	"context"
 )
 
-const createEmployee = `-- name: CreateEmployee :one
+const createEmployee = `-- name: CreateEmployee :exec
 INSERT INTO employees (
   name,
   username,
@@ -22,7 +22,7 @@ INSERT INTO employees (
   $3,
   $4,
   $5
-) RETURNING id, name, roles, team_id
+)
 `
 
 type CreateEmployeeParams struct {
@@ -33,29 +33,15 @@ type CreateEmployeeParams struct {
 	TeamID       *int32   `json:"teamId"`
 }
 
-type CreateEmployeeRow struct {
-	ID     int32    `json:"id"`
-	Name   string   `json:"name"`
-	Roles  []string `json:"roles"`
-	TeamID *int32   `json:"teamId"`
-}
-
-func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (CreateEmployeeRow, error) {
-	row := q.db.QueryRow(ctx, createEmployee,
+func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) error {
+	_, err := q.db.Exec(ctx, createEmployee,
 		arg.Name,
 		arg.Username,
 		arg.PasswordHash,
 		arg.Roles,
 		arg.TeamID,
 	)
-	var i CreateEmployeeRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Roles,
-		&i.TeamID,
-	)
-	return i, err
+	return err
 }
 
 const deleteEmployee = `-- name: DeleteEmployee :exec
@@ -148,7 +134,7 @@ func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 	return items, nil
 }
 
-const updateEmployee = `-- name: UpdateEmployee :one
+const updateEmployee = `-- name: UpdateEmployee :exec
 UPDATE employees
 SET
   name = COALESCE($1,name),
@@ -156,7 +142,6 @@ SET
   team_id = COALESCE($3,team_id),
   is_active = COALESCE($4,is_active)
 WHERE id = $5
-RETURNING id, name, roles, team_id
 `
 
 type UpdateEmployeeParams struct {
@@ -167,29 +152,15 @@ type UpdateEmployeeParams struct {
 	ID       int32    `json:"id"`
 }
 
-type UpdateEmployeeRow struct {
-	ID     int32    `json:"id"`
-	Name   string   `json:"name"`
-	Roles  []string `json:"roles"`
-	TeamID *int32   `json:"teamId"`
-}
-
-func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (UpdateEmployeeRow, error) {
-	row := q.db.QueryRow(ctx, updateEmployee,
+func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
+	_, err := q.db.Exec(ctx, updateEmployee,
 		arg.Name,
 		arg.Roles,
 		arg.TeamID,
 		arg.IsActive,
 		arg.ID,
 	)
-	var i UpdateEmployeeRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Roles,
-		&i.TeamID,
-	)
-	return i, err
+	return err
 }
 
 const updatePassword = `-- name: UpdatePassword :exec

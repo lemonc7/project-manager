@@ -9,17 +9,14 @@ import (
 	"context"
 )
 
-const createTeam = `-- name: CreateTeam :one
+const createTeam = `-- name: CreateTeam :exec
 INSERT INTO teams (
   name,
   description
 ) VALUES (
   $1,
   $2
-) RETURNING
-  id,
-  name,
-  description
+)
 `
 
 type CreateTeamParams struct {
@@ -27,17 +24,9 @@ type CreateTeamParams struct {
 	Description *string `json:"description"`
 }
 
-type CreateTeamRow struct {
-	ID          int32   `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-}
-
-func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) (CreateTeamRow, error) {
-	row := q.db.QueryRow(ctx, createTeam, arg.Name, arg.Description)
-	var i CreateTeamRow
-	err := row.Scan(&i.ID, &i.Name, &i.Description)
-	return i, err
+func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) error {
+	_, err := q.db.Exec(ctx, createTeam, arg.Name, arg.Description)
+	return err
 }
 
 const deleteTeam = `-- name: DeleteTeam :exec
@@ -85,16 +74,12 @@ func (q *Queries) ListTeams(ctx context.Context) ([]ListTeamsRow, error) {
 	return items, nil
 }
 
-const updateTeam = `-- name: UpdateTeam :one
+const updateTeam = `-- name: UpdateTeam :exec
 UPDATE teams
 SET
   name = COALESCE($1,name),
   description = COALESCE($2,description)
 WHERE id = $3
-RETURNING
-  id,
-  name,
-  description
 `
 
 type UpdateTeamParams struct {
@@ -103,15 +88,7 @@ type UpdateTeamParams struct {
 	ID          int32   `json:"id"`
 }
 
-type UpdateTeamRow struct {
-	ID          int32   `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-}
-
-func (q *Queries) UpdateTeam(ctx context.Context, arg UpdateTeamParams) (UpdateTeamRow, error) {
-	row := q.db.QueryRow(ctx, updateTeam, arg.Name, arg.Description, arg.ID)
-	var i UpdateTeamRow
-	err := row.Scan(&i.ID, &i.Name, &i.Description)
-	return i, err
+func (q *Queries) UpdateTeam(ctx context.Context, arg UpdateTeamParams) error {
+	_, err := q.db.Exec(ctx, updateTeam, arg.Name, arg.Description, arg.ID)
+	return err
 }

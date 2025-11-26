@@ -43,6 +43,14 @@ type Task struct {
 	Description   *string    `json:"description,omitempty"`
 	StartedAt     *time.Time `json:"startedAt,omitempty"`
 	RemainingDays *int32     `json:"remainingDays,omitempty"`
-	ProjectID     int32      `json:"projectId"`
+	ProjectID     int32      `json:"projectID"`
 	ProjectName   string     `json:"projectName"`
+}
+
+func (t Task) GetRemainingDays() *int32 {
+	return t.RemainingDays
+}
+
+type HasRemainingDays interface {
+	GetRemainingDays() *int32
 }

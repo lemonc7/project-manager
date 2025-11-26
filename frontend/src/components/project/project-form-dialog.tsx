@@ -22,6 +22,9 @@ import {
   SelectValue
 } from "../ui/select"
 import { Controller, useForm } from "react-hook-form"
+import EmployeeSelect from "../employee/employee_select"
+import useCreateProject from "@/hooks/use-create-project"
+import useUpdateProject from "@/hooks/use-update-project"
 
 type ProjectFormDialogProps =
   | {
@@ -29,22 +32,19 @@ type ProjectFormDialogProps =
       onOpenChange: (open: boolean) => void
       mode: "create"
       defaultValues?: undefined
-      submit: (data: CreateProjectRequest) => void
     }
   | {
       open: boolean
       onOpenChange: (open: boolean) => void
       mode: "edit"
       defaultValues: Project
-      submit: (data: UpdateProjectRequest) => void
     }
 
 export default function ProjectFormDialog({
   open,
   onOpenChange,
   mode,
-  defaultValues,
-  submit
+  defaultValues
 }: ProjectFormDialogProps) {
   const {
     register,
@@ -52,6 +52,9 @@ export default function ProjectFormDialog({
     handleSubmit,
     formState: { dirtyFields }
   } = useForm<Project>({ defaultValues })
+
+  const createProjectMutation = useCreateProject(() => onOpenChange(false))
+  const updateProjectMutation = useUpdateProject(() => onOpenChange(false))
 
   const onSubmit = (data: Project) => {
     if (mode === "create") {
@@ -62,7 +65,7 @@ export default function ProjectFormDialog({
         remark: data.remark,
         duration: data.duration
       }
-      submit(req)
+      createProjectMutation.mutate(req)
       return
     }
     const req: UpdateProjectRequest = {}
@@ -74,7 +77,13 @@ export default function ProjectFormDialog({
     if (dirtyFields.startedAt) req.startedAt = data.startedAt
     if (dirtyFields.duration) req.duration = data.duration
     if (dirtyFields.finishedAt) req.finishedAt = data.finishedAt
-    submit(req)
+
+    if (Object.keys(req).length === 0) {
+      onOpenChange(false)
+      return
+    }
+
+    updateProjectMutation.mutate({ id: data.id, req })
   }
 
   return (
@@ -136,9 +145,21 @@ export default function ProjectFormDialog({
                       />
                     </Field>
                   )}
+                  {/* 负责人 */}
                   <Field>
                     <FieldLabel>负责人</FieldLabel>
+                    <Controller
+                      control={control}
+                      name="managerID"
+                      render={({ field }) => (
+                        <EmployeeSelect
+                          value={String(field.value)}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
                   </Field>
+                  {/* 项目周期 */}
                 </FieldGroup>
               </FieldSet>
             </FieldGroup>

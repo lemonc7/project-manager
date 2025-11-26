@@ -59,7 +59,7 @@ WHERE
   AND p.status = '进行'
 ORDER BY p.id;
 
--- name: UpdateProcess :one
+-- name: UpdateProcess :exec
 UPDATE processes
 SET
   name = COALESCE(sqlc.narg('name'),name),
@@ -69,20 +69,9 @@ SET
   employee_id = COALESCE(sqlc.narg('employee_id'),employee_id),
   started_at = COALESCE(sqlc.narg('started_at'),started_at),
   finished_at = COALESCE(sqlc.narg('finished_at'),finished_at)
-WHERE id = sqlc.arg('id')
-RETURNING
-  id,
-  project_id,
-  name,
-  description,
-  remark,
-  status,
-  employee_id,
-  sequence,
-  started_at,
-  finished_at;
+WHERE id = sqlc.arg('id');
 
--- name: InsertProcessLast :one
+-- name: InsertProcessLast :exec
 WITH project_lock AS (
   SELECT id FROM projects WHERE id = $1 FOR UPDATE
 ),
@@ -105,18 +94,7 @@ INSERT INTO processes (
   $4,
   $5,
   m.val + 1
-FROM max_seq m, project_lock pl
-RETURNING
-  id,
-  project_id,
-  name,
-  description,
-  remark,
-  status,
-  employee_id,
-  sequence,
-  started_at,
-  finished_at;
+FROM max_seq m, project_lock pl;
 
 -- name: ShiftProcessesUp :exec
 WITH project_lock AS (

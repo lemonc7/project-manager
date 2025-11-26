@@ -44,6 +44,7 @@ interface Project {
   status: ProjectStatus
   managerID: number
   startedAt?: string
+  remainingDays?: number
   duration?: number
   finishedAt?: string
 }

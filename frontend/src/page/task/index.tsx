@@ -101,7 +101,7 @@ function Task({
             {data?.map((t) => (
               <TableRow
                 key={t.id}
-                onClick={() => navigate(`/projects/${t.projectId}`)}
+                onClick={() => navigate(`/projects/${t.projectID}`)}
                 className="cursor-pointer"
               >
                 <TableCell>{t.name}</TableCell>

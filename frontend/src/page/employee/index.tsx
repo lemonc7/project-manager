@@ -1,4 +1,3 @@
-import { deleteEmployee, listEmployees, updateEmployee } from "@/api/employees"
 import EditableCell from "@/components/common/editable-cell"
 import HeaderActions from "@/components/common/header-actions"
 import Loading from "@/components/common/loading"
@@ -29,9 +28,11 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import useDeleteEmployee from "@/hooks/use-delete-employee"
+import useEmployees from "@/hooks/use-employees"
 import useTeams from "@/hooks/use-teams"
-import type { Employee, UpdateEmployeeRequest } from "@/model/employees"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import useUpdateEmployee from "@/hooks/use-update-employee"
+import type { Employee } from "@/model/employees"
 import {
   flexRender,
   getCoreRowModel,
@@ -40,80 +41,31 @@ import {
 } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { useState } from "react"
-import { toast } from "sonner"
 
 export default function EmployeePage() {
   // 获取employees数据
-  const {
-    data: employees,
-    isError,
-    isLoading
-  } = useQuery<Employee[], Error>({
-    queryKey: ["employees", "overview"],
-    queryFn: listEmployees
-  })
+  const { data: employees, isError, isLoading } = useEmployees()
 
   // 获取teams数据
   const { data: teams } = useTeams()
 
-  const queryClient = useQueryClient()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [employeeToDelete, setEmployeeToDelete] = useState<number | null>(null)
 
   // 删除employee
-  const deleteEmployeeMutation = useMutation({
-    mutationFn: (id: number) => deleteEmployee(id),
-    onSuccess: (_, deleteEmployeeID) => {
-      queryClient.setQueryData<Employee[]>(
-        ["employees", "overview"],
-        (currentEmployees) => {
-          if (!currentEmployees) {
-            return currentEmployees
-          }
-          return currentEmployees.filter(
-            (employee) => employee.id !== deleteEmployeeID
-          )
-        }
-      )
-      toast.success("删除成功")
+  const deleteEmployeeMutation = useDeleteEmployee(
+    () => {
       setIsDialogOpen(false)
       setEmployeeToDelete(null)
     },
-    onError: () => {
-      toast.error("删除失败")
+    () => {
       setIsDialogOpen(false)
       setEmployeeToDelete(null)
     }
-  })
+  )
 
   // 更新employee
-  const updateEmployeeMutation = useMutation({
-    mutationFn: ({
-      id,
-      fields
-    }: {
-      id: number
-      fields: Partial<UpdateEmployeeRequest>
-    }) => updateEmployee(id, fields),
-    onSuccess: (updatedEmployee) => {
-      // 更新缓存，只更新当前成员的数据
-      queryClient.setQueryData<Employee[]>(
-        ["employees", "overview"],
-        (currentEmployees) =>
-          currentEmployees
-            ? currentEmployees.map((employee) =>
-                employee.id === updatedEmployee.id
-                  ? { ...employee, ...updatedEmployee }
-                  : employee
-              )
-            : [updatedEmployee]
-      )
-    },
-    onError: () => {
-      toast.error("更新失败")
-    }
-  })
-
+  const updateEmployeeMutation = useUpdateEmployee()
   const handleDeleteConfirm = () => {
     if (employeeToDelete !== null) {
       deleteEmployeeMutation.mutate(employeeToDelete)
@@ -129,21 +81,18 @@ export default function EmployeePage() {
     {
       header: "小组",
       cell: ({ row }) => {
-        if (!teams) {
-          return <span>加载失败</span>
-        }
         return (
           <EditableCell
             value={row.original.teamID}
             type="select"
-            options={teams.map((t) => ({
+            options={teams?.map((t) => ({
               label: t.name,
               value: t.id
             }))}
             onSave={(value) =>
               updateEmployeeMutation.mutate({
                 id: row.original.id,
-                fields: { teamID: value }
+                req: { teamID: value }
               })
             }
           />

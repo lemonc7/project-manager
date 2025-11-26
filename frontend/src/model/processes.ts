@@ -46,7 +46,7 @@ interface Task {
   description?: string
   startedAt?: string
   remainingDays?: number
-  projectId: number
+  projectID: number
   projectName: string
 }
 

@@ -12,9 +12,9 @@ import (
 )
 
 type ProcessService interface {
-	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) (model.Process, error)
+	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) error
 	InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error
-	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) (model.Process, error)
+	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error
 	DeleteProcess(ctx context.Context, id int32) error
 	ListProcesses(ctx context.Context, projectID int32) ([]model.Process, error)
 	ListTasksTodo(ctx context.Context, employeeID int32) ([]model.Task, error)
@@ -47,13 +47,15 @@ func (p *ProcessHandler) InsertProcessLast(c echo.Context) error {
 	}
 
 	// 业务函数
-	process, err := p.processService.InsertProcessLast(c.Request().Context(), req)
+	err := p.processService.InsertProcessLast(c.Request().Context(), req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusCreated, process)
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "成功创建流程",
+	})
 }
 
 func (p *ProcessHandler) InsertProcessAt(c echo.Context) error {
@@ -61,6 +63,11 @@ func (p *ProcessHandler) InsertProcessAt(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	if sequence < 1 {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("sequence参数错误: %d", sequence))
+	}
+
 	// 绑定请求
 	var req model.InsertProcessRequest
 	if err := c.Bind(&req); err != nil {
@@ -94,13 +101,15 @@ func (p *ProcessHandler) UpdateProcess(c echo.Context) error {
 	}
 
 	// 业务函数
-	process, err := p.processService.UpdateProcess(c.Request().Context(), id, req)
+	err = p.processService.UpdateProcess(c.Request().Context(), id, req)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusOK, process)
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "成功更新流程",
+	})
 }
 
 func (p *ProcessHandler) DeleteProcess(c echo.Context) error {
