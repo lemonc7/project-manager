@@ -13,6 +13,7 @@ export default function useCreateProject(
     mutationFn: (req: CreateProjectRequest) => createProject(req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
+      toast.success("创建成功")
       if (onSuccuss) {
         onSuccuss()
       }

@@ -23,14 +23,59 @@ import ProjectFormDialog from "@/components/project/project-form-dialog"
 import useUpdateProject from "@/hooks/use-update-project"
 import useProjects from "@/hooks/use-projects"
 import useEmployees from "@/hooks/use-employees"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { MoreHorizontal } from "lucide-react"
+import useDeleteProject from "@/hooks/use-delete-project"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
 
 export default function ProjectPage() {
   const { data, isError, isPending } = useProjects({})
-  const [createDialog, setCreateDialog] = useState(false)
-
-  const updateProjectMutation = useUpdateProject()
   const { data: employees } = useEmployees()
 
+  const [createDialog, setCreateDialog] = useState(false)
+  const [editDialog, setEditDialog] = useState(false)
+  const [deleteDialog, setDeleteDialog] = useState(false)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+
+  const updateProjectMutation = useUpdateProject(
+    () => {
+      setEditDialog(false)
+      setSelectedProject(null)
+    },
+    () => {
+      setEditDialog(false)
+      setSelectedProject(null)
+    }
+  )
+  const deleteProjectMutation = useDeleteProject(
+    () => {
+      setDeleteDialog(false)
+      setSelectedProject(null)
+    },
+    () => {
+      setDeleteDialog(false)
+      setSelectedProject(null)
+    }
+  )
+  const handleDeleteConfirm = () => {
+    if (selectedProject !== null) {
+      deleteProjectMutation.mutate(selectedProject.id)
+    }
+  }
   const navigate = useNavigate()
 
   const columns: ColumnDef<Project>[] = [
@@ -106,6 +151,7 @@ export default function ProjectPage() {
               req: { status: value }
             })
           }
+          disabled
         />
       )
     },
@@ -122,6 +168,45 @@ export default function ProjectPage() {
           }
         />
       )
+    },
+    {
+      id: "actions",
+      header: "操作",
+      cell: ({ row }) => {
+        return (
+          <>
+            <div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem>开始</DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedProject(row.original)
+                      setEditDialog(true)
+                    }}
+                  >
+                    编辑
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600"
+                    onClick={() => {
+                      setSelectedProject(row.original)
+                      setDeleteDialog(true)
+                    }}
+                  >
+                    删除
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </>
+        )
+      }
     }
   ]
 
@@ -151,11 +236,53 @@ export default function ProjectPage() {
       <HeaderActions>
         <Button onClick={() => setCreateDialog(true)}>新建项目</Button>
       </HeaderActions>
+      {/* 编辑弹窗 */}
+      {selectedProject && (
+        <ProjectFormDialog
+          open={editDialog}
+          onOpenChange={setEditDialog}
+          mode="edit"
+          defaultValues={selectedProject}
+        />
+      )}
+      {/* 创建弹窗 */}
       <ProjectFormDialog
         open={createDialog}
         onOpenChange={setCreateDialog}
         mode="create"
       />
+      {/* 删除弹窗 */}
+      <AlertDialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除项目</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除项目
+              <span className="font-bold text-red-600">
+                {selectedProject?.name}
+              </span>
+              吗? 这个操作不能被撤销，将从数据库中删除该项目以及
+              <span className="font-bold text-red-600">相关流程</span>。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setSelectedProject(null)
+              }}
+              disabled={deleteProjectMutation.isPending}
+            >
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteProjectMutation.isPending}
+            >
+              {deleteProjectMutation.isPending ? "删除中..." : "确认"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>

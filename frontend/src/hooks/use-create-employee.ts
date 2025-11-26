@@ -12,6 +12,7 @@ export default function useCreateEmployee(
     mutationFn: (req: CreateEmployeeRequest) => createEmployee(req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees", "overview"] })
+      toast.success("创建成功")
       if (onSuccess) {
         onSuccess()
       }

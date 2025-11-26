@@ -50,25 +50,27 @@ export default function EmployeePage() {
   const { data: teams } = useTeams()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [employeeToDelete, setEmployeeToDelete] = useState<number | null>(null)
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  )
 
   // 删除employee
   const deleteEmployeeMutation = useDeleteEmployee(
     () => {
       setIsDialogOpen(false)
-      setEmployeeToDelete(null)
+      setSelectedEmployee(null)
     },
     () => {
       setIsDialogOpen(false)
-      setEmployeeToDelete(null)
+      setSelectedEmployee(null)
     }
   )
 
   // 更新employee
   const updateEmployeeMutation = useUpdateEmployee()
   const handleDeleteConfirm = () => {
-    if (employeeToDelete !== null) {
-      deleteEmployeeMutation.mutate(employeeToDelete)
+    if (selectedEmployee !== null) {
+      deleteEmployeeMutation.mutate(selectedEmployee.id)
     }
   }
 
@@ -123,7 +125,7 @@ export default function EmployeePage() {
               <DropdownMenuItem
                 className="text-red-600 focus:text-red-600"
                 onClick={() => {
-                  setEmployeeToDelete(employee.id)
+                  setSelectedEmployee(employee)
                   setIsDialogOpen(true)
                 }}
               >
@@ -215,15 +217,16 @@ export default function EmployeePage() {
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
           <AlertDialogHeader>
-            <AlertDialogTitle>确定要删除该成员吗?</AlertDialogTitle>
+            <AlertDialogTitle>删除成员</AlertDialogTitle>
             <AlertDialogDescription>
-              这个操作不能被撤销，将从数据库中删除该成员，你确定要继续吗？
+              确定要删除{`[${selectedEmployee?.name}]`}吗?
+              这个操作不能被撤销，将从数据库中删除该成员。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={() => {
-                setEmployeeToDelete(null)
+                setSelectedEmployee(null)
               }}
               disabled={deleteEmployeeMutation.isPending}
             >

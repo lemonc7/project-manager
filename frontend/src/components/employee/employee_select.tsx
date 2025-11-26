@@ -14,8 +14,8 @@ export default function EmployeeSelect({
   onChange,
   disabled = false
 }: {
-  value?: string
-  onChange?: (value: string) => void
+  value?: number
+  onChange?: (value: number) => void
   disabled?: boolean
 }) {
   const { data, isLoading, isError } = useEmployees()
@@ -28,7 +28,11 @@ export default function EmployeeSelect({
   }
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
+    <Select
+      value={value ? String(value) : undefined}
+      onValueChange={(v) => onChange?.(Number(v))}
+      disabled={disabled}
+    >
       <SelectTrigger>
         <SelectValue placeholder="请选择" />
       </SelectTrigger>

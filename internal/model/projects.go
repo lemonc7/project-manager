@@ -21,7 +21,7 @@ type UpdateProjectRequest struct {
 	Status      *repo.ProjectStatus `json:"status"`
 	ManagerID   *int32              `json:"managerID"`
 	StartedAt   *time.Time          `json:"startedAt"`
-	Duration    *int32              `json:"duration" validate:"gt=0"`
+	Duration    *int32              `json:"duration"`
 	FinishedAt  *time.Time          `json:"finishedAt"`
 }
 
