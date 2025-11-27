@@ -1,15 +1,25 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from "path"
+import path from "node:path"
+import Components from "unplugin-vue-components/vite"
+import { defineConfig } from "vite"
 import tailwindcss from "@tailwindcss/vite"
+import vue from "@vitejs/plugin-vue"
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    vue(),
+    tailwindcss(),
+    Components({
+      dirs: ["src/components"],
+      extensions: ["vue"],
+      deep: true,
+      dts: "src/components.d.ts"
+    })
+  ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+      "@": path.resolve(__dirname, "./src")
+    }
   },
   server: {
     port: 3000,
