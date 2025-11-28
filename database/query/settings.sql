@@ -15,5 +15,9 @@ INSERT INTO system_settings (
   $1,
   $2,
   $3
-);
+)
+ON CONFLICT (key) DO UPDATE
+SET
+  value = EXCLUDED.value,
+  description = EXCLUDED.description;
 

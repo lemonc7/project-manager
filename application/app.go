@@ -28,6 +28,7 @@ type Application struct {
 	cfg    *config.Config
 	jwt    *jwt.JWT
 
+	serverHandler   *api.ServerHandler
 	authHandler     *api.AuthHandler
 	employeeHandler *api.EmployeeHandler
 	teamHandler     *api.TeamHandler
@@ -84,11 +85,16 @@ func InitApp(filePath string) (*Application, error) {
 		service.NewProcessService(dbPool),
 	)
 
+	serverHandler := api.NewServerService(
+		service.NewServerService(dbPool),
+	)
+
 	app := &Application{
 		e:               e,
 		dbPool:          dbPool,
 		cfg:             cfg,
 		jwt:             jwt,
+		serverHandler:   serverHandler,
 		authHandler:     authHandler,
 		employeeHandler: employeeHandler,
 		teamHandler:     teamHandler,

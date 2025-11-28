@@ -3,8 +3,11 @@ package application
 import "github.com/lemonc7/project-manager/internal/middleware"
 
 func (a *Application) initRouter() {
-	jwtMW := middleware.JWTAuther(a.jwt)
+	// 检查服务器
+	a.e.GET("/ping", a.serverHandler.Ping)
+
 	// 用户认证
+	jwtMW := middleware.JWTAuther(a.jwt)
 	auth := a.e.Group("/api/auth")
 	authJWT := auth.Group("", jwtMW)
 

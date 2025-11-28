@@ -1,5 +1,6 @@
 import Layout from "@/components/layout/Layout.vue"
 import NotFound from "@/page/404/NotFound.vue"
+import { EmployeePage } from "@/page/employee"
 import LoginPage from "@/page/login/Login.vue"
 import TaskPage from "@/page/task/Task.vue"
 import { isLoggedIn } from "@/util/auth"
@@ -24,6 +25,11 @@ const routes: RouteRecordRaw[] = [
         component: TaskPage,
         meta: { title: "任务总览" }
       },
+      {
+        path: "employees",
+        component: EmployeePage,
+        meta: { title: "成员列表" }
+      },
       // {
       //   path: "projects",
       //   component: ProjectLayout,
@@ -39,11 +45,6 @@ const routes: RouteRecordRaw[] = [
       //       meta: { title: "项目流程" }
       //     }
       //   ]
-      // },
-      // {
-      //   path: "employees",
-      //   component: EmployeePage,
-      //   meta: { title: "成员列表" }
       // },
       {
         path: "/:pathMatch(.*)*",
