@@ -39,7 +39,7 @@ func (a *Application) initRouter() {
 
 	// 项目
 	projectRouter.GET("/:id", a.processHandler.ListProcesses)
-	projectRouter.GET("/filter", a.projectHandler.ListProjectsFiltered)
+	projectRouter.GET("/:filter", a.projectHandler.ListProjects)
 	projectRouter.POST("", a.projectHandler.CreateProject)
 	projectRouter.PUT("/:id", a.projectHandler.UpdateProject)
 	projectRouter.DELETE("/:id", a.projectHandler.DeleteProject)

@@ -35,12 +35,16 @@ INSERT INTO system_settings (
   $2,
   $3
 )
+ON CONFLICT (key) DO UPDATE
+SET
+  value = EXCLUDED.value,
+  description = EXCLUDED.description
 `
 
 type CreateSettingParams struct {
-	Key         string  `json:"key"`
-	Value       *string `json:"value"`
-	Description *string `json:"description"`
+	Key         string `json:"key"`
+	Value       string `json:"value"`
+	Description string `json:"description"`
 }
 
 func (q *Queries) CreateSetting(ctx context.Context, arg CreateSettingParams) error {

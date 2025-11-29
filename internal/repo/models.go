@@ -135,6 +135,7 @@ type Project struct {
 	Remark      *string       `json:"remark"`
 	Status      ProjectStatus `json:"status"`
 	ManagerID   int32         `json:"managerId"`
+	Priority    int32         `json:"priority"`
 	StartedAt   *time.Time    `json:"startedAt"`
 	Duration    *int32        `json:"duration"`
 	FinishedAt  *time.Time    `json:"finishedAt"`
@@ -144,8 +145,8 @@ type Project struct {
 
 type SystemSetting struct {
 	Key         string    `json:"key"`
-	Value       *string   `json:"value"`
-	Description *string   `json:"description"`
+	Value       string    `json:"value"`
+	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }

@@ -26,6 +26,7 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 		Description: req.Description,
 		ManagerID:   req.ManagerID,
 		Remark:      req.Remark,
+		Priority:    req.Priority,
 		Duration:    req.Duration,
 	})
 }
@@ -38,6 +39,7 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.
 		Remark:      req.Remark,
 		Status:      req.Status,
 		ManagerID:   req.ManagerID,
+		Priority:    req.Priority,
 		StartedAt:   req.StartedAt,
 		Duration:    req.Duration,
 		FinishedAt:  req.FinishedAt,
@@ -69,6 +71,7 @@ func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.Lis
 			Remark:        p.Remark,
 			Status:        p.Status,
 			ManagerID:     p.ManagerID,
+			Priority:      p.Priority,
 			StartedAt:     p.StartedAt,
 			RemainingDays: util.CalculateRemainingDays(p.StartedAt, p.Duration),
 			Duration:      p.Duration,
@@ -80,6 +83,97 @@ func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.Lis
 	slices.SortFunc(projects, func(a, b model.Project) int {
 		return util.SortByRemaining(a, b)
 	})
+
+	return projects, nil
+}
+
+func (p *ProjectService) ListProjectsTodo(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error) {
+	// 获取数据
+	data, err := p.querier.ListProjectsTodo(ctx, req.ManagerID)
+	if err != nil {
+		return nil, err
+	}
+
+	projects := make([]model.Project, len(data))
+	for i, p := range data {
+		projects[i] = model.Project{
+			ID:            p.ID,
+			Name:          p.Name,
+			Description:   p.Description,
+			Remark:        p.Remark,
+			Status:        p.Status,
+			ManagerID:     p.ManagerID,
+			Priority:      p.Priority,
+			StartedAt:     p.StartedAt,
+			RemainingDays: util.CalculateRemainingDays(p.StartedAt, p.Duration),
+			Duration:      p.Duration,
+			FinishedAt:    p.FinishedAt,
+		}
+	}
+	return projects, nil
+
+}
+
+func (p *ProjectService) ListProjectsDoing(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error) {
+	// 获取数据
+	data, err := p.querier.ListProjectsDoing(ctx, repo.ListProjectsDoingParams{
+		ManagerID: req.ManagerID,
+		StartAt:   req.StartAt,
+		EndAt:     req.EndAt,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	projects := make([]model.Project, len(data))
+	for i, p := range data {
+		projects[i] = model.Project{
+			ID:            p.ID,
+			Name:          p.Name,
+			Description:   p.Description,
+			Remark:        p.Remark,
+			Status:        p.Status,
+			ManagerID:     p.ManagerID,
+			Priority:      p.Priority,
+			StartedAt:     p.StartedAt,
+			RemainingDays: util.CalculateRemainingDays(p.StartedAt, p.Duration),
+			Duration:      p.Duration,
+			FinishedAt:    p.FinishedAt,
+		}
+	}
+
+	return projects, nil
+}
+
+func (p *ProjectService) ListProjectsDone(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error) {
+	// 获取数据
+	data, err := p.querier.ListProjectsDone(ctx, repo.ListProjectsDoneParams{
+		ManagerID: req.ManagerID,
+		StartAt:   req.StartAt,
+		EndAt:     req.EndAt,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	projects := make([]model.Project, len(data))
+	for i, p := range data {
+		projects[i] = model.Project{
+			ID:            p.ID,
+			Name:          p.Name,
+			Description:   p.Description,
+			Remark:        p.Remark,
+			Status:        p.Status,
+			ManagerID:     p.ManagerID,
+			Priority:      p.Priority,
+			StartedAt:     p.StartedAt,
+			RemainingDays: util.CalculateRemainingDays(p.StartedAt, p.Duration),
+			Duration:      p.Duration,
+			FinishedAt:    p.FinishedAt,
+		}
+	}
 
 	return projects, nil
 }

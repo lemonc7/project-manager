@@ -118,7 +118,7 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 		return fmt.Errorf("获取管理员初始状态失败: %w", err)
 	}
 	if !allowInit {
-		return fmt.Errorf("管理员已存在")
+		return fmt.Errorf("管理员已存在,不允许再次初始化")
 	}
 
 	// 密码加密
@@ -153,8 +153,8 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 	description := "管理员初始化状态"
 	err = qtx.CreateSetting(ctx, repo.CreateSettingParams{
 		Key:         ADMIN_INITIALIZED,
-		Value:       &value,
-		Description: &description,
+		Value:       value,
+		Description: description,
 	})
 	if err != nil {
 		return err

@@ -46,12 +46,14 @@ CREATE TABLE projects (
   remark TEXT,
   status project_status NOT NULL DEFAULT '排单',
   manager_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
+  priority INT NOT NULL DEFAULT 5,
   started_at TIMESTAMPTZ,
   duration INT,
   finished_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT check_duration_positive CHECK (duration > 0)
+  CONSTRAINT check_duration_positive CHECK (duration > 0),
+  CONSTRAINT check_priority_range CHECK (priority BETWEEN 1 AND 9)
 );
 
 -- 工艺流程表
@@ -76,22 +78,25 @@ CREATE TABLE processes (
 -- 系统设置表
 CREATE TABLE system_settings (
   key TEXT PRIMARY KEY,
-  value TEXT,
-  description TEXT,
+  value TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
 -- projects
-CREATE INDEX idx_projects_status ON projects(status);
 CREATE INDEX idx_projects_manager_id ON projects(manager_id);
-CREATE INDEX idx_projects_started_at ON projects(started_at);
+CREATE INDEX idx_projects_manager_status_started
+  ON projects(manager_id, status, started_at);
+CREATE INDEX idx_projects_priority_started
+  ON projects(priority, started_at);
 
 -- processes
-CREATE INDEX idx_processes_project_id ON processes(project_id);
-CREATE INDEX idx_processes_status ON processes(status);
-CREATE INDEX idx_processes_employee_id ON processes(employee_id);
+CREATE INDEX idx_processes_project_sequence
+  ON processes(project_id, sequence);
+CREATE INDEX idx_processes_employee_status
+  ON processes(employee_id, status);
 
 -- 创建更新时间触发器
 CREATE OR REPLACE FUNCTION update_updated_at()

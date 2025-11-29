@@ -16,13 +16,15 @@ INSERT INTO projects (
   description,
   remark,
   manager_id,
+  priority,
   duration
 ) VALUES (
   $1,
   $2,
   $3,
   $4,
-  $5
+  $5,
+  $6
 )
 `
 
@@ -31,6 +33,7 @@ type CreateProjectParams struct {
 	Description *string `json:"description"`
 	Remark      *string `json:"remark"`
 	ManagerID   int32   `json:"managerId"`
+	Priority    int32   `json:"priority"`
 	Duration    *int32  `json:"duration"`
 }
 
@@ -40,6 +43,7 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) er
 		arg.Description,
 		arg.Remark,
 		arg.ManagerID,
+		arg.Priority,
 		arg.Duration,
 	)
 	return err
@@ -55,6 +59,154 @@ func (q *Queries) DeleteProject(ctx context.Context, id int32) error {
 	return err
 }
 
+const listProjectsDoing = `-- name: ListProjectsDoing :many
+SELECT
+  id,
+  name,
+  description,
+  remark,
+  status,
+  manager_id,
+  priority,
+  started_at,
+  duration,
+  finished_at
+FROM projects
+WHERE 
+  status = '进行'
+  AND (manager_id = $1 OR $1 IS NULL)
+  AND (started_at >= $2 OR $2 IS NULL)
+  AND (started_at <= $3 OR $3 IS NULL)
+ORDER BY
+  priority,
+  started_at NULLS LAST,
+  id
+`
+
+type ListProjectsDoingParams struct {
+	ManagerID *int32     `json:"managerId"`
+	StartAt   *time.Time `json:"startAt"`
+	EndAt     *time.Time `json:"endAt"`
+}
+
+type ListProjectsDoingRow struct {
+	ID          int32         `json:"id"`
+	Name        string        `json:"name"`
+	Description *string       `json:"description"`
+	Remark      *string       `json:"remark"`
+	Status      ProjectStatus `json:"status"`
+	ManagerID   int32         `json:"managerId"`
+	Priority    int32         `json:"priority"`
+	StartedAt   *time.Time    `json:"startedAt"`
+	Duration    *int32        `json:"duration"`
+	FinishedAt  *time.Time    `json:"finishedAt"`
+}
+
+func (q *Queries) ListProjectsDoing(ctx context.Context, arg ListProjectsDoingParams) ([]ListProjectsDoingRow, error) {
+	rows, err := q.db.Query(ctx, listProjectsDoing, arg.ManagerID, arg.StartAt, arg.EndAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProjectsDoingRow
+	for rows.Next() {
+		var i ListProjectsDoingRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Remark,
+			&i.Status,
+			&i.ManagerID,
+			&i.Priority,
+			&i.StartedAt,
+			&i.Duration,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProjectsDone = `-- name: ListProjectsDone :many
+SELECT
+  id,
+  name,
+  description,
+  remark,
+  status,
+  manager_id,
+  priority,
+  started_at,
+  duration,
+  finished_at
+FROM projects
+WHERE 
+  status = '完成'
+  AND (manager_id = $1 OR $1 IS NULL)
+  AND (started_at >= $2 OR $2 IS NULL)
+  AND (started_at <= $3 OR $3 IS NULL)
+ORDER BY
+  priority,
+  started_at NULLS LAST,
+  id
+`
+
+type ListProjectsDoneParams struct {
+	ManagerID *int32     `json:"managerId"`
+	StartAt   *time.Time `json:"startAt"`
+	EndAt     *time.Time `json:"endAt"`
+}
+
+type ListProjectsDoneRow struct {
+	ID          int32         `json:"id"`
+	Name        string        `json:"name"`
+	Description *string       `json:"description"`
+	Remark      *string       `json:"remark"`
+	Status      ProjectStatus `json:"status"`
+	ManagerID   int32         `json:"managerId"`
+	Priority    int32         `json:"priority"`
+	StartedAt   *time.Time    `json:"startedAt"`
+	Duration    *int32        `json:"duration"`
+	FinishedAt  *time.Time    `json:"finishedAt"`
+}
+
+func (q *Queries) ListProjectsDone(ctx context.Context, arg ListProjectsDoneParams) ([]ListProjectsDoneRow, error) {
+	rows, err := q.db.Query(ctx, listProjectsDone, arg.ManagerID, arg.StartAt, arg.EndAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProjectsDoneRow
+	for rows.Next() {
+		var i ListProjectsDoneRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Remark,
+			&i.Status,
+			&i.ManagerID,
+			&i.Priority,
+			&i.StartedAt,
+			&i.Duration,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listProjectsFiltered = `-- name: ListProjectsFiltered :many
 SELECT
   id,
@@ -63,6 +215,7 @@ SELECT
   remark,
   status,
   manager_id,
+  priority,
   started_at,
   duration,
   finished_at
@@ -73,14 +226,14 @@ WHERE
   AND (started_at >= $3 OR $3 IS NULL)
   AND (started_at <= $4 OR $4 IS NULL)
 ORDER BY
+  priority,
   CASE status
     WHEN '进行' THEN 1
     WHEN '排单' THEN 2
     WHEN '暂停' THEN 3
-    WHEN '完成' THEN 4
-    WHEN '终止' THEN 5
-    ELSE 7
+    ELSE 4
   END,
+  started_at NULLS LAST,
   id
 `
 
@@ -98,6 +251,7 @@ type ListProjectsFilteredRow struct {
 	Remark      *string       `json:"remark"`
 	Status      ProjectStatus `json:"status"`
 	ManagerID   int32         `json:"managerId"`
+	Priority    int32         `json:"priority"`
 	StartedAt   *time.Time    `json:"startedAt"`
 	Duration    *int32        `json:"duration"`
 	FinishedAt  *time.Time    `json:"finishedAt"`
@@ -124,6 +278,76 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 			&i.Remark,
 			&i.Status,
 			&i.ManagerID,
+			&i.Priority,
+			&i.StartedAt,
+			&i.Duration,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProjectsTodo = `-- name: ListProjectsTodo :many
+SELECT
+  id,
+  name,
+  description,
+  remark,
+  status,
+  manager_id,
+  priority,
+  started_at,
+  duration,
+  finished_at
+FROM projects
+WHERE 
+  status IN ('暂停','排单')
+  AND (manager_id = $1 OR $1 IS NULL)
+ORDER BY
+  priority,
+  CASE status
+    WHEN '暂停' THEN 1
+    WHEN '排单' THEN 2
+  END,
+  id
+`
+
+type ListProjectsTodoRow struct {
+	ID          int32         `json:"id"`
+	Name        string        `json:"name"`
+	Description *string       `json:"description"`
+	Remark      *string       `json:"remark"`
+	Status      ProjectStatus `json:"status"`
+	ManagerID   int32         `json:"managerId"`
+	Priority    int32         `json:"priority"`
+	StartedAt   *time.Time    `json:"startedAt"`
+	Duration    *int32        `json:"duration"`
+	FinishedAt  *time.Time    `json:"finishedAt"`
+}
+
+func (q *Queries) ListProjectsTodo(ctx context.Context, managerID *int32) ([]ListProjectsTodoRow, error) {
+	rows, err := q.db.Query(ctx, listProjectsTodo, managerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProjectsTodoRow
+	for rows.Next() {
+		var i ListProjectsTodoRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Remark,
+			&i.Status,
+			&i.ManagerID,
+			&i.Priority,
 			&i.StartedAt,
 			&i.Duration,
 			&i.FinishedAt,
@@ -146,10 +370,11 @@ SET
   remark = COALESCE($3,remark),
   status = COALESCE($4,status),
   manager_id = COALESCE($5,manager_id),
-  started_at = COALESCE($6,started_at),
-  duration = COALESCE($7,duration),
-  finished_at = COALESCE($8,finished_at)
-WHERE id = $9
+  priority = COALESCE($6,priority),
+  started_at = COALESCE($7,started_at),
+  duration = COALESCE($8,duration),
+  finished_at = COALESCE($9,finished_at)
+WHERE id = $10
 `
 
 type UpdateProjectParams struct {
@@ -158,6 +383,7 @@ type UpdateProjectParams struct {
 	Remark      *string        `json:"remark"`
 	Status      *ProjectStatus `json:"status"`
 	ManagerID   *int32         `json:"managerId"`
+	Priority    *int32         `json:"priority"`
 	StartedAt   *time.Time     `json:"startedAt"`
 	Duration    *int32         `json:"duration"`
 	FinishedAt  *time.Time     `json:"finishedAt"`
@@ -171,6 +397,7 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) er
 		arg.Remark,
 		arg.Status,
 		arg.ManagerID,
+		arg.Priority,
 		arg.StartedAt,
 		arg.Duration,
 		arg.FinishedAt,
