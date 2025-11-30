@@ -30,16 +30,17 @@
     v-else-if="type === 'number'"
     type="number"
     v-model="tempValue"
+    v-focus
     @blur="handleSave"
     @keydown.enter="handleSave"
     @keydown.esc="handleCancel"
-    autofocus
   />
 
   <!-- 文本输入框 -->
   <Input
     v-else
     v-model="tempValue"
+    v-focus
     @blur="handleSave"
     @keydown.enter="handleSave"
     @keydown.esc="handleCancel"
@@ -77,6 +78,14 @@ watch(
     tempValue.value = val
   }
 )
+
+// 自动聚焦到input，兼容普通input和框架中的input
+const vFocus = {
+  mounted: (el: HTMLElement) => {
+    const input = el.tagName === "INPUT" ? el : el.querySelector("input")
+    input?.focus()
+  }
+}
 
 function handleSave() {
   editing.value = false

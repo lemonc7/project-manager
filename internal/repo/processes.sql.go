@@ -130,6 +130,7 @@ SELECT
   status,
   employee_id,
   sequence,
+  spend_time,
   started_at,
   finished_at
 FROM processes p
@@ -147,6 +148,7 @@ type ListProcessesRow struct {
 	Status      ProcessStatus `json:"status"`
 	EmployeeID  *int32        `json:"employeeId"`
 	Sequence    int32         `json:"sequence"`
+	SpendTime   *float64      `json:"spendTime"`
 	StartedAt   *time.Time    `json:"startedAt"`
 	FinishedAt  *time.Time    `json:"finishedAt"`
 }
@@ -169,6 +171,7 @@ func (q *Queries) ListProcesses(ctx context.Context, projectID int32) ([]ListPro
 			&i.Status,
 			&i.EmployeeID,
 			&i.Sequence,
+			&i.SpendTime,
 			&i.StartedAt,
 			&i.FinishedAt,
 		); err != nil {
@@ -187,7 +190,7 @@ SELECT
   p.id,
   p.name,
   p.description,
-  p.started_at,
+  pr.started_at,
   pr.duration,
   p.project_id,
   COALESCE(pr.name,'') AS project_name
@@ -387,9 +390,10 @@ SET
   remark = COALESCE($3,remark),
   status = COALESCE($4,status),
   employee_id = COALESCE($5,employee_id),
-  started_at = COALESCE($6,started_at),
-  finished_at = COALESCE($7,finished_at)
-WHERE id = $8
+  spend_time = COALESCE($6,spend_time),
+  started_at = COALESCE($7,started_at),
+  finished_at = COALESCE($8,finished_at)
+WHERE id = $9
 `
 
 type UpdateProcessParams struct {
@@ -398,6 +402,7 @@ type UpdateProcessParams struct {
 	Remark      *string        `json:"remark"`
 	Status      *ProcessStatus `json:"status"`
 	EmployeeID  *int32         `json:"employeeId"`
+	SpendTime   *float64       `json:"spendTime"`
 	StartedAt   *time.Time     `json:"startedAt"`
 	FinishedAt  *time.Time     `json:"finishedAt"`
 	ID          int32          `json:"id"`
@@ -410,6 +415,7 @@ func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) er
 		arg.Remark,
 		arg.Status,
 		arg.EmployeeID,
+		arg.SpendTime,
 		arg.StartedAt,
 		arg.FinishedAt,
 		arg.ID,

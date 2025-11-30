@@ -58,8 +58,8 @@ const router = useRouter()
 
 const items = [
   { title: "任务", url: "/home", icon: ListTodo },
-  { title: "项目总览", url: "/projects", icon: Sheet },
-  { title: "成员", url: "/employees", icon: User }
+  { title: "项目总览", url: "/project", icon: Sheet },
+  { title: "成员", url: "/employee", icon: User }
 ]
 
 const { data } = useQuery({

@@ -1,11 +1,12 @@
-import { listProjectsFilter } from "@/api/projects"
-import type { ListProjectsRequest } from "@/model/projects"
+import { listProjects } from "@/api/projects"
+import type { FilterStatus, ListProjectsRequest } from "@/models/projects"
 import { useQuery } from "@tanstack/vue-query"
 
-function buildProjectsQueryKey(req: ListProjectsRequest) {
+function buildProjectsQueryKey(filter: FilterStatus, req: ListProjectsRequest) {
   return [
     "projects",
     "overview",
+    filter,
     req.managerID ?? null,
     req.status ?? null,
     req.startAt ?? null,
@@ -13,9 +14,15 @@ function buildProjectsQueryKey(req: ListProjectsRequest) {
   ]
 }
 
-export default function useProjects(req: ListProjectsRequest) {
+export default function useProjects({
+  filter,
+  req
+}: {
+  filter: FilterStatus
+  req: ListProjectsRequest
+}) {
   return useQuery({
-    queryKey: buildProjectsQueryKey(req),
-    queryFn: () => listProjectsFilter(req)
+    queryKey: buildProjectsQueryKey(filter, req),
+    queryFn: () => listProjects(filter, req)
   })
 }

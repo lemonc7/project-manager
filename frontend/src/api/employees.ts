@@ -2,7 +2,7 @@ import type {
   CreateEmployeeRequest,
   Employee,
   UpdateEmployeeRequest
-} from "@/model/employees"
+} from "@/models/employees"
 import service from "./request"
 
 export async function listEmployees() {

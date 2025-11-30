@@ -40,7 +40,7 @@
     </div>
     <!-- 右侧动态元素|刷新 -->
     <div class="flex items-center gap-2">
-      <div></div>
+      <div id="header-actions" class="flex items-center gap-2"></div>
       <Button variant="outline" size="sm" title="刷新" @click="handleRefresh">
         <RefreshCw />
       </Button>

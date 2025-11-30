@@ -66,13 +66,15 @@ CREATE TABLE processes (
   status process_status NOT NULL DEFAULT '等待',
   employee_id INT REFERENCES employees(id) ON DELETE SET NULL,
   sequence INT NOT NULL,
+  spend_time DOUBLE PRECISION,
   started_at TIMESTAMPTZ,
   finished_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT unique_project_sequence UNIQUE(project_id, sequence)
   DEFERRABLE INITIALLY DEFERRED,
-  CONSTRAINT check_sequence_positive CHECK (sequence > 0)
+  CONSTRAINT check_sequence_positive CHECK (sequence > 0),
+  CONSTRAINT check_spend_time_positive CHECK (spend_time > 0)
 );
 
 -- 系统设置表

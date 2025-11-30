@@ -4,7 +4,7 @@ import { listProcesses } from "@/api/processes"
 
 export function useProcesses() {
   const route = useRoute()
-  const id = route.params.id as string | undefined
+  const id = parseInt(route.params.id as string)
 
   return useQuery({
     queryKey: ["processes", id],
@@ -12,7 +12,7 @@ export function useProcesses() {
       if (!id) {
         throw new Error("缺少流程ID")
       }
-      return listProcesses(+id)
+      return listProcesses(id)
     }
   })
 }

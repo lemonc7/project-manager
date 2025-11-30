@@ -20,6 +20,7 @@ type UpdateProcessRequest struct {
 	Remark      *string             `json:"remark"`
 	Status      *repo.ProcessStatus `json:"status"`
 	EmployeeID  *int32              `json:"employeeID"`
+	SpendTime   *float64            `json:"spendTime"`
 	StartedAt   *time.Time          `json:"startedAt"`
 	FinishedAt  *time.Time          `json:"finishedAt"`
 }
@@ -33,6 +34,7 @@ type Process struct {
 	Status      repo.ProcessStatus `json:"status"`
 	EmployeeID  *int32             `json:"employeeID,omitempty"`
 	Sequence    int32              `json:"sequence"`
+	SpendTime   *float64           `json:"spendTime,omitempty"`
 	StartedAt   *time.Time         `json:"startedAt,omitempty"`
 	FinishedAt  *time.Time         `json:"finishedAt,omitempty"`
 }

@@ -1,13 +1,12 @@
 import { updateProject } from "@/api/projects"
-import type { UpdateProjectRequest } from "@/model/projects"
+import type { UpdateProjectRequest } from "@/models/projects"
 import { useMutation, useQueryClient } from "@tanstack/vue-query"
-import { toast } from "vue-sonner"
 
 export default function useUpdateProject({
-  onSuccuss,
+  onSuccess,
   onError
 }: {
-  onSuccuss?: () => void
+  onSuccess?: () => void
   onError?: () => void
 }) {
   const queryClient = useQueryClient()
@@ -16,12 +15,11 @@ export default function useUpdateProject({
       updateProject(id, req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
-      if (onSuccuss) {
-        onSuccuss()
+      if (onSuccess) {
+        onSuccess()
       }
     },
     onError: () => {
-      toast.error("更新失败")
       if (onError) {
         onError()
       }

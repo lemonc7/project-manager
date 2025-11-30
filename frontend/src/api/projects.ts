@@ -1,13 +1,19 @@
 import type {
   CreateProjectRequest,
+  FilterStatus,
   ListProjectsRequest,
   Project,
   UpdateProjectRequest
-} from "@/model/projects"
+} from "@/models/projects"
 import service from "./request"
 
-export async function listProjectsFilter(req: ListProjectsRequest) {
-  const res = await service.get<Project[]>("/project/filter", { params: req })
+export async function listProjects(
+  filter: FilterStatus,
+  req: ListProjectsRequest
+) {
+  const res = await service.get<Project[]>(`/project/status/${filter}`, {
+    params: req
+  })
   return Array.isArray(res.data) ? res.data : []
 }
 

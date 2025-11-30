@@ -8,6 +8,7 @@ SELECT
   status,
   employee_id,
   sequence,
+  spend_time,
   started_at,
   finished_at
 FROM processes p
@@ -48,7 +49,7 @@ SELECT
   p.id,
   p.name,
   p.description,
-  p.started_at,
+  pr.started_at,
   pr.duration,
   p.project_id,
   COALESCE(pr.name,'') AS project_name
@@ -67,6 +68,7 @@ SET
   remark = COALESCE(sqlc.narg('remark'),remark),
   status = COALESCE(sqlc.narg('status'),status),
   employee_id = COALESCE(sqlc.narg('employee_id'),employee_id),
+  spend_time = COALESCE(sqlc.narg('spend_time'),spend_time),
   started_at = COALESCE(sqlc.narg('started_at'),started_at),
   finished_at = COALESCE(sqlc.narg('finished_at'),finished_at)
 WHERE id = sqlc.arg('id');

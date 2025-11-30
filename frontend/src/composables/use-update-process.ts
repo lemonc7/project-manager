@@ -1,8 +1,7 @@
 import { updateProcess } from "@/api/processes"
-import type { UpdateProcessRequest } from "@/model/processes"
+import type { UpdateProcessRequest } from "@/models/processes"
 import { useMutation, useQueryClient } from "@tanstack/vue-query"
 import { useRoute } from "vue-router"
-import { toast } from "vue-sonner"
 
 export default function useUpdateProcess({
   onSuccess,
@@ -13,18 +12,17 @@ export default function useUpdateProcess({
 }) {
   const queryClient = useQueryClient()
   const route = useRoute()
-  const id = route.params.id as string | undefined
+  const projectID = parseInt(route.params.id as string)
   return useMutation({
     mutationFn: ({ id, req }: { id: number; req: UpdateProcessRequest }) =>
       updateProcess(id, req),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["processes", id] })
+      queryClient.invalidateQueries({ queryKey: ["processes", projectID] })
       if (onSuccess) {
         onSuccess()
       }
     },
     onError: () => {
-      toast.error("更新失败")
       if (onError) {
         onError()
       }

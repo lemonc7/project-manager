@@ -1,13 +1,12 @@
 import { createProject } from "@/api/projects"
-import type { CreateProjectRequest } from "@/model/projects"
+import type { CreateProjectRequest } from "@/models/projects"
 import { useMutation, useQueryClient } from "@tanstack/vue-query"
-import { toast } from "vue-sonner"
 
 export default function useCreateProject({
-  onSuccuss,
+  onSuccess,
   onError
 }: {
-  onSuccuss?: () => void
+  onSuccess?: () => void
   onError?: () => void
 }) {
   const queryClient = useQueryClient()
@@ -16,13 +15,11 @@ export default function useCreateProject({
     mutationFn: (req: CreateProjectRequest) => createProject(req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
-      toast.success("创建成功")
-      if (onSuccuss) {
-        onSuccuss()
+      if (onSuccess) {
+        onSuccess()
       }
     },
     onError: () => {
-      toast.error("创建失败")
       if (onError) {
         onError()
       }

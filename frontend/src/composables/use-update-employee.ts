@@ -1,13 +1,12 @@
 import { updateEmployee } from "@/api/employees"
-import type { UpdateEmployeeRequest } from "@/model/employees"
+import type { UpdateEmployeeRequest } from "@/models/employees"
 import { useMutation, useQueryClient } from "@tanstack/vue-query"
-import { toast } from "vue-sonner"
 
 export default function useUpdateEmployee({
-  onSuccuss,
+  onSuccess,
   onError
 }: {
-  onSuccuss?: () => void
+  onSuccess?: () => void
   onError?: () => void
 }) {
   const queryClient = useQueryClient()
@@ -16,12 +15,11 @@ export default function useUpdateEmployee({
       updateEmployee(id, req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees", "overview"] })
-      if (onSuccuss) {
-        onSuccuss()
+      if (onSuccess) {
+        onSuccess()
       }
     },
     onError: () => {
-      toast.error("更新失败")
       if (onError) {
         onError()
       }

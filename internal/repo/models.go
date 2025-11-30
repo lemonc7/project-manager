@@ -122,6 +122,7 @@ type Process struct {
 	Status      ProcessStatus `json:"status"`
 	EmployeeID  *int32        `json:"employeeId"`
 	Sequence    int32         `json:"sequence"`
+	SpendTime   *float64      `json:"spendTime"`
 	StartedAt   *time.Time    `json:"startedAt"`
 	FinishedAt  *time.Time    `json:"finishedAt"`
 	CreatedAt   time.Time     `json:"createdAt"`

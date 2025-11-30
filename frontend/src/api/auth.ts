@@ -1,4 +1,4 @@
-import type { LoginRequest, LoginResponse } from "@/model/auth"
+import type { LoginRequest, LoginResponse } from "@/models/auth"
 import service from "./request"
 import { setToken } from "@/util/auth"
 

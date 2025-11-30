@@ -12,9 +12,5 @@
         <RouterView />
       </div>
     </div>
-    <!-- toast容器 -->
   </SidebarProvider>
 </template>
-
-<script setup lang="ts">
-</script>

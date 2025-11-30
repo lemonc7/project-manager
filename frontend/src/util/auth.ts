@@ -1,3 +1,5 @@
+import type { Role } from "@/models/employees"
+
 const TOKEN_KEY = "access_token"
 const USER_ID_KEY = "user_id"
 const USERNAME_KEY = "username"
@@ -20,7 +22,8 @@ export function getToken() {
 }
 
 export function getUserID() {
-  return localStorage.getItem(USER_ID_KEY)
+  const id = localStorage.getItem(USER_ID_KEY)
+  return id ? Number(id) : undefined
 }
 
 export function removeToken() {
@@ -32,4 +35,13 @@ export function removeToken() {
 
 export function isLoggedIn() {
   return !!getToken()
+}
+
+export function hasRole(...targetRoles: Role[]) {
+  const roles = localStorage.getItem(ROLES_KEY)
+  if (!roles) {
+    return false
+  }
+  const parsed = JSON.parse(roles) as Role[]
+  return targetRoles.some((role) => parsed.includes(role))
 }

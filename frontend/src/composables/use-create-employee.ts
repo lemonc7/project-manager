@@ -1,7 +1,6 @@
 import { createEmployee } from "@/api/employees"
-import type { CreateEmployeeRequest } from "@/model/employees"
+import type { CreateEmployeeRequest } from "@/models/employees"
 import { useMutation, useQueryClient } from "@tanstack/vue-query"
-import { toast } from "vue-sonner"
 
 export default function useCreateEmployee({
   onSuccess,
@@ -15,13 +14,11 @@ export default function useCreateEmployee({
     mutationFn: (req: CreateEmployeeRequest) => createEmployee(req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees", "overview"] })
-      toast.success("创建成功")
       if (onSuccess) {
         onSuccess()
       }
     },
     onError: () => {
-      toast.error("创建失败")
       if (onError) {
         onError()
       }

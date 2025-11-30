@@ -1,8 +1,11 @@
 import Layout from "@/components/layout/Layout.vue"
-import NotFound from "@/page/404/NotFound.vue"
-import { EmployeePage } from "@/page/employee"
-import LoginPage from "@/page/login/Login.vue"
-import TaskPage from "@/page/task/Task.vue"
+import ProjectLayout from "@/components/layout/ProjectLayout.vue"
+import NotFoundPage from "@/pages/404/NotFoundPage.vue"
+import EmployeePage from "@/pages/employee/EmployeePage.vue"
+import LoginPage from "@/pages/login/LoginPage.vue"
+import ProcessPage from "@/pages/process/ProcessPage.vue"
+import ProjectPage from "@/pages/project/ProjectPage.vue"
+import TaskPage from "@/pages/task/TaskPage.vue"
 import { isLoggedIn } from "@/util/auth"
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router"
 
@@ -26,29 +29,29 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "任务总览" }
       },
       {
-        path: "employees",
+        path: "employee",
         component: EmployeePage,
         meta: { title: "成员列表" }
       },
-      // {
-      //   path: "projects",
-      //   component: ProjectLayout,
-      //   children: [
-      //     {
-      //       path: "",
-      //       component: ProjectPage,
-      //       meta: { title: "项目总览" }
-      //     },
-      //     {
-      //       path: ":id",
-      //       component: ProcessPage,
-      //       meta: { title: "项目流程" }
-      //     }
-      //   ]
-      // },
+      {
+        path: "project",
+        component: ProjectLayout,
+        children: [
+          {
+            path: "",
+            component: ProjectPage,
+            meta: { title: "项目总览" }
+          },
+          {
+            path: ":id",
+            component: ProcessPage,
+            meta: { title: "项目流程" }
+          }
+        ]
+      },
       {
         path: "/:pathMatch(.*)*",
-        component: NotFound,
+        component: NotFoundPage,
         meta: { title: "无此页面" }
       }
     ]

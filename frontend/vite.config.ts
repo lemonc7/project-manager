@@ -10,7 +10,7 @@ export default defineConfig({
     vue(),
     tailwindcss(),
     Components({
-      dirs: ["src/components"],
+      dirs: ["src/components","src/pages"],
       extensions: ["vue"],
       deep: true,
       dts: "src/components.d.ts"
