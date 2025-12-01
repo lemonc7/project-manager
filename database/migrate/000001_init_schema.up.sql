@@ -52,7 +52,7 @@ CREATE TABLE projects (
   finished_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT check_duration_positive CHECK (duration > 0),
+  CONSTRAINT check_duration_positive CHECK (duration >= 0),
   CONSTRAINT check_priority_range CHECK (priority BETWEEN 1 AND 9)
 );
 
@@ -74,7 +74,7 @@ CREATE TABLE processes (
   CONSTRAINT unique_project_sequence UNIQUE(project_id, sequence)
   DEFERRABLE INITIALLY DEFERRED,
   CONSTRAINT check_sequence_positive CHECK (sequence > 0),
-  CONSTRAINT check_spend_time_positive CHECK (spend_time > 0)
+  CONSTRAINT check_spend_time_positive CHECK (spend_time >= 0)
 );
 
 -- 系统设置表

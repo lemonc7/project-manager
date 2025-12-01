@@ -118,8 +118,8 @@ const createProcess = useCreateProcess({
 // 表单提交处理
 const handleSubmit = () => {
   // 校验数据
-  if (!formData.name || !formData.employeeID) {
-    toast.error("请填写流程名称和负责人")
+  if (!formData.name) {
+    toast.error("请填写流程名称")
     return
   }
 

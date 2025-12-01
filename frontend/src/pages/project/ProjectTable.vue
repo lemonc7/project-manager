@@ -12,7 +12,7 @@
     <span>项目列表加载中...</span>
   </div>
   <!-- 表格渲染 -->
-  <div v-else>
+  <div v-else class="w-full">
     <div class="rounded-md border">
       <Table>
         <TableHeader>
@@ -66,24 +66,31 @@ import type {
 import {
   FlexRender,
   getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
   useVueTable,
-  type ColumnDef
+  type ColumnDef,
+  type ColumnFiltersState
 } from "@tanstack/vue-table"
-import { h } from "vue"
+import { h, ref, watch } from "vue"
 import { toast } from "vue-sonner"
 import ProjectActions from "./ProjectActions.vue"
 import { useRouter } from "vue-router"
 import ProjectStatus from "./ProjectStatus.vue"
+import { valueUpdater } from "@/components/ui/table/utils"
 
 const props = defineProps<{
   projectFilter: FilterStatus
   request: ListProjectsRequest
   disableSelect: boolean
+  filterText: string
 }>()
 
 const emit = defineEmits<{
   (e: "edit", project: Project): void
   (e: "delete", project: Project): void
+  (e: "start", project: Project): void
+  (e: "finish", project: Project): void
 }>()
 
 const router = useRouter()
@@ -113,6 +120,7 @@ const updateProject = useUpdateProject({
 // 表格定义
 const columns: ColumnDef<Project>[] = [
   {
+    accessorKey: "name",
     header: "项目名称",
     cell: ({ row }) => {
       const project = row.original
@@ -192,8 +200,16 @@ const columns: ColumnDef<Project>[] = [
   {
     header: "状态",
     cell: ({ row }) => {
+      const project = row.original
       return h(ProjectStatus, {
-        status: row.original.status
+        status: project.status,
+        onClick: ($event: "start" | "finish") => {
+          if ($event === "start") {
+            emit("start", project)
+          } else if ($event === "finish") {
+            emit("finish", project)
+          }
+        }
       })
     }
   },
@@ -225,11 +241,34 @@ const columns: ColumnDef<Project>[] = [
   }
 ]
 
+const columnFilters = ref<ColumnFiltersState>([])
+
 const table = useVueTable({
   get data() {
     return projects.value ?? []
   },
   columns,
-  getCoreRowModel: getCoreRowModel()
+  getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  onColumnFiltersChange: (updaterOrValue) =>
+    valueUpdater(updaterOrValue, columnFilters),
+  state: {
+    get columnFilters() {
+      return columnFilters.value
+    }
+  }
 })
+
+// 更新过滤
+let timer: number | undefined
+watch(
+  () => props.filterText,
+  (val) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      table.getColumn("name")?.setFilterValue(val)
+    }, 300)
+  }
+)
 </script>

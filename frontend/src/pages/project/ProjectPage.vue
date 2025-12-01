@@ -1,6 +1,7 @@
 <template>
   <!-- Header中的按钮 -->
   <SafeTeleport to="#header-actions">
+    <Input v-model="filterText" placeholder="项目名称过滤..." />
     <Button @click="isCreateDialogOpen = true">创建项目</Button>
   </SafeTeleport>
   <!-- 表格渲染 -->
@@ -22,11 +23,15 @@
         :value="item.value"
       >
         <ProjectTable
+          class="py-2"
           :project-filter="item.value"
           :request="{}"
           :disable-select="!hasRole('manager', 'admin')"
+          :filter-text="filterText"
           @edit="handleEditProject"
           @delete="handleDeleteProject"
+          @start="handleStartProject"
+          @finish="handleFinishProject"
         />
       </TabsContent>
     </Tabs>
@@ -71,11 +76,73 @@
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
+  <!-- 开始弹窗 -->
+  <AlertDialog v-model:open="isStartDialogOpen">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>开始项目</AlertDialogTitle>
+        <AlertDialogDescription>
+          确定要开始<span class="font-bold text-red-500">{{
+            selectedProject?.name
+          }}</span
+          >项目吗?
+          <span v-if="!selectedProject?.duration">
+            <span class="font-bold text-red-500">项目周期</span>未设置，请确认！
+          </span>
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel
+          @click="selectedProject = null"
+          :disabled="startProject.isPending.value"
+        >
+          取消
+        </AlertDialogCancel>
+        <AlertDialogAction
+          @click="handleStartConfirm"
+          :disabled="startProject.isPending.value"
+        >
+          {{ startProject.isPending.value ? "操作中..." : "确认" }}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+  <!-- 完成弹窗 -->
+  <AlertDialog v-model:open="isFinishDialogOpen">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>完成项目</AlertDialogTitle>
+        <AlertDialogDescription>
+          确定项目
+          <span class="font-bold text-red-500">{{
+            selectedProject?.name
+          }}</span>
+          已完成吗?
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel
+          @click="selectedProject = null"
+          :disabled="finishProject.isPending.value"
+        >
+          取消
+        </AlertDialogCancel>
+        <AlertDialogAction
+          @click="handleFinishConfirm"
+          :disabled="finishProject.isPending.value"
+        >
+          {{ finishProject.isPending.value ? "操作中..." : "确认" }}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
 import useDeleteProject from "@/composables/use-delete-project"
 import useEmployees from "@/composables/use-employees"
+import useFinishProject from "@/composables/use-finish-project"
+import useStartProject from "@/composables/use-start-project"
 import type { Project } from "@/models/projects"
 import { hasRole } from "@/util/auth"
 import { ref } from "vue"
@@ -92,8 +159,12 @@ const { data: employees } = useEmployees()
 const isCreateDialogOpen = ref(false)
 const isEditDialogOpen = ref(false)
 const isDeleteDialogOpen = ref(false)
+const isStartDialogOpen = ref(false)
+const isFinishDialogOpen = ref(false)
 
 const selectedProject = ref<Project | null>(null)
+
+const filterText = ref("")
 
 const handleEditProject = (project: Project) => {
   selectedProject.value = project
@@ -103,6 +174,16 @@ const handleEditProject = (project: Project) => {
 const handleDeleteProject = (project: Project) => {
   selectedProject.value = project
   isDeleteDialogOpen.value = true
+}
+
+const handleStartProject = (project: Project) => {
+  selectedProject.value = project
+  isStartDialogOpen.value = true
+}
+
+const handleFinishProject = (project: Project) => {
+  selectedProject.value = project
+  isFinishDialogOpen.value = true
 }
 
 const deleteProject = useDeleteProject({
@@ -118,10 +199,50 @@ const deleteProject = useDeleteProject({
   }
 })
 
+const startProject = useStartProject({
+  onSuccess: () => {
+    toast.success(`项目 ${selectedProject.value?.name} 已开始`)
+    isStartDialogOpen.value = false
+    selectedProject.value = null
+  },
+  onError: () => {
+    isStartDialogOpen.value = false
+    selectedProject.value = null
+    toast.error("操作失败")
+  }
+})
+
+const finishProject = useFinishProject({
+  onSuccess: () => {
+    toast.success(`项目 ${selectedProject.value?.name} 已完成`)
+    isFinishDialogOpen.value = false
+    selectedProject.value = null
+  },
+  onError: () => {
+    isFinishDialogOpen.value = false
+    selectedProject.value = null
+    toast.error("操作失败")
+  }
+})
+
 const handleDeleteConfirm = (e: MouseEvent) => {
   e.preventDefault()
   if (selectedProject.value) {
     deleteProject.mutate(selectedProject.value.id)
+  }
+}
+
+const handleStartConfirm = (e: MouseEvent) => {
+  e.preventDefault()
+  if (selectedProject.value) {
+    startProject.mutate(selectedProject.value.id)
+  }
+}
+
+const handleFinishConfirm = (e: MouseEvent) => {
+  e.preventDefault()
+  if (selectedProject.value) {
+    finishProject.mutate(selectedProject.value.id)
   }
 }
 </script>
