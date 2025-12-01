@@ -11,7 +11,7 @@ export async function createTeam(req: CreateTeamRequest) {
 }
 
 export async function updateTeam(id: number, req: UpdateTeamRequest) {
-  return service.put<Team>(`/team/${id}`, req)
+  return service.patch<Team>(`/team/${id}`, req)
 }
 
 export async function deleteTeam(id: number) {

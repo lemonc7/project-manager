@@ -19,6 +19,8 @@ type ProjectService interface {
 	ListProjectsTodo(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error)
 	ListProjectsDoing(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error)
 	ListProjectsDone(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error)
+	StartProject(ctx context.Context, id int32) error
+	FinishProject(ctx context.Context, id int32) error
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)
@@ -140,4 +142,34 @@ func (p *ProjectHandler) ListProjects(c echo.Context) error {
 	default:
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("filter参数错误: %s", filter))
 	}
+}
+
+func (p *ProjectHandler) StartProject(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+
+	if err := p.projectService.StartProject(c.Request().Context(), id); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "成功开始项目",
+	})
+}
+
+func (p *ProjectHandler) FinishProject(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+
+	if err := p.projectService.FinishProject(c.Request().Context(), id); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "成功完成项目",
+	})
 }

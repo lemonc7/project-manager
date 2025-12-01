@@ -41,7 +41,6 @@ func InitLogger(cfg config.LoggerConfig) {
 
 	Log = zap.New(
 		fileCore,
-		zap.AddCaller(),
 		zap.AddStacktrace(zapcore.ErrorLevel),
 	)
 }

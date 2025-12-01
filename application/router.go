@@ -28,26 +28,29 @@ func (a *Application) initRouter() {
 	employeeRouter.GET("", a.employeeHandler.ListEmployees)
 	employeeRouter.GET("/me", a.employeeHandler.GetEmployee)
 	employeeRouter.POST("", a.employeeHandler.CreateEmployee)
-	employeeRouter.PUT("/:id", a.employeeHandler.UpdateEmployee)
+	employeeRouter.PATCH("/:id", a.employeeHandler.UpdateEmployee)
 	employeeRouter.DELETE("/:id", a.employeeHandler.DeleteEmployee)
 
 	// 团队
 	teamRouter.POST("", a.teamHandler.CreateTeam)
 	teamRouter.GET("", a.teamHandler.ListTeams)
-	teamRouter.PUT("/:id", a.teamHandler.UpdateTeam)
+	teamRouter.PATCH("/:id", a.teamHandler.UpdateTeam)
 	teamRouter.DELETE("/:id", a.teamHandler.DeleteTeam)
 
 	// 项目
 	projectRouter.GET("/:id", a.processHandler.ListProcesses)
 	projectRouter.GET("/status/:filter", a.projectHandler.ListProjects)
 	projectRouter.POST("", a.projectHandler.CreateProject)
-	projectRouter.PUT("/:id", a.projectHandler.UpdateProject)
+	projectRouter.PATCH("/:id", a.projectHandler.UpdateProject)
 	projectRouter.DELETE("/:id", a.projectHandler.DeleteProject)
+	projectRouter.POST("/finish/:id", a.projectHandler.FinishProject)
+	projectRouter.POST("/start/:id", a.projectHandler.StartProject)
 
 	// 流程
 	processRouter.POST("", a.processHandler.InsertProcessLast)
 	processRouter.POST("/:id", a.processHandler.InsertProcessAt)
-	processRouter.PUT("/:id", a.processHandler.UpdateProcess)
+	processRouter.PATCH("/:id", a.processHandler.UpdateProcess)
 	processRouter.DELETE("/:id", a.processHandler.DeleteProcess)
 	processRouter.GET("/task/:id", a.processHandler.ListTasks)
+	processRouter.POST("/finish/:id", a.processHandler.FinishProcess)
 }

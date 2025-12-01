@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 	"slices"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -176,4 +179,25 @@ func (p *ProjectService) ListProjectsDone(ctx context.Context, req model.ListPro
 	}
 
 	return projects, nil
+}
+
+func (p *ProjectService) StartProject(ctx context.Context, id int32) error {
+	_, err := p.querier.StartProject(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("项目状态必须为'排单'")
+		}
+		return fmt.Errorf("数据库错误: %w", err)
+	}
+
+	return nil
+}
+
+func (p *ProjectService) FinishProject(ctx context.Context, id int32) error {
+	err := p.querier.FinishProject(ctx, id)
+	if err != nil {
+		return fmt.Errorf("数据库错误: %w", err)
+	}
+
+	return nil
 }

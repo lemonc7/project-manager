@@ -64,12 +64,13 @@
                   <div
                     v-for="r in roles"
                     :key="r"
-                    class="flex items-center space-x-2"
+                    class="flex items-center space-x-2 mt-2"
                   >
-                    <Checkbox
+                    <input
+                      type="checkbox"
+                      v-model="formData.roles"
+                      :value="r"
                       :id="r"
-                      :checked="isChecked(r)"
-                      @update:checked="(checked: boolean) => toggleRole(r, checked)"
                     />
                     <Label :for="r">{{ RoleMap[r] }}</Label>
                   </div>
@@ -129,21 +130,6 @@ const initialFormData = {
 }
 
 const formData = reactive({ ...initialFormData })
-
-// 检查角色是否选中
-const isChecked = (role: Role) => formData.roles.includes(role)
-
-const toggleRole = (role: Role, checked: boolean) => {
-  if (checked) {
-    // 选中时，如果不在数组中就添加
-    if (!formData.roles.includes(role)) {
-      formData.roles.push(role)
-    }
-  } else {
-    // 取消选中，从数组中移除
-    formData.roles = formData.roles.filter((r) => r !== role)
-  }
-}
 
 // 触发update:open事件，通知父组件关闭弹窗
 const onOpenChange = (value: boolean) => {

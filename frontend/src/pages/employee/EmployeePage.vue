@@ -84,11 +84,16 @@
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
-
-  <!-- 创建成员弹窗 -->
+  <!-- 创建弹窗 -->
   <CreateEmployeeDialog
     v-model:open="isCreateDialogOpen"
     :teams="teams ?? []"
+  />
+  <!-- 编辑弹窗 -->
+  <EditEmployeeDialog
+    v-model:open="isEditDialogOpen"
+    :teams="teams ?? []"
+    :employee="selectedEmployee"
   />
 </template>
 
@@ -97,7 +102,12 @@ import EditableCell from "@/components/common/EditableCell.vue"
 import useEmployees from "@/composables/use-employees"
 import useTeams from "@/composables/use-teams"
 import useUpdateEmployee from "@/composables/use-update-employee"
-import type { Employee, UpdateEmployeeRequest } from "@/models/employees"
+import {
+  RoleMap,
+  type Employee,
+  type Role,
+  type UpdateEmployeeRequest
+} from "@/models/employees"
 import {
   FlexRender,
   getCoreRowModel,
@@ -125,6 +135,7 @@ const {
 
 const isDeleteDialogOpen = ref(false)
 const isCreateDialogOpen = ref(false)
+const isEditDialogOpen = ref(false)
 const selectedEmployee = ref<Employee | null>(null)
 
 const deleteEmployee = useUpdateEmployee({
@@ -181,8 +192,13 @@ const columns: ColumnDef<Employee>[] = [
     }
   },
   {
-    accessorKey: "roles",
-    header: "角色"
+    header: "角色",
+    cell: ({ row }) => {
+      const employee = row.original
+      // 把 roles 转换成中文并用逗号拼接
+      const labels = employee.roles?.map((r) => RoleMap[r] ?? r).join("，")
+      return h("span", labels)
+    }
   },
   {
     id: "actions",
@@ -192,7 +208,10 @@ const columns: ColumnDef<Employee>[] = [
       const employee = row.original
       return h(EmployeeActions, {
         employee,
-        // onEdit: (emp) => console.log("编辑", emp.id),
+        onEdit: (emp) => {
+          selectedEmployee.value = emp
+          isEditDialogOpen.value = true
+        },
         onDelete: (emp) => {
           selectedEmployee.value = emp
           isDeleteDialogOpen.value = true

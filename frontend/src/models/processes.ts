@@ -28,6 +28,10 @@ interface UpdateProcessRequest {
   finishedAt?: string
 }
 
+interface FinishProcessRequest {
+  spendTime: number
+}
+
 interface Process {
   id: number
   projectID: number
@@ -52,4 +56,10 @@ interface Task {
   projectName: string
 }
 
-export type { InsertProcessRequest, UpdateProcessRequest, Process, Task }
+export type {
+  InsertProcessRequest,
+  UpdateProcessRequest,
+  FinishProcessRequest,
+  Process,
+  Task
+}

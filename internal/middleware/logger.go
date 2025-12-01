@@ -14,18 +14,18 @@ func Logger(next echo.HandlerFunc) echo.HandlerFunc {
 
 		err := next(c)
 		if err != nil {
-			c.Error(err)
+			return err
 		}
 
 		req := c.Request()
 		res := c.Response()
 
 		fields := []zap.Field{
+			zap.Int("status", res.Status),
+			zap.String("request", req.Method+" "+req.RequestURI),
+			zap.String("host", req.Host),
 			zap.String("remote_ip", c.RealIP()),
 			zap.String("latency", time.Since(start).String()),
-			zap.String("host", req.Host),
-			zap.String("request", req.Method+" "+req.RequestURI),
-			zap.Int("status", res.Status),
 			zap.Int64("size", res.Size),
 			zap.String("user_agent", req.UserAgent()),
 		}

@@ -11,13 +11,13 @@ interface CreateEmployeeRequest {
   name: string
   username: string
   password: string
-  roles?: string[]
+  roles?: Role[]
   teamID?: number
 }
 
 interface UpdateEmployeeRequest {
   name?: string
-  roles?: string[]
+  roles?: Role[]
   teamID?: number
   isActive?: boolean
 }
@@ -25,7 +25,7 @@ interface UpdateEmployeeRequest {
 interface Employee {
   id: number
   name: string
-  roles?: string[]
+  roles?: Role[]
   teamID?: number
 }
 

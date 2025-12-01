@@ -23,6 +23,30 @@ func (q *Queries) DeleteProcess(ctx context.Context, id int32) (int32, error) {
 	return project_id, err
 }
 
+const finishProcess = `-- name: FinishProcess :one
+UPDATE processes
+SET 
+  status = '完成',
+  finished_at = CURRENT_TIMESTAMP,
+  spend_time = $2
+WHERE
+  id = $1
+  AND status = '进行'
+RETURNING id
+`
+
+type FinishProcessParams struct {
+	ID        int32    `json:"id"`
+	SpendTime *float64 `json:"spendTime"`
+}
+
+func (q *Queries) FinishProcess(ctx context.Context, arg FinishProcessParams) (int32, error) {
+	row := q.db.QueryRow(ctx, finishProcess, arg.ID, arg.SpendTime)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getMaxSequence = `-- name: GetMaxSequence :one
 SELECT COALESCE(MAX(sequence), 0)::INT AS max_seq
 FROM processes
@@ -199,6 +223,7 @@ LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
   AND p.status = '进行'
+  AND pr.status NOT IN ('终止','完成')
 ORDER BY p.id
 `
 
@@ -252,6 +277,7 @@ LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
   AND p.status IN ('准备', '暂停')
+  AND pr.status NOT IN ('终止','完成')
 ORDER BY p.id
 `
 
@@ -301,6 +327,7 @@ LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
   AND p.status NOT IN ('终止','完成')
+  AND pr.status NOT IN ('终止','完成')
 ORDER BY p.id
 `
 

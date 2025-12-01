@@ -59,6 +59,20 @@ func (q *Queries) DeleteProject(ctx context.Context, id int32) error {
 	return err
 }
 
+const finishProject = `-- name: FinishProject :exec
+UPDATE projects
+SET
+  status = '完成',
+  finished_at = CURRENT_TIMESTAMP
+WHERE
+  id = $1
+`
+
+func (q *Queries) FinishProject(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, finishProject, id)
+	return err
+}
+
 const listProjectsDoing = `-- name: ListProjectsDoing :many
 SELECT
   id,
@@ -360,6 +374,23 @@ func (q *Queries) ListProjectsTodo(ctx context.Context, managerID *int32) ([]Lis
 		return nil, err
 	}
 	return items, nil
+}
+
+const startProject = `-- name: StartProject :one
+UPDATE projects
+SET
+  status = '进行',
+  started_at = CURRENT_TIMESTAMP
+WHERE
+  id = $1
+  AND status = '排单'
+RETURNING id
+`
+
+func (q *Queries) StartProject(ctx context.Context, id int32) (int32, error) {
+	row := q.db.QueryRow(ctx, startProject, id)
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateProject = `-- name: UpdateProject :exec

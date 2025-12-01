@@ -28,6 +28,7 @@ LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
   AND p.status NOT IN ('终止','完成')
+  AND pr.status NOT IN ('终止','完成')
 ORDER BY p.id;
 
 -- name: ListTasksReady :many
@@ -42,6 +43,7 @@ LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
   AND p.status IN ('准备', '暂停')
+  AND pr.status NOT IN ('终止','完成')
 ORDER BY p.id;
 
 -- name: ListTasksDoing :many
@@ -58,6 +60,7 @@ LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
   AND p.status = '进行'
+  AND pr.status NOT IN ('终止','完成')
 ORDER BY p.id;
 
 -- name: UpdateProcess :exec
@@ -151,4 +154,15 @@ FROM (
   WHERE processes.project_id = $1
 ) AS sub
 WHERE p.id = sub.id;
+
+-- name: FinishProcess :one
+UPDATE processes
+SET 
+  status = '完成',
+  finished_at = CURRENT_TIMESTAMP,
+  spend_time = $2
+WHERE
+  id = $1
+  AND status = '进行'
+RETURNING id;
 

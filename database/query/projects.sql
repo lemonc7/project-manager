@@ -131,3 +131,21 @@ WHERE id = sqlc.arg('id');
 -- name: DeleteProject :exec
 DELETE FROM projects
 WHERE id = $1;
+
+-- name: StartProject :one
+UPDATE projects
+SET
+  status = '进行',
+  started_at = CURRENT_TIMESTAMP
+WHERE
+  id = $1
+  AND status = '排单'
+RETURNING id;
+
+-- name: FinishProject :exec
+UPDATE projects
+SET
+  status = '完成',
+  finished_at = CURRENT_TIMESTAMP
+WHERE
+  id = $1;

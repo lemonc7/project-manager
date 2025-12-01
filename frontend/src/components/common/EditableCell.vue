@@ -44,7 +44,6 @@
     @blur="handleSave"
     @keydown.enter="handleSave"
     @keydown.esc="handleCancel"
-    autofocus
   />
 </template>
 

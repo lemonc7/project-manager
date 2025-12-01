@@ -18,6 +18,8 @@ type Querier interface {
 	DeleteProcess(ctx context.Context, id int32) (int32, error)
 	DeleteProject(ctx context.Context, id int32) error
 	DeleteTeam(ctx context.Context, id int32) error
+	FinishProcess(ctx context.Context, arg FinishProcessParams) (int32, error)
+	FinishProject(ctx context.Context, id int32) error
 	GetEmployeeByUsername(ctx context.Context, username string) (GetEmployeeByUsernameRow, error)
 	GetMaxSequence(ctx context.Context, projectID int32) (int32, error)
 	InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error
@@ -34,6 +36,7 @@ type Querier interface {
 	ListTeams(ctx context.Context) ([]ListTeamsRow, error)
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error
+	StartProject(ctx context.Context, id int32) (int32, error)
 	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error
 	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error
 	UpdateProcess(ctx context.Context, arg UpdateProcessParams) error

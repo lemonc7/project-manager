@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"slices"
 
@@ -212,4 +214,19 @@ func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) (
 		return util.SortByRemaining(a, b)
 	})
 	return tasks, nil
+}
+
+func (p *ProcessService) FinishProcess(ctx context.Context, id int32, req model.FinishProcessRequest) error {
+	_, err := p.querier.FinishProcess(ctx, repo.FinishProcessParams{
+		ID:        id,
+		SpendTime: &req.SpendTime,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("当前任务状态必须为'进行'")
+		}
+		return fmt.Errorf("数据库错误: %w", err)
+	}
+
+	return nil
 }

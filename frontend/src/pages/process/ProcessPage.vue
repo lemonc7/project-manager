@@ -97,6 +97,71 @@
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
+  <!-- 完成弹窗 -->
+  <Drawer v-model:open="isFinishDialogOpen">
+    <DrawerContent>
+      <div class="mx-auto w-full max-w-sm">
+        <DrawerHeader>
+          <DrawerTitle>流程设置</DrawerTitle>
+          <DrawerDescription
+            >将选中的流程设置为完成状态，并设置机时</DrawerDescription
+          >
+        </DrawerHeader>
+        <div class="p-4 pb-0">
+          <div class="flex items-center justify-center space-x-2">
+            <Button
+              variant="outline"
+              size="icon"
+              class="h-8 w-8 shrink-0 rounded-full"
+              :disabled="spendTime <= 0"
+              @click="spendTime -= 0.5"
+            >
+              <Minus />
+            </Button>
+            <div class="flex-1 text-center">
+              <div class="text-7xl font-bold tracking-tighter">
+                <!-- 展示模式 -->
+                <div
+                  v-if="!editing"
+                  class="cursor-pointer"
+                  @click="startEdit"
+                >
+                  {{ spendTime }}
+                </div>
+                <!-- 输入模式 -->
+                <input
+                  v-else
+                  v-model.number="spendTime"
+                  ref="inputRef"
+                  @blur="finishEdit"
+                  @keyup.enter="finishEdit"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  class="w-32 text-center bg-transparent outline-none text-5xl font-bold"
+                />
+              </div>
+              <div class="text-muted-foreground text-sm">小时</div>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              class="h-8 w-8 shrink-0 rounded-full"
+              @click="spendTime += 0.5"
+            >
+              <Plus />
+            </Button>
+          </div>
+        </div>
+        <DrawerFooter>
+          <Button @click="handleFinishConfirm">确认</Button>
+          <DrawerClose as-child>
+            <Button variant="outline">取消</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </div>
+    </DrawerContent>
+  </Drawer>
 </template>
 
 <script setup lang="ts">
@@ -112,11 +177,14 @@ import {
   useVueTable,
   type ColumnDef
 } from "@tanstack/vue-table"
-import { computed, h, ref } from "vue"
+import { computed, h, nextTick, ref, watch } from "vue"
 import { toast } from "vue-sonner"
 import ProcessStatus from "./ProcessStatus.vue"
 import ProcessActions from "./ProcessActions.vue"
 import useDeleteProcess from "@/composables/use-delete-process"
+import useFinishProcess from "@/composables/use-finish-process"
+import Button from "@/components/ui/button/Button.vue"
+import { Minus, Plus } from "lucide-vue-next"
 
 const {
   data: processes,
@@ -133,6 +201,7 @@ const {
 const isCreateDialogOpen = ref(false)
 const isUpdateDialogOpen = ref(false)
 const isDeleteDialogOpen = ref(false)
+const isFinishDialogOpen = ref(false)
 
 const selectedProcess = ref<Process | null>(null)
 
@@ -168,6 +237,56 @@ const handleDeleteConfirm = (e: MouseEvent) => {
     deleteProcess.mutate(selectedProcess.value.id)
   }
 }
+
+// 完成
+const spendTime = ref(0)
+const editing = ref(false)
+const inputRef = ref<HTMLInputElement>()
+
+const startEdit = () => {
+  editing.value = true
+  nextTick(() => {
+    inputRef.value?.focus()
+    inputRef.value?.select()
+  })
+}
+
+const finishEdit = () => {
+  if (!spendTime.value && spendTime.value !== 0) {
+    spendTime.value = 0
+  }
+  editing.value = false
+}
+
+const finishProcess = useFinishProcess({
+  onSuccess: () => {
+    toast.success("操作成功")
+    isFinishDialogOpen.value = false
+    selectedProcess.value = null
+  },
+  onError: () => {
+    isFinishDialogOpen.value = false
+    selectedProcess.value = null
+    toast.error("操作失败")
+  }
+})
+
+const handleFinishConfirm = (e: MouseEvent) => {
+  e.preventDefault()
+  if (selectedProcess.value) {
+    finishProcess.mutate({
+      id: selectedProcess.value.id,
+      req: { spendTime: spendTime.value }
+    })
+  }
+}
+
+// 监听isFinishDialogOpen变化，关闭时重置spendTime
+watch(isFinishDialogOpen, (newVal) => {
+  if (!newVal) {
+    spendTime.value = 0
+  }
+})
 
 // 计算processes里的最大序号
 const maxSequence = computed(() => {
@@ -251,7 +370,11 @@ const columns: ColumnDef<Process>[] = [
     header: "状态",
     cell: ({ row }) => {
       return h(ProcessStatus, {
-        status: row.original.status
+        status: row.original.status,
+        onClick: () => {
+          selectedProcess.value = row.original
+          isFinishDialogOpen.value = true
+        }
       })
     }
   },

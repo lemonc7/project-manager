@@ -22,9 +22,17 @@ export async function createProject(req: CreateProjectRequest) {
 }
 
 export async function updateProject(id: number, req: UpdateProjectRequest) {
-  return service.put<Project>(`/project/${id}`, req)
+  return service.patch<Project>(`/project/${id}`, req)
 }
 
 export async function deleteProject(id: number) {
   return service.delete(`/project/${id}`)
+}
+
+export async function startProject(id: number) {
+  return service.post(`/project/start/${id}`)
+}
+
+export async function finishProject(id: number) {
+  return service.post(`/project/finish/${id}`)
 }

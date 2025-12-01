@@ -1,4 +1,5 @@
 import type {
+  FinishProcessRequest,
   InsertProcessRequest,
   Process,
   Task,
@@ -31,9 +32,13 @@ export async function insertProcessAt(
 }
 
 export async function updateProcess(id: number, req: UpdateProcessRequest) {
-  return service.put<Process>(`/process/${id}`, req)
+  return service.patch<Process>(`/process/${id}`, req)
 }
 
 export async function deleteProcess(id: number) {
   return service.delete(`/process/${id}`)
+}
+
+export async function finishProcess(id: number, req: FinishProcessRequest) {
+  return service.post(`/process/finish/${id}`, req)
 }

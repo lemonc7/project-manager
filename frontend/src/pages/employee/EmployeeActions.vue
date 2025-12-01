@@ -8,9 +8,9 @@
     <DropdownMenuContent>
       <DropdownMenuLabel>操作</DropdownMenuLabel>
       <DropdownMenuSeparator />
-      <!-- <DropdownMenuItem @click="props.onEdit?.(props.employee)">
+      <DropdownMenuItem @click="props.onEdit?.(props.employee)">
         编辑
-      </DropdownMenuItem> -->
+      </DropdownMenuItem>
       <DropdownMenuItem
         class="text-red-600 focus:text-red-600"
         @click="props.onDelete?.(props.employee)"
@@ -27,7 +27,7 @@ import { MoreHorizontal } from "lucide-vue-next"
 
 const props = defineProps<{
   employee: Employee
-  // onEdit?: (employee: Employee) => void
+  onEdit?: (employee: Employee) => void
   onDelete?: (employee: Employee) => void
 }>()
 </script>

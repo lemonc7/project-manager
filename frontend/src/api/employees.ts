@@ -20,7 +20,7 @@ export async function createEmployee(req: CreateEmployeeRequest) {
 }
 
 export async function updateEmployee(id: number, req: UpdateEmployeeRequest) {
-  return service.put<Employee>(`/employee/${id}`, req)
+  return service.patch<Employee>(`/employee/${id}`, req)
 }
 
 export async function deleteEmployee(id: number) {

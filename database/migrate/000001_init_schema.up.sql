@@ -138,3 +138,81 @@ CREATE TRIGGER trigger_update_updated_at_system_settings
 BEFORE UPDATE ON system_settings
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
+
+
+-- 创建工艺流程状态流转监听器
+CREATE OR REPLACE FUNCTION update_next_processes_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  current_sequence INT;
+  next_sequence INT;
+  next_next_sequence INT;
+BEGIN
+  -- 确保新的状态是完成，旧的状态不是完成
+  IF NEW.status = '完成' AND OLD.status <> '完成' THEN
+    current_sequence := NEW.sequence;
+    next_sequence := current_sequence + 1;
+    next_next_sequence := current_sequence + 2;
+    -- 更新下一步工艺为进行，确认下一步工艺是准备状态
+    UPDATE processes
+    SET 
+      status = '进行',
+      started_at = CURRENT_TIMESTAMP
+    WHERE 
+      project_id = NEW.project_id 
+      AND sequence = next_sequence
+      AND status = '准备';
+
+    -- 更新下下步工艺为准备，确认工艺是等待状态
+    UPDATE processes
+    SET status = '准备'
+    WHERE 
+      project_id = NEW.project_id 
+      AND sequence = next_next_sequence
+      AND status = '等待';
+    
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 创建项目开始状态监听器
+CREATE OR REPLACE FUNCTION start_project_processes()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- 确保项目新的状态是进行，旧的状态不是进行
+  IF NEW.status = '进行' AND OLD.status <> '进行' THEN
+    -- 更新第一步工艺为进行，确认工艺是等待状态
+    UPDATE processes
+    SET 
+      status = '进行',
+      started_at = CURRENT_TIMESTAMP
+    WHERE 
+      project_id = NEW.id 
+      AND sequence = 1
+      AND status = '等待';
+    
+    -- 更新第二步工艺为准备，确认工艺是等待状态
+    UPDATE processes
+    SET status = '准备'
+    WHERE 
+      project_id = NEW.id 
+      AND sequence = 2
+      AND status = '等待';
+
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 应用到processes表
+CREATE TRIGGER trigger_update_next_processes_status
+AFTER UPDATE ON processes
+FOR EACH ROW
+EXECUTE FUNCTION update_next_processes_status();
+
+-- 应用到projects表
+CREATE TRIGGER trigger_start_project_processes
+AFTER UPDATE ON projects
+FOR EACH ROW
+EXECUTE FUNCTION start_project_processes();

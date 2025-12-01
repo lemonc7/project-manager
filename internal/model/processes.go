@@ -25,6 +25,10 @@ type UpdateProcessRequest struct {
 	FinishedAt  *time.Time          `json:"finishedAt"`
 }
 
+type FinishProcessRequest struct {
+	SpendTime float64 `json:"spendTime" validate:"required"`
+}
+
 type Process struct {
 	ID          int32              `json:"id"`
 	ProjectID   int32              `json:"projectID"`

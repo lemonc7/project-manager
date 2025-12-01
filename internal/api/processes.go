@@ -20,6 +20,7 @@ type ProcessService interface {
 	ListTasksTodo(ctx context.Context, employeeID int32) ([]model.Task, error)
 	ListTasksReady(ctx context.Context, employeeID int32) ([]model.Task, error)
 	ListTasksDoing(ctx context.Context, employeeID int32) ([]model.Task, error)
+	FinishProcess(ctx context.Context, id int32, req model.FinishProcessRequest) error
 }
 
 var _ ProcessService = (*service.ProcessService)(nil)
@@ -175,4 +176,24 @@ func (p *ProcessHandler) ListTasks(c echo.Context) error {
 	default:
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("status参数错误: %s", statusStr))
 	}
+}
+
+func (p *ProcessHandler) FinishProcess(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+
+	var req model.FinishProcessRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	if err := p.processService.FinishProcess(c.Request().Context(), id, req); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "成功完成流程",
+	})
 }
