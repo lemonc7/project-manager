@@ -50,6 +50,48 @@
         </TableBody>
       </Table>
     </div>
+    <div class="flex gap-6">
+      <Button
+        variant="outline"
+        title="首页"
+        class="border rounded"
+        @click="() => table.setPageIndex(0)"
+        :disabled="!table.getCanPreviousPage()"
+      >
+        <ChevronFirst />
+      </Button>
+      <Button
+        variant="outline"
+        title="上一页"
+        class="border rounded"
+        @click="() => table.previousPage()"
+        :disabled="!table.getCanPreviousPage()"
+      >
+        <ChevronLeft />
+      </Button>
+      <strong>
+        {{ table.getState().pagination.pageIndex + 1 }}
+      </strong>
+      <span> / {{ table.getPageCount().toLocaleString() }}</span>
+      <Button
+        variant="outline"
+        title="下一页"
+        class="border rounded"
+        @click="() => table.nextPage()"
+        :disabled="!table.getCanNextPage()"
+      >
+        <ChevronRight />
+      </Button>
+      <Button
+        variant="outline"
+        title="尾页"
+        class="border rounded"
+        @click="() => table.setPageIndex(table.getPageCount() - 1)"
+        :disabled="!table.getCanNextPage()"
+      >
+        <ChevronLast />
+      </Button>
+    </div>
   </div>
 </template>
 
@@ -78,6 +120,12 @@ import ProjectActions from "./ProjectActions.vue"
 import { useRouter } from "vue-router"
 import ProjectStatus from "./ProjectStatus.vue"
 import { valueUpdater } from "@/components/ui/table/utils"
+import {
+  ChevronFirst,
+  ChevronLast,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-vue-next"
 
 const props = defineProps<{
   projectFilter: FilterStatus
@@ -271,4 +319,20 @@ watch(
     }, 300)
   }
 )
+
+// 分页
+const INITIAL_PAGE_INDEX = 0
+const goToPageNumber = ref(INITIAL_PAGE_INDEX + 1)
+const handleGoToPage = (e: any) => {
+  const page = e.target.value ? Number(e.target.value) - 1 : 0
+  goToPageNumber.value = page + 1
+  table.setPageIndex(page)
+}
+watch(goToPageNumber, (val) => {
+  // 确保 val 是有效的数字并且大于 0
+  if (typeof val === "number" && val > 0) {
+    // 将页码 (1-based) 转换为页索引 (0-based)
+    table.setPageIndex(val - 1)
+  }
+})
 </script>

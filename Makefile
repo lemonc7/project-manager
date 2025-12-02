@@ -1,9 +1,3 @@
-# # 加载.env文件
-# ifneq ("$(wildcard .env)","")
-# 	include .env
-# 	export
-# endif
-
 CONFIG_FILE = config.yaml
 
 DB_HOST := $(shell yq '.database.host' $(CONFIG_FILE))
