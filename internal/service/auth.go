@@ -52,7 +52,7 @@ func (a *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 	// 验证权限
 	if !slices.Contains(user.Roles, "admin") &&
 		!slices.Contains(user.Roles, "manager") &&
-		!slices.Contains(user.Roles, "user") {
+		!slices.Contains(user.Roles, "employee") {
 		return nil, model.ErrNoPermission
 	}
 

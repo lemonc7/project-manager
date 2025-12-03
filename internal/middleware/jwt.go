@@ -31,7 +31,7 @@ func JWTAuther(jwt *jwt.JWT) func(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set("roles", claims.Roles)
 			if !slices.Contains(claims.Roles, "admin") &&
 				!slices.Contains(claims.Roles, "manager") &&
-				!slices.Contains(claims.Roles, "user") {
+				!slices.Contains(claims.Roles, "employee") {
 				return echo.NewHTTPError(http.StatusForbidden, model.ErrNoPermission)
 			}
 			return next(c)

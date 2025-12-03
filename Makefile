@@ -1,11 +1,12 @@
 CONFIG_FILE = config.yaml
 
-DB_HOST := $(shell yq '.database.host' $(CONFIG_FILE))
-DB_PORT := $(shell yq '.database.port' $(CONFIG_FILE))
-DB_USER := $(shell yq '.database.user' $(CONFIG_FILE))
-DB_PASS := $(shell yq '.database.password' $(CONFIG_FILE))
-DB_NAME := $(shell yq '.database.dbname' $(CONFIG_FILE))
-DB_SSL := $(shell yq '.database.ssl_mode' $(CONFIG_FILE))
+# 注意添加了 -r 参数以去除引号
+DB_HOST := $(shell yq -r '.database.host' $(CONFIG_FILE))
+DB_PORT := $(shell yq -r '.database.port' $(CONFIG_FILE))
+DB_USER := $(shell yq -r '.database.user' $(CONFIG_FILE))
+DB_PASS := $(shell yq -r '.database.password' $(CONFIG_FILE))
+DB_NAME := $(shell yq -r '.database.dbname' $(CONFIG_FILE))
+DB_SSL  := $(shell yq -r '.database.ssl_mode' $(CONFIG_FILE))
 
 MIGRATE_PATH := ./database/migrate
 

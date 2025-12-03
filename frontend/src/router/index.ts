@@ -12,11 +12,13 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router"
 const routes: RouteRecordRaw[] = [
   {
     path: "/login",
+    name: "login",
     component: LoginPage
   },
   {
     path: "/",
     component: Layout,
+    name: "layout",
     meta: { requiresAuth: true },
     children: [
       {
@@ -25,25 +27,30 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: "home",
+        name: "taskList",
         component: TaskPage,
         meta: { title: "任务总览" }
       },
       {
         path: "employee",
+        name: "employeeList",
         component: EmployeePage,
         meta: { title: "成员列表" }
       },
       {
         path: "project",
+        name: "projectRoot",
         component: ProjectLayout,
         children: [
           {
             path: "",
+            name: "projectList",
             component: ProjectPage,
             meta: { title: "项目总览" }
           },
           {
             path: ":id",
+            name: "processList",
             component: ProcessPage,
             meta: { title: "项目流程" }
           }
