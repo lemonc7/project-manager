@@ -1,4 +1,4 @@
-import { getToken, removeToken } from "@/util/auth"
+import { getToken, removeToken } from "../utils/auth"
 import axios from "axios"
 
 const service = axios.create({

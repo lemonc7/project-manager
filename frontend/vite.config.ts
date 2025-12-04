@@ -1,26 +1,18 @@
-import path from "node:path"
-import Components from "unplugin-vue-components/vite"
 import { defineConfig } from "vite"
-import tailwindcss from "@tailwindcss/vite"
 import vue from "@vitejs/plugin-vue"
+import ui from "@nuxt/ui/vite"
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    tailwindcss(),
-    Components({
-      dirs: ["src/components","src/pages"],
-      extensions: ["vue"],
-      deep: true,
-      dts: "src/components.d.ts"
+    ui({
+      ui: {
+        colors: {
+          primary: "neutral"
+        }
+      }
     })
   ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src")
-    }
-  },
   server: {
     host: "0.0.0.0",
     port: 3000,

@@ -1,6 +1,6 @@
-import type { LoginRequest, LoginResponse } from "@/models/auth"
+import type { LoginRequest, LoginResponse } from "../models/auth"
 import service from "./request"
-import { setToken } from "@/util/auth"
+import { setToken } from "../utils/auth"
 
 export async function login(req: LoginRequest) {
   const res = await service.post<LoginResponse>("/auth/login", req)

@@ -4,7 +4,7 @@ import type {
   ListProjectsRequest,
   Project,
   UpdateProjectRequest
-} from "@/models/projects"
+} from "../models/projects"
 import service from "./request"
 
 export async function listProjects(

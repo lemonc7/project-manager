@@ -2,6 +2,9 @@
 .vscode/
 config.yaml
 
+# Auto-generated type declarations
+auto-imports.d.ts
+components.d.ts
 
 # Logs
 logs
