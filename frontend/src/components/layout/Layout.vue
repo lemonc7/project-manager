@@ -1,3 +1,3 @@
 <template>
-  <div>Project</div>
+  <RouterView />
 </template>
