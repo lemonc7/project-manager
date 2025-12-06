@@ -6,7 +6,7 @@ SELECT
   team_id
 FROM employees
 WHERE is_active = true
-ORDER BY name;
+ORDER BY id;
 
 -- name: CreateEmployee :exec
 INSERT INTO employees (

@@ -1,58 +1,159 @@
 <template>
-  <!-- actions下拉菜单 -->
-  <DefineTemplate v-slot="{ employee, onEdit, onDelete }">
-    <UDropdownMenu
-      :content="{ align: 'end' }"
-      :items="[
-        {
-          label: '编辑',
-          icon: 'i-lucide-edit',
-          onSelect: () => onEdit(employee)
-        },
-        {
-          label: '删除',
-          icon: 'i-lucide-trash',
-          color: 'error',
-          onSelect: () => onDelete(employee)
-        }
-      ]"
-    >
-      <UButton variant="outline" icon="i-lucide-menu" />
-    </UDropdownMenu>
-  </DefineTemplate>
-  <!-- table渲染 -->
-  <UTable
-    sticky
-    :loading="isEmployeesLoading || isTeamsLoading"
-    :data="employees"
-    :columns="columns"
-    class="flex-1"
+  <UDashboardPanel id="employee">
+    <template #header>
+      <UDashboardNavbar title="成员列表">
+        <template #leading>
+          <UDashboardSidebarCollapse title="折叠侧栏" />
+        </template>
+        <template #right>
+          <div class="flex flex-wrap items-center gap-2">
+            <CreateEmployeeModal :team-items="teamItems" />
+            <RefreshButton />
+          </div>
+        </template>
+      </UDashboardNavbar>
+    </template>
+
+    <template #body>
+      <div class="flex flex-wrap items-center justify-between gap-1">
+        <UInput
+          v-model="name"
+          class="max-w-sm"
+          icon="i-lucide-search"
+          placeholder="姓名过滤..."
+        />
+        <USelect
+          v-model="teamFilter"
+          :items="[{ label: '全部', value: 0 }, ...teamItems]"
+          :ui="{
+            trailingIcon:
+              'group-data-[state=open]:rotate-180 transition-transform duration-200'
+          }"
+          placeholder="小组过滤..."
+          class="min-w-28"
+        />
+      </div>
+
+      <!-- table渲染 -->
+      <UTable
+        sticky
+        ref="table"
+        v-model:column-filters="columnFilters"
+        class="shrink-0"
+        :loading="isEmployeesLoading || isTeamsLoading"
+        :data="employees ?? []"
+        :columns="columns"
+        :ui="{
+          base: 'table-fixed border-separate border-spacing-0',
+          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+          tbody: '[&>tr]:last:[&>td]:border-b-0',
+          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+          td: 'border-b border-default',
+          separator: 'h-0'
+        }"
+      />
+    </template>
+  </UDashboardPanel>
+  <!-- 删除弹窗 -->
+  <DeleteModal
+    v-model:open="isDeleteModalOpen"
+    :on-submit="handleDelete"
+    title="删除成员"
+    :description="`确认要删除[${selectedEmployee?.name}]么？该操作无法撤销!`"
+  />
+  <!-- 编辑弹窗 -->
+  <EditEmployeeModal
+    v-model:open="isEditModalOpen"
+    :employee="selectedEmployee"
+    :team-items="teamItems"
   />
 </template>
 
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui"
 import useEmployees from "../composables/useEmployees"
-import { RoleMap, type Employee } from "../models/employees"
+import { type Employee, type UpdateEmployeeRequest } from "../models/employees"
 import getTeamName from "../utils/getTeamName"
 import useTeams from "../composables/useTeams"
-import { createReusableTemplate } from "@vueuse/core"
-import { h, ref } from "vue"
+import { computed, h, ref, resolveComponent, useTemplateRef, watch } from "vue"
+import { type Row, type Table } from "@tanstack/table-core"
+import useUpdateEmployee from "../composables/useUpdateEmployee"
+import getRoleLabels from "../utils/getRoleLabels"
 
-const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
-  employee: Employee
-  onEdit: (employee: Employee) => void
-  onDelete: (employee: Employee) => void
-}>()
-
+// 数据获取
 const { data: employees, isLoading: isEmployeesLoading } = useEmployees()
 const { data: teams, isLoading: isTeamsLoading } = useTeams()
 
+const toast = useToast()
+
+// table定义
+const table = useTemplateRef<{ tableApi: Table<Employee> }>("table")
+
+// 模态框
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
-const isCreateModalOpen = ref(false)
 const selectedEmployee = ref<Employee | null>(null)
 
+const deleteEmployee = useUpdateEmployee({
+  onSuccess: () => {
+    toast.add({
+      title: "员工删除成功",
+      color: "success"
+    })
+  },
+  onError: () => {
+    toast.add({
+      title: "删除失败",
+      color: "error"
+    })
+  }
+})
+
+function handleDelete() {
+  if (selectedEmployee.value) {
+    const req: UpdateEmployeeRequest = {
+      isActive: false
+    }
+    deleteEmployee.mutate({ id: selectedEmployee.value.id, req })
+    isDeleteModalOpen.value = false
+  }
+}
+
+// 组件定义
+const UDropdownMenu = resolveComponent("UDropdownMenu")
+const UButton = resolveComponent("UButton")
+
+// 操作菜单定义
+function getRowItems(row: Row<Employee>) {
+  return [
+    {
+      type: "label",
+      label: "操作"
+    },
+    {
+      type: "separator"
+    },
+    {
+      label: "编辑",
+      icon: "i-lucide-pencil",
+      onSelect: () => {
+        isEditModalOpen.value = true
+        selectedEmployee.value = row.original
+      }
+    },
+    {
+      label: "删除",
+      icon: "i-lucide-trash",
+      color: "error",
+      onSelect: () => {
+        isDeleteModalOpen.value = true
+        selectedEmployee.value = row.original
+      }
+    }
+  ]
+}
+
+// table列定义
 const columns: TableColumn<Employee>[] = [
   {
     accessorKey: "id",
@@ -63,7 +164,10 @@ const columns: TableColumn<Employee>[] = [
     header: "成员"
   },
   {
+    id: "team",
     header: "小组",
+    accessorFn: (row) => row.teamID,
+    filterFn: "equals",
     cell: ({ row }) => {
       const team = getTeamName(row.original.teamID, teams.value)
       return team
@@ -72,28 +176,82 @@ const columns: TableColumn<Employee>[] = [
   {
     header: "角色",
     cell: ({ row }) => {
-      const employee = row.original
-      const labels = employee.roles?.map((r) => RoleMap[r] ?? r).join("，")
-      return labels
+      return getRoleLabels(row.original.roles)
     }
   },
   {
     id: "actions",
-    header: "操作",
     cell: ({ row }) => {
-      const employee = row.original
-      return h(ReuseTemplate, {
-        employee: employee,
-        onEdit: (employee: Employee) => {
-          isEditModalOpen.value = true
-          selectedEmployee.value = employee
-        },
-        onDelete: (employee: Employee) => {
-          isDeleteModalOpen.value = true
-          selectedEmployee.value = employee
-        }
-      })
+      return h(
+        "div",
+        { class: "text-right" },
+        h(
+          UDropdownMenu,
+          {
+            content: {
+              align: "end"
+            },
+            items: getRowItems(row)
+          },
+          () =>
+            h(UButton, {
+              icon: "i-lucide-ellipsis-vertical",
+              variant: "ghost",
+              class: "ml-auto"
+            })
+        )
+      )
     }
   }
 ]
+
+// table姓名过滤
+const columnFilters = ref([
+  {
+    id: "name",
+    value: ""
+  }
+])
+
+// table小组过滤
+const teamFilter = ref(0)
+
+// 监视小组选择
+watch(
+  () => teamFilter.value,
+  (newVal) => {
+    if (!table.value?.tableApi) return
+    const statusColumn = table.value.tableApi.getColumn("team")
+    if (!statusColumn) return
+
+    if (newVal === 0) {
+      statusColumn.setFilterValue(undefined)
+    } else {
+      statusColumn.setFilterValue(newVal)
+    }
+  }
+)
+
+// 小组选项
+const teamItems = computed(() =>
+  (teams.value ?? []).map((t) => ({
+    label: t.name,
+    value: t.id
+  }))
+)
+
+// 监视姓名过滤
+const name = ref("")
+let timer: ReturnType<typeof setTimeout> | null = null
+watch(
+  name,
+  (newVal) => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+      table.value?.tableApi.getColumn("name")?.setFilterValue(newVal)
+      timer = null
+    }, 300)
+  },
+  { flush: "post" }
+)
 </script>

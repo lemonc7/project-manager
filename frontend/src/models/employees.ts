@@ -1,11 +1,12 @@
-export const RoleMap = {
-  admin: "管理员",
-  manager: "项目经理",
-  employee: "员工"
-} as const
+export const roleItems = [
+  { value: "admin", label: "管理员" },
+  { value: "manager", label: "项目经理" },
+  { value: "employee", label: "员工" },
+] as const
 
-// 自动推导类型为 "admin" | "manager" | "employee"
-export type Role = keyof typeof RoleMap
+export type Role = typeof roleItems[number]['value']
+export type RoleItem = typeof roleItems[number]
+
 
 interface CreateEmployeeRequest {
   name: string

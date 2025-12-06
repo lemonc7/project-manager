@@ -99,7 +99,7 @@ SELECT
   team_id
 FROM employees
 WHERE is_active = true
-ORDER BY name
+ORDER BY id
 `
 
 type ListEmployeesRow struct {
