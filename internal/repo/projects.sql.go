@@ -241,14 +241,7 @@ WHERE
   AND (started_at <= $4 OR $4 IS NULL)
 ORDER BY
   priority,
-  CASE status
-    WHEN '进行' THEN 1
-    WHEN '排单' THEN 2
-    WHEN '暂停' THEN 3
-    ELSE 4
-  END,
-  started_at NULLS LAST,
-  id
+  updated_at DESC
 `
 
 type ListProjectsFilteredParams struct {
@@ -325,10 +318,6 @@ WHERE
   AND (manager_id = $1 OR $1 IS NULL)
 ORDER BY
   priority,
-  CASE status
-    WHEN '暂停' THEN 1
-    WHEN '排单' THEN 2
-  END,
   id
 `
 

@@ -1,10 +1,5 @@
 import { isLoggedIn } from "../utils/auth"
-import {
-  createRouter,
-  createWebHistory,
-  RouterView,
-  type RouteRecordRaw
-} from "vue-router"
+import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router"
 
 const routes: RouteRecordRaw[] = [
   {
@@ -20,37 +15,31 @@ const routes: RouteRecordRaw[] = [
       {
         path: "",
         name: "task",
-        component: () => import("../pages/TaskPage.vue"),
-        meta: { title: "任务总览" }
+        component: () => import("../pages/TaskPage.vue")
       },
       {
         path: "employee",
         name: "employee",
-        component: () => import("../pages/EmployeePage.vue"),
-        meta: { title: "成员列表" }
+        component: () => import("../pages/EmployeePage.vue")
       },
       {
         path: "team",
         name: "team",
-        component: () => import("../pages/TeamPage.vue"),
-        meta: { title: "小组列表" }
+        component: () => import("../pages/TeamPage.vue")
       },
       {
         path: "project",
         name: "project",
-        component: () => import("../pages/ProjectPage.vue"),
-        meta: { title: "项目总览" }
+        component: () => import("../pages/ProjectPage.vue")
       },
       {
         path: "project/:id",
         name: "process",
-        component: () => import("../pages/ProcessPage.vue"),
-        meta: { title: "项目流程" }
+        component: () => import("../pages/ProcessPage.vue")
       },
       {
         path: "/:pathMatch(.*)*",
-        component: () => import("../pages/NotFoundPage.vue"),
-        meta: { title: "无此页面" }
+        component: () => import("../pages/NotFoundPage.vue")
       }
     ]
   }

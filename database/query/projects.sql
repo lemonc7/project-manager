@@ -18,14 +18,7 @@ WHERE
   AND (started_at <= sqlc.narg('end_at') OR sqlc.narg('end_at') IS NULL)
 ORDER BY
   priority,
-  CASE status
-    WHEN '进行' THEN 1
-    WHEN '排单' THEN 2
-    WHEN '暂停' THEN 3
-    ELSE 4
-  END,
-  started_at NULLS LAST,
-  id;
+  updated_at DESC;
 
 -- name: ListProjectsTodo :many
 SELECT
@@ -45,10 +38,6 @@ WHERE
   AND (manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
 ORDER BY
   priority,
-  CASE status
-    WHEN '暂停' THEN 1
-    WHEN '排单' THEN 2
-  END,
   id;
 
 -- name: ListProjectsDoing :many

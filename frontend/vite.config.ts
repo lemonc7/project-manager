@@ -8,7 +8,8 @@ export default defineConfig({
     ui({
       ui: {
         colors: {
-          primary: "neutral"
+          primary: "zinc",
+          secondary: "purple"
         }
       }
     })

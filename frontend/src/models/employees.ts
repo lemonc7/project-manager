@@ -6,7 +6,9 @@ export const roleItems = [
 
 export type Role = typeof roleItems[number]['value']
 export type RoleItem = typeof roleItems[number]
-
+export const roleMap: Record<string, string> = Object.fromEntries(
+  roleItems.map(i => [i.value, i.label])
+)
 
 interface CreateEmployeeRequest {
   name: string

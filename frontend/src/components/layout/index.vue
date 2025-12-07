@@ -1,5 +1,10 @@
 <template>
-  <UApp>
+  <UApp
+    :toaster="{
+      duration: 2000,
+      position: 'top-center'
+    }"
+  >
     <UDashboardGroup unit="rem" storage="local">
       <!-- 侧栏 -->
       <UDashboardSidebar

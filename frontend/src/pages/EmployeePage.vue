@@ -7,7 +7,7 @@
         </template>
         <template #right>
           <div class="flex flex-wrap items-center gap-2">
-            <CreateEmployeeModal :team-items="teamItems" />
+            <CreateEmployeeModal />
             <RefreshButton />
           </div>
         </template>
@@ -15,7 +15,7 @@
     </template>
 
     <template #body>
-      <div class="flex flex-wrap items-center justify-between gap-1">
+      <div class="flex flex-wrap items-center justify-between gap-2">
         <UInput
           v-model="name"
           class="max-w-sm"
@@ -24,13 +24,14 @@
         />
         <USelect
           v-model="teamFilter"
+          icon="material-symbols:family-group"
           :items="[{ label: '全部', value: 0 }, ...teamItems]"
           :ui="{
             trailingIcon:
               'group-data-[state=open]:rotate-180 transition-transform duration-200'
           }"
           placeholder="小组过滤..."
-          class="min-w-28"
+          class="min-w-40"
         />
       </div>
 
@@ -40,7 +41,7 @@
         ref="table"
         v-model:column-filters="columnFilters"
         class="shrink-0"
-        :loading="isEmployeesLoading || isTeamsLoading"
+        :loading="isEmployeesLoading"
         :data="employees ?? []"
         :columns="columns"
         :ui="{
@@ -48,7 +49,7 @@
           thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
           tbody: '[&>tr]:last:[&>td]:border-b-0',
           th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default',
+          td: 'py-2 border-b border-default',
           separator: 'h-0'
         }"
       />
@@ -65,7 +66,6 @@
   <EditEmployeeModal
     v-model:open="isEditModalOpen"
     :employee="selectedEmployee"
-    :team-items="teamItems"
   />
 </template>
 
@@ -73,16 +73,15 @@
 import type { TableColumn } from "@nuxt/ui"
 import useEmployees from "../composables/useEmployees"
 import { type Employee, type UpdateEmployeeRequest } from "../models/employees"
-import getTeamName from "../utils/getTeamName"
-import useTeams from "../composables/useTeams"
-import { computed, h, ref, resolveComponent, useTemplateRef, watch } from "vue"
+import { h, ref, resolveComponent, useTemplateRef, watch } from "vue"
 import { type Row, type Table } from "@tanstack/table-core"
 import useUpdateEmployee from "../composables/useUpdateEmployee"
 import getRoleLabels from "../utils/getRoleLabels"
+import useTeamMap from "../composables/useTeamMap"
 
 // 数据获取
 const { data: employees, isLoading: isEmployeesLoading } = useEmployees()
-const { data: teams, isLoading: isTeamsLoading } = useTeams()
+const { teamItems, getTeamName } = useTeamMap()
 
 const toast = useToast()
 
@@ -168,16 +167,11 @@ const columns: TableColumn<Employee>[] = [
     header: "小组",
     accessorFn: (row) => row.teamID,
     filterFn: "equals",
-    cell: ({ row }) => {
-      const team = getTeamName(row.original.teamID, teams.value)
-      return team
-    }
+    cell: ({ row }) => getTeamName(row.original.teamID)
   },
   {
     header: "角色",
-    cell: ({ row }) => {
-      return getRoleLabels(row.original.roles)
-    }
+    cell: ({ row }) => getRoleLabels(row.original.roles)
   },
   {
     id: "actions",
@@ -230,14 +224,6 @@ watch(
       statusColumn.setFilterValue(newVal)
     }
   }
-)
-
-// 小组选项
-const teamItems = computed(() =>
-  (teams.value ?? []).map((t) => ({
-    label: t.name,
-    value: t.id
-  }))
 )
 
 // 监视姓名过滤

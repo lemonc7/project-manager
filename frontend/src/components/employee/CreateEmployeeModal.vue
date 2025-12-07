@@ -4,7 +4,7 @@
     title="创建"
     description="添加一个新成员到数据库中"
   >
-    <UButton label="创建成员" icon="i-lucide-user-round-plus" color="neutral" />
+    <UButton label="创建成员" icon="i-lucide-user-round-plus" />
     <template #body>
       <UForm
         :schema="schema"
@@ -18,6 +18,7 @@
             v-model="state.name"
             class="w-full"
             placeholder="请输入姓名"
+            autofocus
           />
         </UFormField>
         <!-- 小组+角色 -->
@@ -26,8 +27,6 @@
             <USelect
               v-model="state.team"
               :items="teamItems"
-              item-label="label"
-              item-value="value"
               placeholder="请选择小组"
               class="w-full"
             />
@@ -36,8 +35,6 @@
             <USelect
               v-model="state.roles"
               :items="[...roleItems]"
-              item-label="label"
-              item-value="value"
               placeholder="请选择角色"
               multiple
               class="w-full"
@@ -63,7 +60,6 @@
           >
             <template #trailing>
               <UButton
-                color="neutral"
                 variant="link"
                 size="sm"
                 :icon="show ? 'i-lucide-eye-off' : 'i-lucide-eye'"
@@ -79,14 +75,12 @@
         <div class="flex justify-end gap-2">
           <UButton
             label="取消"
-            color="neutral"
             variant="outline"
             @click="open = false"
           />
           <UButton
             label="创建"
             type="submit"
-            color="neutral"
             :loading="createEmployee.isPending.value"
           />
         </div>
@@ -101,14 +95,9 @@ import { reactive, ref, watch } from "vue"
 import z from "zod"
 import useCreateEmployee from "../../composables/useCreateEmployee"
 import { roleItems, type CreateEmployeeRequest } from "../../models/employees"
+import useTeamMap from "../../composables/useTeamMap"
 
-// 需要传进来team的选项
-defineProps<{
-  teamItems: {
-    label: string
-    value: number
-  }[]
-}>()
+const { teamItems } = useTeamMap()
 
 const open = ref(false)
 const show = ref(false)
@@ -119,7 +108,7 @@ const schema = z.object({
   username: z.string().nonempty("请输入用户名"),
   password: z.string().min(6, "密码不能少于6位"),
   team: z.number().optional(),
-  roles: z.array(z.enum(["admin", "manager", "employee"] as const))
+  roles: z.array(z.enum(["admin", "manager", "employee"] as const)).default([])
 })
 
 type Schema = z.output<typeof schema>

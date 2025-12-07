@@ -24,9 +24,7 @@
         <UFormField label="小组" name="team">
           <USelect
             v-model="state.team"
-            :items="props.teamItems"
-            item-label="label"
-            item-value="value"
+            :items="teamItems"
             placeholder="请选择小组"
             class="w-full"
           />
@@ -36,8 +34,6 @@
           <USelect
             v-model="state.roles"
             :items="[...roleItems]"
-            item-label="label"
-            item-value="value"
             placeholder="请选择角色"
             multiple
             class="w-full"
@@ -47,14 +43,12 @@
         <div class="flex justify-end gap-2">
           <UButton
             label="取消"
-            color="neutral"
             variant="outline"
             @click="onOpenChange(false)"
           />
           <UButton
             label="更新"
             type="submit"
-            color="neutral"
             :loading="updateEmployee.isPending.value"
           />
         </div>
@@ -72,19 +66,18 @@ import {
 } from "../../models/employees"
 import { reactive, watch } from "vue"
 import useUpdateEmployee from "../../composables/useUpdateEmployee"
+import useTeamMap from "../../composables/useTeamMap"
 
 const props = defineProps<{
   open: boolean
   employee: Employee | null
-  teamItems: {
-    label: string
-    value: number
-  }[]
 }>()
 
 const emit = defineEmits<{
   (e: "update:open", open: boolean): void
 }>()
+
+const { teamItems } = useTeamMap()
 
 const toast = useToast()
 

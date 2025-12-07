@@ -1,9 +1,5 @@
-import { roleItems, type Role } from "../models/employees"
+import { roleMap, type Role } from "../models/employees"
 
 export default function getRoleLabels(roles?: Role[]): string {
-  return (
-    roles
-      ?.map((r) => roleItems.find((i) => i.value === r)?.label ?? r)
-      .join("，") ?? ""
-  )
+  return roles?.map((r) => roleMap[r] ?? r).join("，") ?? ""
 }
