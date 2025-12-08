@@ -147,9 +147,9 @@ async function handleSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
-// 监视弹窗，关闭时重置表单
-watch(open, (newVal) => {
-  if (!newVal) {
+// 监视弹窗，打开时重置表单
+watch(open, (isOpen) => {
+  if (isOpen) {
     Object.assign(state, initialState)
   }
 })

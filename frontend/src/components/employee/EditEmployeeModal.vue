@@ -2,8 +2,8 @@
   <UModal
     :open="props.open"
     @update:open="onOpenChange"
-    title="编辑成员"
-    description="更新成员的内容(不包括用户名和密码)"
+    title="编辑"
+    description="更新成员信息(不包括用户名和密码)"
   >
     <template #body>
       <UForm
@@ -93,7 +93,8 @@ type Schema = z.output<typeof schema>
 
 const state = reactive<Schema>({
   name: "",
-  roles: []
+  roles: [],
+  team: undefined
 })
 
 function onOpenChange(open: boolean) {
@@ -124,26 +125,11 @@ async function handleSubmit() {
   }
 }
 
-// 监听employee变化，用于数据初始化和外部数据更新
-watch(
-  () => props.employee,
-  (newVal) => {
-    if (newVal) {
-      Object.assign(state, {
-        name: newVal.name,
-        team: newVal.teamID,
-        roles: newVal.roles
-      })
-    }
-  },
-  { immediate: true }
-)
-
-// 监听open变化，关闭时重置表单
+// 监听open变化，打开时同步表单数据
 watch(
   () => props.open,
-  (newVal) => {
-    if (!newVal && props.employee) {
+  (isOpen) => {
+    if (isOpen && props.employee) {
       Object.assign(state, {
         name: props.employee.name,
         team: props.employee.teamID,

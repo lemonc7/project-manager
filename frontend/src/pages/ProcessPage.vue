@@ -1,4 +1,14 @@
 <template>
+  <DefineTemplate v-slot="{ process }">
+    <USelectMenu
+      :model-value="process.employeeID"
+      :items="employeeItems"
+      @update:model-value="(value:number) => handleUpdate({id:process.id,req:{employeeID:value}}) "
+      value-key="value"
+      placeholder="请选择"
+      class="min-w-24"
+    />
+  </DefineTemplate>
   <UDashboardPanel id="process">
     <template #header>
       <UDashboardNavbar title="项目流程">
@@ -37,6 +47,8 @@
     title="删除流程"
     :description="`确认要删除[${selectedProcess?.name}]流程么？该操作无法撤销!`"
   />
+  <!-- 编辑弹窗 -->
+  <EditProcessModal v-model:open="isEditModalOpen" :process="selectedProcess" />
 </template>
 
 <script setup lang="ts">
@@ -52,6 +64,7 @@ import EditableCell from "../components/EditableCell.vue"
 import { useEmployeeStore } from "../composables/useEmployeeStore"
 import { storeToRefs } from "pinia"
 import { useProcessStore } from "../composables/useProcessStore"
+import { createReusableTemplate } from "@vueuse/core"
 
 const toast = useToast()
 const employeeStore = useEmployeeStore()
@@ -68,6 +81,11 @@ const UDropdownMenu = resolveComponent("UDropdownMenu")
 const UBadge = resolveComponent("UBadge")
 const USelectMenu = resolveComponent("USelectMenu")
 const UButton = resolveComponent("UButton")
+
+// 选择框复用
+const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
+  process: Process
+}>()
 
 // 删除方法
 async function handleDelete() {
@@ -175,17 +193,8 @@ const columns: TableColumn<Process>[] = [
   {
     header: "负责人",
     cell: ({ row }) => {
-      return h(USelectMenu, {
-        modelValue: row.original.employeeID,
-        "onUpdate:modelValue": (value: number) => {
-          handleUpdate({
-            id: row.original.id,
-            req: { employeeID: value }
-          })
-        },
-        items: employeeItems,
-        valueKey: "value",
-        class: "w-28"
+      return h(ReuseTemplate, {
+        process: row.original
       })
     }
   },

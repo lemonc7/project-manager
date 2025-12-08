@@ -2,8 +2,8 @@
   <UModal
     :open="props.open"
     @update:open="onOpenChange"
-    title="编辑项目"
-    description="更新成员的内容(不包括用户名和密码)"
+    title="编辑"
+    :description="detail"
   >
     <template #body>
       <UForm
@@ -12,6 +12,70 @@
         class="space-y-4"
         @submit="handleSubmit"
       >
+        <!-- 项目名称 -->
+        <UFormField label="名称" name="name" required>
+          <UInput
+            v-model="state.name"
+            class="w-full"
+            placeholder="请输入项目名称"
+          />
+        </UFormField>
+        <!-- 细节描述 -->
+        <UFormField label="细节描述" name="description">
+          <UInput
+            v-model="state.description"
+            class="w-full"
+            placeholder="请输入细节描述"
+          />
+        </UFormField>
+        <!-- 负责人+状态 -->
+        <div class="grid grid-cols-2 gap-4">
+          <UFormField label="负责人" name="manager">
+            <USelectMenu
+              v-model="state.manager"
+              :items="employeeItems"
+              value-key="value"
+              placeholder="请选择负责人"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="状态" name="status">
+            <USelect
+              v-model="state.status"
+              :items="[...ProjectStatusOptions]"
+              placeholder="请选择状态"
+              class="w-full"
+            />
+          </UFormField>
+        </div>
+        <!-- 优先级+项目周期 -->
+        <div class="grid grid-cols-2 gap-2">
+          <UFormField label="优先级" name="priority" required>
+            <UInput
+              type="number"
+              v-model="state.priority"
+              class="w-full"
+              placeholder="请输入优先级"
+            />
+          </UFormField>
+          <UFormField label="项目周期" name="duration">
+            <UInput
+              type="number"
+              v-model="state.duration"
+              class="w-full"
+              placeholder="请输入项目周期"
+            />
+          </UFormField>
+        </div>
+        <!-- 备注 -->
+        <UFormField>
+          <UTextarea
+            v-model="state.remark"
+            class="w-full"
+            placeholder="请输入备注"
+            autoresize
+          />
+        </UFormField>
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
           <UButton
@@ -28,10 +92,15 @@
 
 <script setup lang="ts">
 import z from "zod"
-import { reactive, watch } from "vue"
-import type { Project, UpdateProjectRequest } from "../../models/projects"
+import { computed, reactive, watch } from "vue"
+import {
+  ProjectStatusOptions,
+  type Project,
+  type UpdateProjectRequest
+} from "../../models/projects"
 import { useProjectStore } from "../../composables/useProjectStore"
 import { storeToRefs } from "pinia"
+import { useEmployeeStore } from "../../composables/useEmployeeStore"
 
 const props = defineProps<{
   open: boolean
@@ -72,8 +141,10 @@ function onOpenChange(open: boolean) {
 }
 
 const projectStore = useProjectStore()
+const employeeStore = useEmployeeStore()
 const { updateProject } = projectStore
 const { isUpdating } = storeToRefs(projectStore)
+const { employeeItems } = storeToRefs(employeeStore)
 
 async function handleSubmit() {
   if (!props.project?.id) return
@@ -102,30 +173,27 @@ async function handleSubmit() {
   }
 }
 
-// 监听employee变化，用于数据初始化和外部数据更新
-watch(
-  () => props.project,
-  (newVal) => {
-    if (newVal) {
-      Object.assign(state, {
-        name: newVal.name,
-        description: newVal.description,
-        remark: newVal.remark,
-        status: newVal.status,
-        manager: newVal.managerID,
-        priority: newVal.priority,
-        duration: newVal.duration
-      })
-    }
-  },
-  { immediate: true }
-)
+const detail = computed(() => {
+  const p = props.project
+  if (!p?.startedAt) return "项目未开始"
+  const date = p.startedAt.slice(0, 10)
+  let remainingDays = ""
+  if (p.remainingDays === undefined) {
+    remainingDays = "(项目周期未设置)"
+  } else if (p.remainingDays >= 0) {
+    remainingDays = `(剩余${p.remainingDays}天)`
+  } else {
+    remainingDays = `(超时${Math.abs(p.remainingDays)}天)`
+  }
 
-// 监听open变化，关闭时重置表单
+  return `项目开始时间:${date} ${remainingDays}`
+})
+
+// 监听open变化，打开时同步表单数据
 watch(
   () => props.open,
-  (newVal) => {
-    if (!newVal && props.project) {
+  (isOpen) => {
+    if (isOpen && props.project) {
       Object.assign(state, {
         name: props.project.name,
         description: props.project.description,

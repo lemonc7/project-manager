@@ -17,17 +17,19 @@ import { computed } from "vue"
 
 export const useProcessStore = defineStore("process", () => {
   const route = useRoute()
-  const id = parseInt(route.params.id as string)
+  const projectID = computed(() => parseInt(route.params.id as string) || 0)
   const queryClient = useQueryClient()
   // 查询数据
   const processQuery = useQuery({
-    queryKey: ["processes", id],
+    queryKey: ["processes", projectID],
     queryFn: () => {
-      if (!id) {
+      const id = projectID.value
+      if (!id || isNaN(id)) {
         throw new Error("缺少流程ID")
       }
       return listProcesses(id)
-    }
+    },
+    enabled: computed(() => !!projectID.value && !isNaN(projectID.value))
   })
 
   // 派生 maxSequence
@@ -49,6 +51,10 @@ export const useProcessStore = defineStore("process", () => {
       sequence?: number
       req: Omit<InsertProcessRequest, "projectID">
     }) => {
+      const id = projectID.value
+      if (!id || isNaN(id)) {
+        throw new Error("缺少项目ID，无法创建流程")
+      }
       if (sequence) {
         return insertProcessAt(sequence, { ...req, projectID: id })
       } else {
@@ -56,27 +62,35 @@ export const useProcessStore = defineStore("process", () => {
       }
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["processes", id] })
+      queryClient.invalidateQueries({
+        queryKey: ["processes", projectID]
+      })
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, req }: { id: number; req: UpdateProcessRequest }) =>
       updateProcess(id, req),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["processes", id] })
+      queryClient.invalidateQueries({
+        queryKey: ["processes", projectID]
+      })
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteProcess(id),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["processes", id] })
+      queryClient.invalidateQueries({
+        queryKey: ["processes", projectID]
+      })
   })
 
   const finishMutation = useMutation({
     mutationFn: ({ id, spendTime }: { id: number; spendTime: number }) =>
       finishProcess(id, { spendTime }),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["processes", id] })
+      queryClient.invalidateQueries({
+        queryKey: ["processes", projectID]
+      })
   })
 
   return {

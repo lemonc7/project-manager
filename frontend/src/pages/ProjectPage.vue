@@ -101,6 +101,8 @@
     title="删除项目"
     :description="`确认要删除[${selectedProject?.name}]项目么？该操作还会删除相关流程，无法撤销！`"
   />
+  <!-- 编辑弹窗 -->
+  <EditProjectModal v-model:open="isEditModalOpen" :project="selectedProject" />
 </template>
 
 <script setup lang="ts">
@@ -273,7 +275,7 @@ const columns: TableColumn<Project>[] = [
     header: "开始时间",
     cell: ({ row }) => {
       const dateStr = row.original.startedAt
-        ? new Date(row.original.startedAt).toISOString().split("T")[0]
+        ? row.original.startedAt.slice(0, 10)
         : ""
 
       const days = row.original.remainingDays
