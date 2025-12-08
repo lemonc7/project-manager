@@ -1,6 +1,6 @@
 <template>
   <UModal
-    v-model:open="props.open"
+    :open="props.open"
     @update:open="onOpenChange"
     :title="props.title"
     :description="props.description"

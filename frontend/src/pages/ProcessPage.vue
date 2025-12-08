@@ -18,7 +18,7 @@
         class="shrink-0"
         :data="processes ?? []"
         :columns="columns"
-        :loading="isProcessLoading"
+        :loading="isLoading"
         :ui="{
           base: 'table-fixed border-separate border-spacing-0',
           thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -41,18 +41,24 @@
 
 <script setup lang="ts">
 import { h, ref, resolveComponent } from "vue"
-import { useProcesses } from "../composables/useProcesses"
 import { type Row } from "@tanstack/table-core"
-import type { Process, ProcessStatus } from "../models/processes"
+import type {
+  Process,
+  ProcessStatus,
+  UpdateProcessRequest
+} from "../models/processes"
 import type { TableColumn } from "@nuxt/ui"
-import useDeleteProcess from "../composables/useDeleteProcess"
-import useUpdateProcess from "../composables/useUpdateProcess"
 import EditableCell from "../components/EditableCell.vue"
-import useEmployeeMap from "../composables/useEmployeeMap"
+import { useEmployeeStore } from "../composables/useEmployeeStore"
+import { storeToRefs } from "pinia"
+import { useProcessStore } from "../composables/useProcessStore"
 
 const toast = useToast()
-const { data: processes, isLoading: isProcessLoading } = useProcesses()
-const { employeeItems } = useEmployeeMap()
+const employeeStore = useEmployeeStore()
+const processStore = useProcessStore()
+const { employeeItems } = storeToRefs(employeeStore)
+const { processes, isLoading } = storeToRefs(processStore)
+const { deleteProcess, updateProcess } = processStore
 
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
@@ -64,36 +70,44 @@ const USelectMenu = resolveComponent("USelectMenu")
 const UButton = resolveComponent("UButton")
 
 // 删除方法
-const deleteProcess = useDeleteProcess({
-  onSuccess: () => {
-    toast.add({
-      title: `流程 ${selectedProcess.value?.name} 删除成功`,
-      color: "success"
-    })
-  },
-  onError: () => {
-    toast.add({
-      title: "删除失败",
-      color: "error"
-    })
-  }
-})
-
-function handleDelete() {
+async function handleDelete() {
   if (selectedProcess.value) {
-    deleteProcess.mutate(selectedProcess.value.id)
-    isDeleteModalOpen.value = false
+    try {
+      await deleteProcess(selectedProcess.value.id)
+      toast.add({
+        title: `流程 ${selectedProcess.value.name} 删除成功`,
+        color: "success"
+      })
+    } catch (error) {
+      toast.add({
+        title: "删除失败",
+        color: "error"
+      })
+      console.log("删除流程失败:", error)
+    } finally {
+      isDeleteModalOpen.value = false
+    }
   }
 }
 
-const updateProcess = useUpdateProcess({
-  onError: () => {
+// 更新
+async function handleUpdate({
+  id,
+  req
+}: {
+  id: number
+  req: UpdateProcessRequest
+}) {
+  try {
+    await updateProcess({ id, req })
+  } catch (err) {
     toast.add({
       title: "更新失败",
       color: "error"
     })
+    console.log("更新流程失败:", err)
   }
-})
+}
 
 // 操作菜单定义
 function getRowItems(row: Row<Process>) {
@@ -136,7 +150,7 @@ const columns: TableColumn<Process>[] = [
       return h(EditableCell, {
         value: row.original.name,
         onSave: (value: string) => {
-          updateProcess.mutate({
+          handleUpdate({
             id: row.original.id,
             req: { name: value }
           })
@@ -150,7 +164,7 @@ const columns: TableColumn<Process>[] = [
       return h(EditableCell, {
         value: row.original.description,
         onSave: (value: string) => {
-          updateProcess.mutate({
+          handleUpdate({
             id: row.original.id,
             req: { description: value }
           })
@@ -164,12 +178,12 @@ const columns: TableColumn<Process>[] = [
       return h(USelectMenu, {
         modelValue: row.original.employeeID,
         "onUpdate:modelValue": (value: number) => {
-          updateProcess.mutate({
+          handleUpdate({
             id: row.original.id,
             req: { employeeID: value }
           })
         },
-        items: employeeItems.value,
+        items: employeeItems,
         valueKey: "value",
         class: "w-28"
       })
@@ -220,7 +234,7 @@ const columns: TableColumn<Process>[] = [
       return h(EditableCell, {
         value: row.original.remark,
         onSave: (value: string) => {
-          updateProcess.mutate({
+          handleUpdate({
             id: row.original.id,
             req: { remark: value }
           })

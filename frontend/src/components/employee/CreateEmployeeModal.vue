@@ -73,16 +73,8 @@
         </UFormField>
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
-          <UButton
-            label="取消"
-            variant="outline"
-            @click="open = false"
-          />
-          <UButton
-            label="创建"
-            type="submit"
-            :loading="createEmployee.isPending.value"
-          />
+          <UButton label="取消" variant="outline" @click="open = false" />
+          <UButton label="创建" type="submit" :loading="isCreating" />
         </div>
       </UForm>
     </template>
@@ -93,14 +85,20 @@
 import type { FormSubmitEvent } from "@nuxt/ui"
 import { reactive, ref, watch } from "vue"
 import z from "zod"
-import useCreateEmployee from "../../composables/useCreateEmployee"
 import { roleItems, type CreateEmployeeRequest } from "../../models/employees"
-import useTeamMap from "../../composables/useTeamMap"
-
-const { teamItems } = useTeamMap()
+import { useEmployeeStore } from "../../composables/useEmployeeStore"
+import { useTeamStore } from "../../composables/useTeamStore"
+import { storeToRefs } from "pinia"
 
 const open = ref(false)
 const show = ref(false)
+const toast = useToast()
+
+const teamStore = useTeamStore()
+const employeeStore = useEmployeeStore()
+const { teamItems } = storeToRefs(teamStore)
+const { isCreating } = storeToRefs(employeeStore)
+const { createEmployee } = employeeStore
 
 // 定义表单数据
 const schema = z.object({
@@ -123,26 +121,8 @@ const initialState: Schema = {
 }
 const state = reactive<Schema>({ ...initialState })
 
-const toast = useToast()
-// 创建员工
-const createEmployee = useCreateEmployee({
-  onSuccess: () => {
-    toast.add({
-      title: `成员 ${state.name} 创建成功`,
-      color: "success"
-    })
-    open.value = false
-  },
-  onError: () => {
-    toast.add({
-      title: "创建失败",
-      color: "error"
-    })
-  }
-})
-
 // 表单提交
-function handleSubmit(event: FormSubmitEvent<Schema>) {
+async function handleSubmit(event: FormSubmitEvent<Schema>) {
   const req: CreateEmployeeRequest = {
     name: event.data.name,
     username: event.data.username,
@@ -151,7 +131,20 @@ function handleSubmit(event: FormSubmitEvent<Schema>) {
     roles: event.data.roles
   }
 
-  createEmployee.mutate(req)
+  try {
+    await createEmployee(req)
+    toast.add({
+      title: `成员 ${state.name} 创建成功`,
+      color: "success"
+    })
+    open.value = false
+  } catch (err) {
+    toast.add({
+      title: "创建失败",
+      color: "error"
+    })
+    console.log("创建员工失败:", err)
+  }
 }
 
 // 监视弹窗，关闭时重置表单

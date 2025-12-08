@@ -41,7 +41,7 @@
         ref="table"
         v-model:column-filters="columnFilters"
         class="shrink-0"
-        :loading="isEmployeesLoading"
+        :loading="isLoading"
         :data="employees ?? []"
         :columns="columns"
         :ui="{
@@ -71,17 +71,21 @@
 
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui"
-import useEmployees from "../composables/useEmployees"
-import { type Employee, type UpdateEmployeeRequest } from "../models/employees"
+import { type Employee } from "../models/employees"
 import { h, ref, resolveComponent, useTemplateRef, watch } from "vue"
 import { type Row, type Table } from "@tanstack/table-core"
-import useUpdateEmployee from "../composables/useUpdateEmployee"
 import getRoleLabels from "../utils/getRoleLabels"
-import useTeamMap from "../composables/useTeamMap"
+import { useEmployeeStore } from "../composables/useEmployeeStore"
+import { useTeamStore } from "../composables/useTeamStore"
+import { storeToRefs } from "pinia"
 
 // 数据获取
-const { data: employees, isLoading: isEmployeesLoading } = useEmployees()
-const { teamItems, getTeamName } = useTeamMap()
+const teamStore = useTeamStore()
+const employeeStore = useEmployeeStore()
+const { deleteEmployee } = employeeStore
+const { employees, isLoading } = storeToRefs(employeeStore)
+const { getTeamName } = teamStore
+const { teamItems } = storeToRefs(teamStore)
 
 const toast = useToast()
 
@@ -93,28 +97,23 @@ const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const selectedEmployee = ref<Employee | null>(null)
 
-const deleteEmployee = useUpdateEmployee({
-  onSuccess: () => {
-    toast.add({
-      title: "员工删除成功",
-      color: "success"
-    })
-  },
-  onError: () => {
-    toast.add({
-      title: "删除失败",
-      color: "error"
-    })
-  }
-})
-
-function handleDelete() {
+async function handleDelete() {
   if (selectedEmployee.value) {
-    const req: UpdateEmployeeRequest = {
-      isActive: false
+    try {
+      await deleteEmployee(selectedEmployee.value.id)
+      toast.add({
+        title: `成员 ${selectedEmployee.value.name} 删除成功`,
+        color: "success"
+      })
+    } catch (error) {
+      toast.add({
+        title: "删除失败",
+        color: "error"
+      })
+      console.log("删除成员失败:", error)
+    } finally {
+      isDeleteModalOpen.value = false
     }
-    deleteEmployee.mutate({ id: selectedEmployee.value.id, req })
-    isDeleteModalOpen.value = false
   }
 }
 

@@ -28,7 +28,6 @@ import type { DropdownMenuItem } from "@nuxt/ui"
 import { computed } from "vue"
 import { removeToken } from "../utils/auth"
 import { useRouter } from "vue-router"
-import { RoleMap } from "../models/employees"
 
 defineProps<{
   collapsed?: boolean

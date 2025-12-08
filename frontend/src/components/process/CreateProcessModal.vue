@@ -56,11 +56,7 @@
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
           <UButton label="取消" variant="outline" @click="open = false" />
-          <UButton
-            label="创建"
-            type="submit"
-            :loading="createProcess.isPending.value"
-          />
+          <UButton label="创建" type="submit" :loading="isCreating" />
         </div>
       </UForm>
     </template>
@@ -71,14 +67,19 @@
 import type { FormSubmitEvent } from "@nuxt/ui"
 import { reactive, ref, watch } from "vue"
 import z from "zod"
-import { useProcesses } from "../../composables/useProcesses"
-import useCreateProcess from "../../composables/useCreateProcess"
 import type { InsertProcessRequest } from "../../models/processes"
-import useEmployeeMap from "../../composables/useEmployeeMap"
+import { useEmployeeStore } from "../../composables/useEmployeeStore"
+import { storeToRefs } from "pinia"
+import { useProcessStore } from "../../composables/useProcessStore"
 
 const open = ref(false)
-const { maxSequence } = useProcesses()
-const { employeeItems } = useEmployeeMap()
+const toast = useToast()
+
+const employeeStore = useEmployeeStore()
+const processStore = useProcessStore()
+const { employeeItems } = storeToRefs(employeeStore)
+const { createProcess } = processStore
+const { isCreating, maxSequence } = storeToRefs(processStore)
 
 // 定义表单数据
 const schema = z.object({
@@ -105,34 +106,28 @@ const initialState: Schema = {
 }
 const state = reactive<Schema>({ ...initialState })
 
-const toast = useToast()
 // 创建流程
-const createProcess = useCreateProcess({
-  onSuccess: () => {
-    toast.add({
-      title: `流程 ${state.name} 创建成功`,
-      color: "success"
-    })
-    open.value = false
-  },
-  onError: () => {
-    toast.add({
-      title: "创建失败",
-      color: "error"
-    })
-  }
-})
-
-// 表单提交
-function handleSubmit(event: FormSubmitEvent<Schema>) {
+async function handleSubmit(event: FormSubmitEvent<Schema>) {
   const req: Omit<InsertProcessRequest, "projectID"> = {
     name: event.data.name,
     employeeID: event.data.employee,
     description: event.data.description,
     remark: event.data.remark
   }
-
-  createProcess.mutate({ sequence: event.data.sequence, req })
+  try {
+    await createProcess({ sequence: event.data.sequence, req })
+    toast.add({
+      title: `流程 ${state.name} 创建成功`,
+      color: "success"
+    })
+    open.value = false
+  } catch (err) {
+    toast.add({
+      title: "创建失败",
+      color: "error"
+    })
+    console.log("创建流程失败:", err)
+  }
 }
 
 // 监视弹窗，关闭时重置表单

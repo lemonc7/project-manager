@@ -53,16 +53,8 @@
         </UFormField>
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
-          <UButton
-            label="取消"
-            variant="outline"
-            @click="open = false"
-          />
-          <UButton
-            label="创建"
-            type="submit"
-            :loading="createProject.isPending.value"
-          />
+          <UButton label="取消" variant="outline" @click="open = false" />
+          <UButton label="创建" type="submit" :loading="isCreating" />
         </div>
       </UForm>
     </template>
@@ -73,9 +65,10 @@
 import type { FormSubmitEvent } from "@nuxt/ui"
 import { reactive, ref, watch } from "vue"
 import z from "zod"
-import useCreateProject from "../../composables/useCreateProject"
 import type { CreateProjectRequest } from "../../models/projects"
 import { getUserID } from "../../utils/auth"
+import { useProjectStore } from "../../composables/useProjectStore"
+import { storeToRefs } from "pinia"
 
 const open = ref(false)
 
@@ -102,25 +95,13 @@ const initialState: Schema = {
 const state = reactive<Schema>({ ...initialState })
 
 const toast = useToast()
-// 创建项目
-const createProject = useCreateProject({
-  onSuccess: () => {
-    toast.add({
-      title: `项目 ${state.name} 创建成功`,
-      color: "success"
-    })
-    open.value = false
-  },
-  onError: () => {
-    toast.add({
-      title: "创建失败",
-      color: "error"
-    })
-  }
-})
+
+const projectStore = useProjectStore()
+const { createProject } = projectStore
+const { isCreating } = storeToRefs(projectStore)
 
 // 表单提交
-function handleSubmit(event: FormSubmitEvent<Schema>) {
+async function handleSubmit(event: FormSubmitEvent<Schema>) {
   const req: CreateProjectRequest = {
     name: event.data.name,
     description: event.data.description,
@@ -130,7 +111,20 @@ function handleSubmit(event: FormSubmitEvent<Schema>) {
     duration: event.data.duration
   }
 
-  createProject.mutate(req)
+  try {
+    await createProject(req)
+    toast.add({
+      title: `项目 ${state.name} 创建成功`,
+      color: "success"
+    })
+    open.value = false
+  } catch (err) {
+    toast.add({
+      title: "创建失败",
+      color: "error"
+    })
+    console.log("创建项目失败:", err)
+  }
 }
 
 // 监视弹窗，关闭时重置表单

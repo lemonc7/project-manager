@@ -72,7 +72,7 @@
         class="shrink-0"
         :data="projects ?? []"
         :columns="columns"
-        :loading="isProjectLoading"
+        :loading="isLoading"
         :ui="{
           base: 'table-fixed border-separate border-spacing-0',
           thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -104,8 +104,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref, resolveComponent, useTemplateRef, watch } from "vue"
-import useProjects from "../composables/useProjects"
+import {
+  computed,
+  h,
+  onMounted,
+  ref,
+  resolveComponent,
+  useTemplateRef,
+  watch
+} from "vue"
 import {
   getPaginationRowModel,
   type Row,
@@ -118,18 +125,23 @@ import {
 } from "../models/projects"
 import { useRouter } from "vue-router"
 import type { TableColumn } from "@nuxt/ui"
-import useEmployeeMap from "../composables/useEmployeeMap"
-import useDeleteProject from "../composables/useDeleteProject"
+import { useEmployeeStore } from "../composables/useEmployeeStore"
+import { storeToRefs } from "pinia"
+import { useProjectStore } from "../composables/useProjectStore"
 
 const router = useRouter()
 const toast = useToast()
+const projectStore = useProjectStore()
+const { projects, isLoading } = storeToRefs(projectStore)
+const { setQuery, deleteProject } = projectStore
 
-const { data: projects, isLoading: isProjectLoading } = useProjects({
-  filter: "filter",
-  req: {}
+onMounted(() => {
+  setQuery("filter", {})
 })
 
-const { employeeItems, getEmployeeName } = useEmployeeMap()
+const employeeStore = useEmployeeStore()
+const { getEmployeeName } = employeeStore
+const { employeeItems } = storeToRefs(employeeStore)
 
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
@@ -142,26 +154,23 @@ const UButton = resolveComponent("UButton")
 const UBadge = resolveComponent("UBadge")
 
 // 删除项目
-const deleteProject = useDeleteProject({
-  onSuccess: () => {
-    toast.add({
-      title: `项目 ${selectedProject.value?.name} 删除成功`,
-      color: "success"
-    })
-    isDeleteModalOpen.value = false
-  },
-  onError: () => {
-    toast.add({
-      title: "删除失败",
-      color: "error"
-    })
-  }
-})
-
-function handleDelete() {
+async function handleDelete() {
   if (selectedProject.value) {
-    deleteProject.mutate(selectedProject.value.id)
-    isDeleteModalOpen.value = false
+    try {
+      await deleteProject(selectedProject.value.id)
+      toast.add({
+        title: `项目 ${selectedProject.value.name} 删除成功`,
+        color: "success"
+      })
+    } catch (error) {
+      toast.add({
+        title: "删除失败",
+        color: "error"
+      })
+      console.log("删除项目失败:", error)
+    } finally {
+      isDeleteModalOpen.value = false
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 <template>
   <UModal
-    v-model:open="props.open"
+    :open="props.open"
     @update:open="onOpenChange"
     title="编辑成员"
     description="更新成员的内容(不包括用户名和密码)"
@@ -46,11 +46,7 @@
             variant="outline"
             @click="onOpenChange(false)"
           />
-          <UButton
-            label="更新"
-            type="submit"
-            :loading="updateEmployee.isPending.value"
-          />
+          <UButton label="更新" type="submit" :loading="isUpdating" />
         </div>
       </UForm>
     </template>
@@ -65,8 +61,9 @@ import {
   type UpdateEmployeeRequest
 } from "../../models/employees"
 import { reactive, watch } from "vue"
-import useUpdateEmployee from "../../composables/useUpdateEmployee"
-import useTeamMap from "../../composables/useTeamMap"
+import { useEmployeeStore } from "../../composables/useEmployeeStore"
+import { useTeamStore } from "../../composables/useTeamStore"
+import { storeToRefs } from "pinia"
 
 const props = defineProps<{
   open: boolean
@@ -77,7 +74,11 @@ const emit = defineEmits<{
   (e: "update:open", open: boolean): void
 }>()
 
-const { teamItems } = useTeamMap()
+const teamStore = useTeamStore()
+const employeeStore = useEmployeeStore()
+const { teamItems } = storeToRefs(teamStore)
+const { isUpdating } = storeToRefs(employeeStore)
+const { updateEmployee } = employeeStore
 
 const toast = useToast()
 
@@ -99,31 +100,28 @@ function onOpenChange(open: boolean) {
   emit("update:open", open)
 }
 
-const updateEmployee = useUpdateEmployee({
-  onSuccess: () => {
+async function handleSubmit() {
+  if (!props.employee?.id) return
+  try {
+    const req: UpdateEmployeeRequest = {
+      name: state.name,
+      roles: state.roles,
+      teamID: state.team
+    }
+
+    await updateEmployee({ id: props.employee.id, req })
     toast.add({
       title: `成员 ${state.name} 更新成功`,
       color: "success"
     })
     onOpenChange(false)
-  },
-  onError: () => {
+  } catch (err) {
     toast.add({
       title: "更新失败",
       color: "error"
     })
+    console.log("更新成员失败:", err)
   }
-})
-
-function handleSubmit() {
-  if (!props.employee?.id) return
-  const req: UpdateEmployeeRequest = {
-    name: state.name,
-    roles: state.roles,
-    teamID: state.team
-  }
-
-  updateEmployee.mutate({ id: props.employee.id, req })
 }
 
 // 监听employee变化，用于数据初始化和外部数据更新
