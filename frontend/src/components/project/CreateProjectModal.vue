@@ -31,29 +31,40 @@
         <!-- 优先级+项目周期 -->
         <div class="grid grid-cols-2 gap-4">
           <UFormField label="优先级" name="priority" required>
-            <UInput
-              type="number"
+            <UInputNumber
               v-model="state.priority"
               class="w-full"
               placeholder="请输入优先级"
+              :min="1"
+              :max="5"
             />
           </UFormField>
           <UFormField label="项目周期" name="duration">
-            <UInput
-              type="number"
+            <UInputNumber
               v-model="state.duration"
               class="w-full"
               placeholder="请输入项目周期"
+              :min="0"
             />
           </UFormField>
         </div>
         <!-- 备注 -->
         <UFormField label="备注" name="remark">
-          <UTextarea v-model="state.remark" autoresize class="w-full" />
+          <UTextarea
+            v-model="state.remark"
+            autoresize
+            class="w-full"
+            placeholder="请输入备注"
+          />
         </UFormField>
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
-          <UButton label="取消" variant="outline" @click="open = false" />
+          <UButton
+            label="取消"
+            variant="outline"
+            @click="open = false"
+            @pointerdown.prevent
+          />
           <UButton label="创建" type="submit" :loading="isCreating" />
         </div>
       </UForm>
@@ -75,9 +86,9 @@ const open = ref(false)
 // 定义表单数据
 const schema = z.object({
   name: z.string().nonempty("请输入项目名称"),
-  description: z.string().optional(),
-  remark: z.string().optional(),
-  priority: z.number().min(1, "优先级不能小于1").max(9, "优先级不能大于9"),
+  description: z.string().default(""),
+  remark: z.string().default(""),
+  priority: z.number().default(1),
   duration: z.number().min(0, "项目周期不能小于0").optional()
 })
 
@@ -87,9 +98,9 @@ const userID = getUserID()
 // 表单默认数据状态
 const initialState: Schema = {
   name: "",
-  description: undefined,
-  remark: undefined,
-  priority: 5,
+  description: "",
+  remark: "",
+  priority: 1,
   duration: undefined
 }
 const state = reactive<Schema>({ ...initialState })

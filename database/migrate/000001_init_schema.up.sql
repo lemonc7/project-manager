@@ -20,7 +20,7 @@ CREATE TYPE process_status as ENUM (
 CREATE TABLE teams (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(20) NOT NULL UNIQUE,
-  description TEXT,
+  description TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -42,29 +42,60 @@ CREATE TABLE employees (
 CREATE TABLE projects (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(50) NOT NULL UNIQUE,
-  description TEXT,
-  remark TEXT,
+  description TEXT NOT NULL DEFAULT '',
+  remark TEXT NOT NULL DEFAULT '',
   status project_status NOT NULL DEFAULT '排单',
   manager_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
-  priority INT NOT NULL DEFAULT 5,
+  priority INT NOT NULL DEFAULT 1,
   started_at TIMESTAMPTZ,
   duration INT,
   finished_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT check_duration_positive CHECK (duration >= 0),
-  CONSTRAINT check_priority_range CHECK (priority BETWEEN 1 AND 9)
+  CONSTRAINT check_priority_range CHECK (priority BETWEEN 1 AND 5)
 );
+
+-- 项目视图，用来计算剩余天数
+CREATE OR REPLACE VIEW projects_view AS
+SELECT
+  p.id,
+  p.name,
+  p.description,
+  p.remark,
+  p.status,
+  p.manager_id,
+  p.priority,
+  p.started_at,
+  p.duration,
+  p.finished_at,
+  p.created_at,
+  p.updated_at,
+  -- 剩余天数 (必须用于排序，保留在数据库计算)
+  (
+    CASE 
+      WHEN 
+        p.status NOT IN ('完成', '终止') 
+        AND p.started_at IS NOT NULL 
+        AND p.duration IS NOT NULL THEN
+        CEIL(
+            EXTRACT(EPOCH FROM ((p.started_at + make_interval(days => p.duration)) - NOW())) / 86400.0
+        )::INTEGER
+      ELSE NULL
+    END
+  ) AS remaining_days
+FROM 
+  projects p;
 
 -- 工艺流程表
 CREATE TABLE processes (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name VARCHAR(50) NOT NULL,
-  description TEXT,
-  remark TEXT,
+  description TEXT NOT NULL DEFAULT '',
+  remark TEXT NOT NULL DEFAULT '',
   status process_status NOT NULL DEFAULT '等待',
-  employee_id INT REFERENCES employees(id) ON DELETE SET NULL,
+  employee_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
   sequence INT NOT NULL,
   spend_time DOUBLE PRECISION,
   started_at TIMESTAMPTZ,

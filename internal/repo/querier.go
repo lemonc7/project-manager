@@ -26,13 +26,10 @@ type Querier interface {
 	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) error
 	ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 	ListProcesses(ctx context.Context, projectID int32) ([]ListProcessesRow, error)
-	ListProjectsDoing(ctx context.Context, arg ListProjectsDoingParams) ([]ListProjectsDoingRow, error)
-	ListProjectsDone(ctx context.Context, arg ListProjectsDoneParams) ([]ListProjectsDoneRow, error)
 	ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error)
-	ListProjectsTodo(ctx context.Context, managerID *int32) ([]ListProjectsTodoRow, error)
-	ListTasksDoing(ctx context.Context, employeeID *int32) ([]ListTasksDoingRow, error)
-	ListTasksReady(ctx context.Context, employeeID *int32) ([]ListTasksReadyRow, error)
-	ListTasksTodo(ctx context.Context, employeeID *int32) ([]ListTasksTodoRow, error)
+	ListTasksDoing(ctx context.Context, employeeID int32) ([]ListTasksDoingRow, error)
+	ListTasksReady(ctx context.Context, employeeID int32) ([]ListTasksReadyRow, error)
+	ListTasksTodo(ctx context.Context, employeeID int32) ([]ListTasksTodoRow, error)
 	ListTeams(ctx context.Context) ([]ListTeamsRow, error)
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error

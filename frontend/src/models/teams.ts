@@ -1,6 +1,6 @@
 interface CreateTeamRequest {
   name: string
-  description?: string
+  description: string
 }
 
 interface UpdateTeamRequest {
@@ -11,7 +11,7 @@ interface UpdateTeamRequest {
 interface Team {
   id: number
   name: string
-  description?: string
+  description: string
 }
 
 export type { CreateTeamRequest, UpdateTeamRequest, Team }

@@ -70,7 +70,7 @@
           getPaginationRowModel: getPaginationRowModel()
         }"
         class="shrink-0"
-        :data="projects ?? []"
+        :data="projects"
         :columns="columns"
         :loading="isLoading"
         :ui="{
@@ -95,14 +95,34 @@
     </template>
   </UDashboardPanel>
   <!-- 删除弹窗 -->
-  <DeleteModal
+  <AlertModal
     v-model:open="isDeleteModalOpen"
     :on-submit="handleDelete"
     title="删除项目"
+    label="删除"
+    color="error"
     :description="`确认要删除[${selectedProject?.name}]项目么？该操作还会删除相关流程，无法撤销！`"
   />
   <!-- 编辑弹窗 -->
   <EditProjectModal v-model:open="isEditModalOpen" :project="selectedProject" />
+  <!-- 开始弹窗 -->
+  <AlertModal
+    v-model:open="isStartModalOpen"
+    :on-submit="handleStart"
+    title="开始项目"
+    label="开始"
+    color="neutral"
+    description="将项目状态设置为进行中，并同步设置流程状态。"
+  />
+  <!-- 完成弹窗 -->
+  <AlertModal
+    v-model:open="isFinishModalOpen"
+    :on-submit="handleFinish"
+    title="完成项目"
+    label="完成"
+    color="neutral"
+    description="请确认项目已完成，该项目的所有流程在任务面板会隐藏。"
+  />
 </template>
 
 <script setup lang="ts">
@@ -130,15 +150,18 @@ import type { TableColumn } from "@nuxt/ui"
 import { useEmployeeStore } from "../composables/useEmployeeStore"
 import { storeToRefs } from "pinia"
 import { useProjectStore } from "../composables/useProjectStore"
+import { useQueryClient } from "@tanstack/vue-query"
 
 const router = useRouter()
 const toast = useToast()
+const queryClient = useQueryClient()
+
 const projectStore = useProjectStore()
 const { projects, isLoading } = storeToRefs(projectStore)
-const { setQuery, deleteProject } = projectStore
+const { setQuery, deleteProject, startProject, finishProject } = projectStore
 
 onMounted(() => {
-  setQuery("filter", {})
+  setQuery({})
 })
 
 const employeeStore = useEmployeeStore()
@@ -147,6 +170,8 @@ const { employeeItems } = storeToRefs(employeeStore)
 
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
+const isStartModalOpen = ref(false)
+const isFinishModalOpen = ref(false)
 const selectedProject = ref<Project | null>(null)
 
 const table = useTemplateRef<{ tableApi: Table<Project> }>("table")
@@ -172,6 +197,51 @@ async function handleDelete() {
       console.log("删除项目失败:", error)
     } finally {
       isDeleteModalOpen.value = false
+    }
+  }
+}
+
+// 开始项目
+async function handleStart() {
+  if (selectedProject.value) {
+    try {
+      await startProject(selectedProject.value.id)
+      toast.add({
+        title: `项目 ${selectedProject.value.name} 已开始`,
+        color: "success"
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["processes", selectedProject.value.id]
+      })
+    } catch (err) {
+      toast.add({
+        title: "开始失败",
+        color: "error"
+      })
+      console.log("开始项目失败:", err)
+    } finally {
+      isStartModalOpen.value = false
+    }
+  }
+}
+
+// 完成项目
+async function handleFinish() {
+  if (selectedProject.value) {
+    try {
+      await finishProject(selectedProject.value.id)
+      toast.add({
+        title: `项目 ${selectedProject.value.name} 已完成`,
+        color: "success"
+      })
+    } catch (err) {
+      toast.add({
+        title: "完成失败",
+        color: "error"
+      })
+      console.log("完成项目失败:", err)
+    } finally {
+      isFinishModalOpen.value = false
     }
   }
 }
@@ -204,12 +274,36 @@ function getRowItems(row: Row<Project>) {
       }
     },
     {
+      type: "separator"
+    },
+    {
       label: "编辑",
       icon: "i-lucide-pencil",
       onSelect: () => {
         isEditModalOpen.value = true
         selectedProject.value = row.original
       }
+    },
+    {
+      label: "开始",
+      icon: "i-lucide-play",
+      disabled: row.original.status !== "排单",
+      onSelect: () => {
+        isStartModalOpen.value = true
+        selectedProject.value = row.original
+      }
+    },
+    {
+      label: "完成",
+      icon: "i-lucide-check",
+      disabled: row.original.status !== "进行",
+      onSelect: () => {
+        isFinishModalOpen.value = true
+        selectedProject.value = row.original
+      }
+    },
+    {
+      type: "separator"
     },
     {
       label: "删除",
@@ -250,9 +344,14 @@ const columns: TableColumn<Project>[] = [
   {
     header: "优先级",
     cell: ({ row }) => {
-      const priority = row.original.priority
-      const color =
-        priority <= 3 ? "success" : priority <= 6 ? "warning" : "error"
+      const colorMap: Record<number, string> = {
+        1: "success",
+        2: "warning",
+        3: "warning",
+        4: "error",
+        5: "error"
+      }
+      const color = colorMap[row.original.priority]
       return h(
         UBadge,
         {
@@ -260,7 +359,7 @@ const columns: TableColumn<Project>[] = [
           variant: "subtle",
           color
         },
-        () => priority.toString()
+        () => row.original.priority.toString()
       )
     }
   },

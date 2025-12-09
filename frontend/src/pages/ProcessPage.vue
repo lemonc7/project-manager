@@ -26,7 +26,7 @@
       <UTable
         sticky
         class="shrink-0"
-        :data="processes ?? []"
+        :data="processes"
         :columns="columns"
         :loading="isLoading"
         :ui="{
@@ -41,10 +41,12 @@
     </template>
   </UDashboardPanel>
   <!-- 删除弹窗 -->
-  <DeleteModal
+  <AlertModal
     v-model:open="isDeleteModalOpen"
     :on-submit="handleDelete"
     title="删除流程"
+    label="删除"
+    color="error"
     :description="`确认要删除[${selectedProcess?.name}]流程么？该操作无法撤销!`"
   />
   <!-- 编辑弹窗 -->

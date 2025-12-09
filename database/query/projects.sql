@@ -9,82 +9,16 @@ SELECT
   priority,
   started_at,
   duration,
-  finished_at
-FROM projects
+  finished_at,
+  remaining_days
+FROM projects_view
 WHERE 
-  (status = sqlc.narg('status') OR sqlc.narg('status') IS NULL)
-  AND (manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
-  AND (started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
+  (started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
   AND (started_at <= sqlc.narg('end_at') OR sqlc.narg('end_at') IS NULL)
 ORDER BY
-  priority,
+  priority DESC,
+  remaining_days NULLS LAST,
   updated_at DESC;
-
--- name: ListProjectsTodo :many
-SELECT
-  id,
-  name,
-  description,
-  remark,
-  status,
-  manager_id,
-  priority,
-  started_at,
-  duration,
-  finished_at
-FROM projects
-WHERE 
-  status IN ('暂停','排单')
-  AND (manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
-ORDER BY
-  priority,
-  id;
-
--- name: ListProjectsDoing :many
-SELECT
-  id,
-  name,
-  description,
-  remark,
-  status,
-  manager_id,
-  priority,
-  started_at,
-  duration,
-  finished_at
-FROM projects
-WHERE 
-  status = '进行'
-  AND (manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
-  AND (started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
-  AND (started_at <= sqlc.narg('end_at') OR sqlc.narg('end_at') IS NULL)
-ORDER BY
-  priority,
-  started_at NULLS LAST,
-  id;
-
--- name: ListProjectsDone :many
-SELECT
-  id,
-  name,
-  description,
-  remark,
-  status,
-  manager_id,
-  priority,
-  started_at,
-  duration,
-  finished_at
-FROM projects
-WHERE 
-  status = '完成'
-  AND (manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
-  AND (started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
-  AND (started_at <= sqlc.narg('end_at') OR sqlc.narg('end_at') IS NULL)
-ORDER BY
-  priority,
-  started_at NULLS LAST,
-  id;
 
 -- name: CreateProject :exec
 INSERT INTO projects (

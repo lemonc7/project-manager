@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
+	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/util"
 )
@@ -14,8 +15,8 @@ type EmployeeService interface {
 	CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error
 	UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) error
 	DeleteEmployee(ctx context.Context, id int32) error
-	ListEmployees(ctx context.Context) ([]model.Employee, error)
-	GetEmployee(ctx context.Context, username string) (model.Employee, error)
+	ListEmployees(ctx context.Context) ([]repo.ListEmployeesRow, error)
+	GetEmployee(ctx context.Context, username string) (string, error)
 }
 
 var _ EmployeeService = (*service.EmployeeService)(nil)

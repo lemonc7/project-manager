@@ -1,20 +1,20 @@
 export const roleItems = [
   { value: "admin", label: "管理员" },
   { value: "manager", label: "项目经理" },
-  { value: "employee", label: "员工" },
+  { value: "employee", label: "员工" }
 ] as const
 
-export type Role = typeof roleItems[number]['value']
-export type RoleItem = typeof roleItems[number]
+export type Role = (typeof roleItems)[number]["value"]
+export type RoleItem = (typeof roleItems)[number]
 export const roleMap: Record<string, string> = Object.fromEntries(
-  roleItems.map(i => [i.value, i.label])
+  roleItems.map((i) => [i.value, i.label])
 )
 
 interface CreateEmployeeRequest {
   name: string
   username: string
   password: string
-  roles?: Role[]
+  roles: Role[]
   teamID?: number
 }
 
@@ -28,7 +28,7 @@ interface UpdateEmployeeRequest {
 interface Employee {
   id: number
   name: string
-  roles?: Role[]
+  roles: Role[]
   teamID?: number
 }
 

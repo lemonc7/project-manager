@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query"
 import { defineStore } from "pinia"
 import type {
   CreateProjectRequest,
-  FilterStatus,
   ListProjectsRequest,
   UpdateProjectRequest
 } from "../models/projects"
@@ -16,37 +15,27 @@ import {
   updateProject
 } from "../api/projects"
 
-function buildProjectsQueryKey(filter: FilterStatus, req: ListProjectsRequest) {
-  return [
-    "projects",
-    "overview",
-    filter,
-    req.managerID ?? null,
-    req.status ?? null,
-    req.startAt ?? null,
-    req.endAt ?? null
-  ]
+function buildProjectsQueryKey(req: ListProjectsRequest) {
+  return ["projects", "overview", req.startAt ?? null, req.endAt ?? null]
 }
 
 export const useProjectStore = defineStore("project", () => {
   const queryClient = useQueryClient()
 
   // 查询数据
-  const filter = ref<FilterStatus>("filter")
   const req = ref<ListProjectsRequest>({})
 
   const queryKey = computed(() => {
-    return buildProjectsQueryKey(filter.value, req.value)
+    return buildProjectsQueryKey(req.value)
   })
 
   const projectQuery = useQuery({
     queryKey: queryKey,
-    queryFn: () => listProjects(filter.value, req.value)
+    queryFn: () => listProjects(req.value)
   })
 
   // 更改查询的key
-  function setQuery(newFilter: FilterStatus, newReq: ListProjectsRequest) {
-    filter.value = newFilter
+  function setQuery(newReq: ListProjectsRequest) {
     req.value = newReq
   }
 

@@ -51,17 +51,18 @@ SELECT
   p.id,
   p.name,
   p.description,
-  pr.started_at,
-  pr.duration,
   p.project_id,
-  COALESCE(pr.name,'') AS project_name
+  COALESCE(pr.name,'') AS project_name,
+  pr.remaining_days AS remaining_days
 FROM processes p
-LEFT JOIN projects pr ON p.project_id = pr.id
+LEFT JOIN projects_view pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
   AND p.status = '进行'
   AND pr.status NOT IN ('终止','完成')
-ORDER BY p.id;
+ORDER BY 
+  remaining_days NULLS LAST,
+  p.id;
 
 -- name: UpdateProcess :exec
 UPDATE processes

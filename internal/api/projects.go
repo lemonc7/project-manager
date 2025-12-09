@@ -2,11 +2,11 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
+	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/util"
 )
@@ -15,10 +15,7 @@ type ProjectService interface {
 	CreateProject(ctx context.Context, req model.CreateProjectRequest) error
 	UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) error
 	DeleteProject(ctx context.Context, id int32) error
-	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error)
-	ListProjectsTodo(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error)
-	ListProjectsDoing(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error)
-	ListProjectsDone(ctx context.Context, req model.ListProjectsRequest) ([]model.Project, error)
+	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
 	StartProject(ctx context.Context, id int32) error
 	FinishProject(ctx context.Context, id int32) error
 }
@@ -111,37 +108,12 @@ func (p *ProjectHandler) ListProjects(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	// 获取状态
-	filter := c.Param("filter")
-
-	switch filter {
-	case "todo":
-		projects, err := p.projectService.ListProjectsTodo(c.Request().Context(), req)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		}
-		return c.JSON(http.StatusOK, projects)
-	case "doing":
-		projects, err := p.projectService.ListProjectsDoing(c.Request().Context(), req)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		}
-		return c.JSON(http.StatusOK, projects)
-	case "done":
-		projects, err := p.projectService.ListProjectsDone(c.Request().Context(), req)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		}
-		return c.JSON(http.StatusOK, projects)
-	case "filter":
-		projects, err := p.projectService.ListProjectsFiltered(c.Request().Context(), req)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		}
-		return c.JSON(http.StatusOK, projects)
-	default:
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("filter参数错误: %s", filter))
+	projects, err := p.projectService.ListProjectsFiltered(c.Request().Context(), req)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
+	return c.JSON(http.StatusOK, projects)
+
 }
 
 func (p *ProjectHandler) StartProject(c echo.Context) error {

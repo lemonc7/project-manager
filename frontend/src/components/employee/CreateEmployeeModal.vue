@@ -73,7 +73,12 @@
         </UFormField>
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
-          <UButton label="取消" variant="outline" @click="open = false" />
+          <UButton
+            label="取消"
+            variant="outline"
+            @click="open = false"
+            @pointerdown.prevent
+          />
           <UButton label="创建" type="submit" :loading="isCreating" />
         </div>
       </UForm>
@@ -105,8 +110,8 @@ const schema = z.object({
   name: z.string().nonempty("请输入姓名"),
   username: z.string().nonempty("请输入用户名"),
   password: z.string().min(6, "密码不能少于6位"),
-  team: z.number().optional(),
-  roles: z.array(z.enum(["admin", "manager", "employee"] as const)).default([])
+  roles: z.array(z.enum(["admin", "manager", "employee"] as const)).default([]),
+  team: z.number().optional()
 })
 
 type Schema = z.output<typeof schema>
@@ -116,8 +121,8 @@ const initialState: Schema = {
   name: "",
   username: "",
   password: "",
-  team: undefined,
-  roles: ["employee"]
+  roles: ["employee"],
+  team: undefined
 }
 const state = reactive<Schema>({ ...initialState })
 

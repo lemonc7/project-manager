@@ -42,7 +42,7 @@
         v-model:column-filters="columnFilters"
         class="shrink-0"
         :loading="isLoading"
-        :data="employees ?? []"
+        :data="employees"
         :columns="columns"
         :ui="{
           base: 'table-fixed border-separate border-spacing-0',
@@ -56,10 +56,12 @@
     </template>
   </UDashboardPanel>
   <!-- 删除弹窗 -->
-  <DeleteModal
+  <AlertModal
     v-model:open="isDeleteModalOpen"
     :on-submit="handleDelete"
     title="删除成员"
+    label="删除"
+    color="error"
     :description="`确认要删除[${selectedEmployee?.name}]么？该操作无法撤销!`"
   />
   <!-- 编辑弹窗 -->

@@ -30,7 +30,7 @@ type CreateEmployeeParams struct {
 	Username     string   `json:"username"`
 	PasswordHash string   `json:"passwordHash"`
 	Roles        []string `json:"roles"`
-	TeamID       *int32   `json:"teamId"`
+	TeamID       *int32   `json:"teamID,omitempty"`
 }
 
 func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) error {
@@ -74,7 +74,7 @@ type GetEmployeeByUsernameRow struct {
 	Username     string   `json:"username"`
 	PasswordHash string   `json:"passwordHash"`
 	Roles        []string `json:"roles"`
-	TeamID       *int32   `json:"teamId"`
+	TeamID       *int32   `json:"teamID,omitempty"`
 }
 
 func (q *Queries) GetEmployeeByUsername(ctx context.Context, username string) (GetEmployeeByUsernameRow, error) {
@@ -106,7 +106,7 @@ type ListEmployeesRow struct {
 	ID     int32    `json:"id"`
 	Name   string   `json:"name"`
 	Roles  []string `json:"roles"`
-	TeamID *int32   `json:"teamId"`
+	TeamID *int32   `json:"teamID,omitempty"`
 }
 
 func (q *Queries) ListEmployees(ctx context.Context) ([]ListEmployeesRow, error) {
@@ -147,7 +147,7 @@ WHERE id = $5
 type UpdateEmployeeParams struct {
 	Name     *string  `json:"name"`
 	Roles    []string `json:"roles"`
-	TeamID   *int32   `json:"teamId"`
+	TeamID   *int32   `json:"teamID,omitempty"`
 	IsActive *bool    `json:"isActive"`
 	ID       int32    `json:"id"`
 }

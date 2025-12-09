@@ -31,7 +31,7 @@
         </UFormField>
         <!-- 负责人+流程序号 -->
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="负责人" name="employee">
+          <UFormField label="负责人" name="employee" required>
             <USelectMenu
               v-model="state.employee"
               :items="employeeItems"
@@ -41,21 +41,32 @@
             />
           </UFormField>
           <UFormField label="流程序号" name="sequence">
-            <UInput
-              type="number"
+            <UInputNumber
               v-model="state.sequence"
               class="w-full"
               placeholder="请输入流程序号"
+              :min="1"
+              :max="maxSequence"
             />
           </UFormField>
         </div>
         <!-- 备注 -->
         <UFormField label="备注" name="remark">
-          <UTextarea v-model="state.remark" autoresize class="w-full" />
+          <UTextarea
+            v-model="state.remark"
+            autoresize
+            class="w-full"
+            placeholder="请输入备注"
+          />
         </UFormField>
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
-          <UButton label="取消" variant="outline" @click="open = false" />
+          <UButton
+            label="取消"
+            variant="outline"
+            @click="open = false"
+            @pointerdown.prevent
+          />
           <UButton label="创建" type="submit" :loading="isCreating" />
         </div>
       </UForm>
@@ -71,6 +82,7 @@ import type { InsertProcessRequest } from "../../models/processes"
 import { useEmployeeStore } from "../../composables/useEmployeeStore"
 import { storeToRefs } from "pinia"
 import { useProcessStore } from "../../composables/useProcessStore"
+import { getUserID } from "../../utils/auth"
 
 const open = ref(false)
 const toast = useToast()
@@ -84,25 +96,22 @@ const { isCreating, maxSequence } = storeToRefs(processStore)
 // 定义表单数据
 const schema = z.object({
   name: z.string().nonempty("请输入流程名称"),
-  sequence: z
-    .number()
-    .min(1, "序号不能小于1")
-    .max(maxSequence.value, `序号不能大于${maxSequence.value}`)
-    .optional(),
-  employee: z.number().optional(),
-  description: z.string().optional(),
-  remark: z.string().optional()
+  sequence: z.number().optional(),
+  employee: z.number(),
+  description: z.string(),
+  remark: z.string()
 })
 
 type Schema = z.output<typeof schema>
+const userID = getUserID()
 
 // 表单默认数据状态
 const initialState: Schema = {
   name: "",
   sequence: undefined,
-  employee: undefined,
-  description: undefined,
-  remark: undefined
+  employee: userID!,
+  description: "",
+  remark: ""
 }
 const state = reactive<Schema>({ ...initialState })
 

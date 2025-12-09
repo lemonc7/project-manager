@@ -14,10 +14,3 @@ type UpdateEmployeeRequest struct {
 	TeamID   *int32   `json:"teamID"`
 	IsActive *bool    `json:"isActive"`
 }
-
-type Employee struct {
-	ID     int32    `json:"id"`
-	Name   string   `json:"name"`
-	Roles  []string `json:"roles,omitempty"`
-	TeamID *int32   `json:"teamID,omitempty"`
-}

@@ -30,7 +30,7 @@
         </UFormField>
         <!-- 负责人+状态+机时 -->
         <div class="grid grid-cols-3 gap-4">
-          <UFormField label="负责人" name="manager">
+          <UFormField label="负责人" name="manager" required>
             <USelectMenu
               v-model="state.employee"
               :items="employeeItems"
@@ -48,11 +48,12 @@
             />
           </UFormField>
           <UFormField label="机时" name="spendTime">
-            <UInput
-              type="number"
+            <UInputNumber
               v-model="state.spendTime"
               class="w-full"
               placeholder="请输入机时"
+              :min="0"
+              :step="0.5"
             />
           </UFormField>
         </div>
@@ -71,6 +72,7 @@
             label="取消"
             variant="outline"
             @click="onOpenChange(false)"
+            @pointerdown.prevent
           />
           <UButton label="更新" type="submit" :loading="isUpdating" />
         </div>
@@ -81,7 +83,7 @@
 
 <script setup lang="ts">
 import z from "zod"
-import { computed, reactive, ref, watch } from "vue"
+import { computed, reactive, watch } from "vue"
 import { storeToRefs } from "pinia"
 import { useEmployeeStore } from "../../composables/useEmployeeStore"
 import {
@@ -90,6 +92,7 @@ import {
   type UpdateProcessRequest
 } from "../../models/processes"
 import { useProcessStore } from "../../composables/useProcessStore"
+import { getUserID } from "../../utils/auth"
 
 const props = defineProps<{
   open: boolean
@@ -105,22 +108,24 @@ const toast = useToast()
 // 定义表单数据
 const schema = z.object({
   name: z.string().nonempty("请输入姓名"),
-  description: z.string().optional(),
-  remark: z.string().optional(),
+  description: z.string(),
+  remark: z.string(),
   status: z.enum(["等待", "准备", "进行", "完成", "暂停", "终止"]),
-  employee: z.number().optional(),
+  employee: z.number(),
   spendTime: z.number().min(0, "花费时间不能小于0").optional()
 })
 
 type Schema = z.output<typeof schema>
 
+const userID = getUserID()
+
 const state = reactive<Schema>({
-  name: props.process?.name ?? "",
-  description: props.process?.description,
-  remark: props.process?.remark,
-  status: props.process?.status ?? "等待",
-  employee: props.process?.employeeID,
-  spendTime: props.process?.spendTime
+  name: "",
+  description: "",
+  remark: "",
+  status: "等待",
+  employee: userID!,
+  spendTime: undefined
 })
 
 function onOpenChange(open: boolean) {

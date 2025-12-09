@@ -5,12 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"slices"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type ProcessService struct {
@@ -122,97 +120,40 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 	return tx.Commit(ctx)
 }
 
-func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]model.Process, error) {
-	data, err := p.querier.ListProcesses(ctx, projectID)
+func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error) {
+	processes, err := p.querier.ListProcesses(ctx, projectID)
 
 	if err != nil {
 		return nil, err
 	}
-	processes := make([]model.Process, len(data))
 
-	for i, p := range data {
-		processes[i] = model.Process{
-			ID:          p.ID,
-			ProjectID:   p.ProjectID,
-			Name:        p.Name,
-			Description: p.Description,
-			Remark:      p.Remark,
-			Status:      p.Status,
-			EmployeeID:  p.EmployeeID,
-			SpendTime:   p.SpendTime,
-			Sequence:    p.Sequence,
-			StartedAt:   p.StartedAt,
-			FinishedAt:  p.FinishedAt,
-		}
-	}
 	return processes, nil
-
 }
 
-func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([]model.Task, error) {
-	data, err := p.querier.ListTasksTodo(ctx, &employeeID)
+func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error) {
+	tasks, err := p.querier.ListTasksTodo(ctx, employeeID)
 	if err != nil {
 		return nil, err
-	}
-	tasks := make([]model.Task, len(data))
-
-	for i, t := range data {
-		tasks[i] = model.Task{
-			ID:          t.ID,
-			Name:        t.Name,
-			Description: t.Description,
-			ProjectID:   t.ProjectID,
-			ProjectName: t.ProjectName,
-		}
 	}
 
 	return tasks, nil
 }
 
-func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) ([]model.Task, error) {
-	data, err := p.querier.ListTasksReady(ctx, &employeeID)
+func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error) {
+	tasks, err := p.querier.ListTasksReady(ctx, employeeID)
 	if err != nil {
 		return nil, err
-	}
-
-	tasks := make([]model.Task, len(data))
-	for i, t := range data {
-		tasks[i] = model.Task{
-			ID:          t.ID,
-			Name:        t.Name,
-			Description: t.Description,
-			ProjectID:   t.ProjectID,
-			ProjectName: t.ProjectName,
-		}
 	}
 
 	return tasks, nil
 }
 
-func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) ([]model.Task, error) {
-	ts, err := p.querier.ListTasksDoing(ctx, &employeeID)
+func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) ([]repo.ListTasksDoingRow, error) {
+	tasks, err := p.querier.ListTasksDoing(ctx, employeeID)
 	if err != nil {
 		return nil, err
 	}
 
-	tasks := make([]model.Task, len(ts))
-	// 计算剩余天数
-	for i, t := range ts {
-		tasks[i] = model.Task{
-			ID:            t.ID,
-			Name:          t.Name,
-			Description:   t.Description,
-			StartedAt:     t.StartedAt,
-			RemainingDays: util.CalculateRemainingDays(t.StartedAt, t.Duration),
-			ProjectID:     t.ProjectID,
-			ProjectName:   t.ProjectName,
-		}
-	}
-
-	// 排序
-	slices.SortFunc(tasks, func(a, b model.Task) int {
-		return util.SortByRemaining(a, b)
-	})
 	return tasks, nil
 }
 

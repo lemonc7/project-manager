@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
+	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/util"
 )
@@ -14,7 +15,7 @@ type TeamService interface {
 	CreateTeam(ctx context.Context, req model.CreateTeamRequest) error
 	UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) error
 	DeleteTeam(ctx context.Context, id int32) error
-	ListTeams(ctx context.Context) ([]model.Team, error)
+	ListTeams(ctx context.Context) ([]repo.ListTeamsRow, error)
 }
 
 var _ TeamService = (*service.TeamService)(nil)

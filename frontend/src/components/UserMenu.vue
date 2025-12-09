@@ -7,7 +7,7 @@
     }"
   >
     <UButton
-      v-bind:label="collapsed ? undefined : data?.name"
+      v-bind:label="collapsed ? undefined : data"
       v-bind:trailing-icon="collapsed ? undefined : 'i-lucide-chevrons-up-down'"
       variant="ghost"
       block
@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import { useQuery } from "@tanstack/vue-query"
-import { getEmployeeMe } from "../api/employees"
+import { getEmployeeName } from "../api/employees"
 import type { DropdownMenuItem } from "@nuxt/ui"
 import { computed } from "vue"
 import { removeToken } from "../utils/auth"
@@ -35,7 +35,7 @@ defineProps<{
 
 const { data } = useQuery({
   queryKey: ["user"],
-  queryFn: getEmployeeMe
+  queryFn: getEmployeeName
 })
 
 const router = useRouter()

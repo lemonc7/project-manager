@@ -37,7 +37,7 @@ RETURNING id
 
 type FinishProcessParams struct {
 	ID        int32    `json:"id"`
-	SpendTime *float64 `json:"spendTime"`
+	SpendTime *float64 `json:"spendTime,omitempty"`
 }
 
 func (q *Queries) FinishProcess(ctx context.Context, arg FinishProcessParams) (int32, error) {
@@ -79,12 +79,12 @@ INSERT INTO processes (
 `
 
 type InsertProcessAtParams struct {
-	ProjectID   int32   `json:"projectId"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	Remark      *string `json:"remark"`
-	EmployeeID  *int32  `json:"employeeId"`
-	Sequence    int32   `json:"sequence"`
+	ProjectID   int32  `json:"projectID"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Remark      string `json:"remark"`
+	EmployeeID  int32  `json:"employeeID"`
+	Sequence    int32  `json:"sequence"`
 }
 
 func (q *Queries) InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error {
@@ -126,11 +126,11 @@ FROM max_seq m, project_lock pl
 `
 
 type InsertProcessLastParams struct {
-	ProjectID   int32   `json:"projectId"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	Remark      *string `json:"remark"`
-	EmployeeID  *int32  `json:"employeeId"`
+	ProjectID   int32  `json:"projectID"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Remark      string `json:"remark"`
+	EmployeeID  int32  `json:"employeeID"`
 }
 
 func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) error {
@@ -165,16 +165,16 @@ ORDER BY sequence
 
 type ListProcessesRow struct {
 	ID          int32         `json:"id"`
-	ProjectID   int32         `json:"projectId"`
+	ProjectID   int32         `json:"projectID"`
 	Name        string        `json:"name"`
-	Description *string       `json:"description"`
-	Remark      *string       `json:"remark"`
+	Description string        `json:"description"`
+	Remark      string        `json:"remark"`
 	Status      ProcessStatus `json:"status"`
-	EmployeeID  *int32        `json:"employeeId"`
+	EmployeeID  int32         `json:"employeeID"`
 	Sequence    int32         `json:"sequence"`
-	SpendTime   *float64      `json:"spendTime"`
-	StartedAt   *time.Time    `json:"startedAt"`
-	FinishedAt  *time.Time    `json:"finishedAt"`
+	SpendTime   *float64      `json:"spendTime,omitempty"`
+	StartedAt   *time.Time    `json:"startedAt,omitempty"`
+	FinishedAt  *time.Time    `json:"finishedAt,omitempty"`
 }
 
 func (q *Queries) ListProcesses(ctx context.Context, projectID int32) ([]ListProcessesRow, error) {
@@ -214,30 +214,30 @@ SELECT
   p.id,
   p.name,
   p.description,
-  pr.started_at,
-  pr.duration,
   p.project_id,
-  COALESCE(pr.name,'') AS project_name
+  COALESCE(pr.name,'') AS project_name,
+  pr.remaining_days AS remaining_days
 FROM processes p
-LEFT JOIN projects pr ON p.project_id = pr.id
+LEFT JOIN projects_view pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
   AND p.status = '进行'
   AND pr.status NOT IN ('终止','完成')
-ORDER BY p.id
+ORDER BY 
+  remaining_days NULLS LAST,
+  p.id
 `
 
 type ListTasksDoingRow struct {
-	ID          int32      `json:"id"`
-	Name        string     `json:"name"`
-	Description *string    `json:"description"`
-	StartedAt   *time.Time `json:"startedAt"`
-	Duration    *int32     `json:"duration"`
-	ProjectID   int32      `json:"projectId"`
-	ProjectName string     `json:"projectName"`
+	ID            int32  `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	ProjectID     int32  `json:"projectID"`
+	ProjectName   string `json:"projectName"`
+	RemainingDays *int32 `json:"remainingDays,omitempty"`
 }
 
-func (q *Queries) ListTasksDoing(ctx context.Context, employeeID *int32) ([]ListTasksDoingRow, error) {
+func (q *Queries) ListTasksDoing(ctx context.Context, employeeID int32) ([]ListTasksDoingRow, error) {
 	rows, err := q.db.Query(ctx, listTasksDoing, employeeID)
 	if err != nil {
 		return nil, err
@@ -250,10 +250,9 @@ func (q *Queries) ListTasksDoing(ctx context.Context, employeeID *int32) ([]List
 			&i.ID,
 			&i.Name,
 			&i.Description,
-			&i.StartedAt,
-			&i.Duration,
 			&i.ProjectID,
 			&i.ProjectName,
+			&i.RemainingDays,
 		); err != nil {
 			return nil, err
 		}
@@ -282,14 +281,14 @@ ORDER BY p.id
 `
 
 type ListTasksReadyRow struct {
-	ID          int32   `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	ProjectID   int32   `json:"projectId"`
-	ProjectName string  `json:"projectName"`
+	ID          int32  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ProjectID   int32  `json:"projectID"`
+	ProjectName string `json:"projectName"`
 }
 
-func (q *Queries) ListTasksReady(ctx context.Context, employeeID *int32) ([]ListTasksReadyRow, error) {
+func (q *Queries) ListTasksReady(ctx context.Context, employeeID int32) ([]ListTasksReadyRow, error) {
 	rows, err := q.db.Query(ctx, listTasksReady, employeeID)
 	if err != nil {
 		return nil, err
@@ -332,14 +331,14 @@ ORDER BY p.id
 `
 
 type ListTasksTodoRow struct {
-	ID          int32   `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	ProjectID   int32   `json:"projectId"`
-	ProjectName string  `json:"projectName"`
+	ID          int32  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ProjectID   int32  `json:"projectID"`
+	ProjectName string `json:"projectName"`
 }
 
-func (q *Queries) ListTasksTodo(ctx context.Context, employeeID *int32) ([]ListTasksTodoRow, error) {
+func (q *Queries) ListTasksTodo(ctx context.Context, employeeID int32) ([]ListTasksTodoRow, error) {
 	rows, err := q.db.Query(ctx, listTasksTodo, employeeID)
 	if err != nil {
 		return nil, err
@@ -400,7 +399,7 @@ WHERE processes.project_id = $1 AND processes.sequence >= $2
 `
 
 type ShiftProcessesUpParams struct {
-	ProjectID int32 `json:"projectId"`
+	ProjectID int32 `json:"projectID"`
 	Sequence  int32 `json:"sequence"`
 }
 
@@ -428,10 +427,10 @@ type UpdateProcessParams struct {
 	Description *string        `json:"description"`
 	Remark      *string        `json:"remark"`
 	Status      *ProcessStatus `json:"status"`
-	EmployeeID  *int32         `json:"employeeId"`
-	SpendTime   *float64       `json:"spendTime"`
-	StartedAt   *time.Time     `json:"startedAt"`
-	FinishedAt  *time.Time     `json:"finishedAt"`
+	EmployeeID  *int32         `json:"employeeID"`
+	SpendTime   *float64       `json:"spendTime,omitempty"`
+	StartedAt   *time.Time     `json:"startedAt,omitempty"`
+	FinishedAt  *time.Time     `json:"finishedAt,omitempty"`
 	ID          int32          `json:"id"`
 }
 

@@ -77,8 +77,8 @@ export const useTeamStore = defineStore("team", () => {
 
     getTeamName,
 
-    createTeam: createMutation.mutate,
-    updateTeam: updateMutation.mutate,
-    deleteTeam: deleteMutation.mutate
+    createTeam: createMutation.mutateAsync,
+    updateTeam: updateMutation.mutateAsync,
+    deleteTeam: deleteMutation.mutateAsync
   }
 })

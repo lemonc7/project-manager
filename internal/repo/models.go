@@ -107,7 +107,7 @@ type Employee struct {
 	Username     string    `json:"username"`
 	PasswordHash string    `json:"passwordHash"`
 	Roles        []string  `json:"roles"`
-	TeamID       *int32    `json:"teamId"`
+	TeamID       *int32    `json:"teamID,omitempty"`
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
 	IsActive     bool      `json:"isActive"`
@@ -115,16 +115,16 @@ type Employee struct {
 
 type Process struct {
 	ID          int32         `json:"id"`
-	ProjectID   int32         `json:"projectId"`
+	ProjectID   int32         `json:"projectID"`
 	Name        string        `json:"name"`
-	Description *string       `json:"description"`
-	Remark      *string       `json:"remark"`
+	Description string        `json:"description"`
+	Remark      string        `json:"remark"`
 	Status      ProcessStatus `json:"status"`
-	EmployeeID  *int32        `json:"employeeId"`
+	EmployeeID  int32         `json:"employeeID"`
 	Sequence    int32         `json:"sequence"`
-	SpendTime   *float64      `json:"spendTime"`
-	StartedAt   *time.Time    `json:"startedAt"`
-	FinishedAt  *time.Time    `json:"finishedAt"`
+	SpendTime   *float64      `json:"spendTime,omitempty"`
+	StartedAt   *time.Time    `json:"startedAt,omitempty"`
+	FinishedAt  *time.Time    `json:"finishedAt,omitempty"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
 }
@@ -132,16 +132,32 @@ type Process struct {
 type Project struct {
 	ID          int32         `json:"id"`
 	Name        string        `json:"name"`
-	Description *string       `json:"description"`
-	Remark      *string       `json:"remark"`
+	Description string        `json:"description"`
+	Remark      string        `json:"remark"`
 	Status      ProjectStatus `json:"status"`
-	ManagerID   int32         `json:"managerId"`
+	ManagerID   int32         `json:"managerID"`
 	Priority    int32         `json:"priority"`
-	StartedAt   *time.Time    `json:"startedAt"`
-	Duration    *int32        `json:"duration"`
-	FinishedAt  *time.Time    `json:"finishedAt"`
+	StartedAt   *time.Time    `json:"startedAt,omitempty"`
+	Duration    *int32        `json:"duration,omitempty"`
+	FinishedAt  *time.Time    `json:"finishedAt,omitempty"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
+}
+
+type ProjectsView struct {
+	ID            int32         `json:"id"`
+	Name          string        `json:"name"`
+	Description   string        `json:"description"`
+	Remark        string        `json:"remark"`
+	Status        ProjectStatus `json:"status"`
+	ManagerID     int32         `json:"managerID"`
+	Priority      int32         `json:"priority"`
+	StartedAt     *time.Time    `json:"startedAt,omitempty"`
+	Duration      *int32        `json:"duration,omitempty"`
+	FinishedAt    *time.Time    `json:"finishedAt,omitempty"`
+	CreatedAt     time.Time     `json:"createdAt"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
+	RemainingDays *int32        `json:"remainingDays,omitempty"`
 }
 
 type SystemSetting struct {
@@ -155,7 +171,7 @@ type SystemSetting struct {
 type Team struct {
 	ID          int32     `json:"id"`
 	Name        string    `json:"name"`
-	Description *string   `json:"description"`
+	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }

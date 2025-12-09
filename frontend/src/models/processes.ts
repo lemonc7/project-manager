@@ -12,9 +12,9 @@ export type ProcessStatus = (typeof ProcessStatusOptions)[number]
 interface InsertProcessRequest {
   name: string
   projectID: number
-  employeeID?: number
-  description?: string
-  remark?: string
+  employeeID: number
+  description: string
+  remark: string
 }
 
 interface UpdateProcessRequest {
@@ -36,12 +36,12 @@ interface Process {
   id: number
   projectID: number
   name: string
-  description?: string
-  remark?: string
+  description: string
+  remark: string
   status: ProcessStatus
-  employeeID?: number
-  spendTime?: number
+  employeeID: number
   sequence: number
+  spendTime?: number
   startedAt?: string
   finishedAt?: string
 }
@@ -49,11 +49,10 @@ interface Process {
 interface Task {
   id: number
   name: string
-  description?: string
-  startedAt?: string
-  remainingDays?: number
+  description: string
   projectID: number
   projectName: string
+  remainingDays?: number
 }
 
 export type {

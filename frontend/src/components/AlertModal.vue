@@ -9,8 +9,8 @@
       <div class="flex justify-end gap-2">
         <UButton label="取消" variant="outline" @click="onOpenChange(false)" />
         <UButton
-          label="删除"
-          color="error"
+          :label="label"
+          :color="props.color"
           loading-auto
           @click="props.onSubmit"
         />
@@ -22,6 +22,8 @@
 <script setup lang="ts">
 const props = defineProps<{
   open: boolean
+  color: string
+  label: string
   onSubmit: () => void
   title: string
   description: string

@@ -10,9 +10,9 @@ export async function listEmployees() {
   return Array.isArray(res.data) ? res.data : []
 }
 
-export async function getEmployeeMe() {
-  const res = await service.get<Employee>("/employee/me")
-  return res.data
+export async function getEmployeeName() {
+  const res = await service.get<string>("/employee/me")
+  return res.data || ""
 }
 
 export async function createEmployee(req: CreateEmployeeRequest) {

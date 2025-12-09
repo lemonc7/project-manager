@@ -51,37 +51,22 @@ func (e *EmployeeService) DeleteEmployee(ctx context.Context, id int32) error {
 	return e.querier.DeleteEmployee(ctx, id)
 }
 
-func (e *EmployeeService) ListEmployees(ctx context.Context) ([]model.Employee, error) {
+func (e *EmployeeService) ListEmployees(ctx context.Context) ([]repo.ListEmployeesRow, error) {
 	// 获取数据
 	data, err := e.querier.ListEmployees(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	employees := make([]model.Employee, len(data))
-	for i, e := range data {
-		employees[i] = model.Employee{
-			ID:     e.ID,
-			Name:   e.Name,
-			Roles:  e.Roles,
-			TeamID: e.TeamID,
-		}
-	}
-
-	return employees, nil
+	return data, nil
 }
 
-func (e *EmployeeService) GetEmployee(ctx context.Context, username string) (model.Employee, error) {
+func (e *EmployeeService) GetEmployee(ctx context.Context, username string) (string, error) {
 	// 获取数据
 	employee, err := e.querier.GetEmployeeByUsername(ctx, username)
 	if err != nil {
-		return model.Employee{}, nil
+		return "", nil
 	}
 
-	return model.Employee{
-		ID:     employee.ID,
-		Name:   employee.Name,
-		Roles:  employee.Roles,
-		TeamID: employee.TeamID,
-	}, nil
+	return employee.Name, nil
 }

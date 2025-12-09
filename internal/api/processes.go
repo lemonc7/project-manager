@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
+	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/util"
 )
@@ -16,10 +17,10 @@ type ProcessService interface {
 	InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error
 	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error
 	DeleteProcess(ctx context.Context, id int32) error
-	ListProcesses(ctx context.Context, projectID int32) ([]model.Process, error)
-	ListTasksTodo(ctx context.Context, employeeID int32) ([]model.Task, error)
-	ListTasksReady(ctx context.Context, employeeID int32) ([]model.Task, error)
-	ListTasksDoing(ctx context.Context, employeeID int32) ([]model.Task, error)
+	ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error)
+	ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error)
+	ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error)
+	ListTasksDoing(ctx context.Context, employeeID int32) ([]repo.ListTasksDoingRow, error)
 	FinishProcess(ctx context.Context, id int32, req model.FinishProcessRequest) error
 }
 

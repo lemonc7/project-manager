@@ -38,20 +38,11 @@ func (t *TeamService) DeleteTeam(ctx context.Context, id int32) error {
 	return t.querier.DeleteTeam(ctx, id)
 }
 
-func (t *TeamService) ListTeams(ctx context.Context) ([]model.Team, error) {
+func (t *TeamService) ListTeams(ctx context.Context) ([]repo.ListTeamsRow, error) {
 	// 获取数据
-	data, err := t.querier.ListTeams(ctx)
+	teams, err := t.querier.ListTeams(ctx)
 	if err != nil {
 		return nil, err
-	}
-
-	teams := make([]model.Team, len(data))
-	for i, t := range data {
-		teams[i] = model.Team{
-			ID:          t.ID,
-			Name:        t.Name,
-			Description: t.Description,
-		}
 	}
 
 	return teams, nil

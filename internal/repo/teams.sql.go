@@ -20,8 +20,8 @@ INSERT INTO teams (
 `
 
 type CreateTeamParams struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) error {
@@ -49,9 +49,9 @@ ORDER BY name
 `
 
 type ListTeamsRow struct {
-	ID          int32   `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
+	ID          int32  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (q *Queries) ListTeams(ctx context.Context) ([]ListTeamsRow, error) {

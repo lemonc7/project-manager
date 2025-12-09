@@ -45,6 +45,7 @@
             label="取消"
             variant="outline"
             @click="onOpenChange(false)"
+            @pointerdown.prevent
           />
           <UButton label="更新" type="submit" :loading="isUpdating" />
         </div>

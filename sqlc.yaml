@@ -12,6 +12,7 @@ sql:
         emit_interface: true
         emit_json_tags: true
         json_tags_case_style: camel
+        json_tags_id_uppercase: true
 
         overrides:
           - db_type: "timestamptz"
@@ -34,4 +35,33 @@ sql:
             go_type:
               type: "ProjectStatus"
               pointer: true
-          
+
+          - column: "projects_view.remaining_days"
+            go_struct_tag: 'json:"remainingDays,omitempty"'
+            nullable: true
+            go_type:
+              type: "int32"
+              pointer: true
+          - column: "projects_view.duration"
+            go_struct_tag: 'json:"duration,omitempty"'
+          - column: "projects_view.started_at"
+            go_struct_tag: 'json:"startedAt,omitempty"'
+          - column: "projects_view.finished_at"
+            go_struct_tag: 'json:"finishedAt,omitempty"'
+
+          - column: "employees.team_id"
+            go_struct_tag: 'json:"teamID,omitempty"'
+
+          - column: "processes.spend_time"
+            go_struct_tag: 'json:"spendTime,omitempty"'
+          - column: "processes.started_at"
+            go_struct_tag: 'json:"startedAt,omitempty"'
+          - column: "processes.finished_at"
+            go_struct_tag: 'json:"finishedAt,omitempty"'
+
+          - column: "projects.duration"
+            go_struct_tag: 'json:"duration,omitempty"'
+          - column: "projects.started_at"
+            go_struct_tag: 'json:"startedAt,omitempty"'
+          - column: "projects.finished_at"
+            go_struct_tag: 'json:"finishedAt,omitempty"'
