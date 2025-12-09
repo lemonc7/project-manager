@@ -26,7 +26,7 @@ func (a *Application) initRouter() {
 
 	// 员工
 	employeeRouter.GET("", a.employeeHandler.ListEmployees)
-	employeeRouter.GET("/me", a.employeeHandler.GetEmployee)
+	employeeRouter.GET("/me", a.employeeHandler.GetEmployeeName)
 	employeeRouter.POST("", a.employeeHandler.CreateEmployee)
 	employeeRouter.PATCH("/:id", a.employeeHandler.UpdateEmployee)
 	employeeRouter.DELETE("/:id", a.employeeHandler.DeleteEmployee)
@@ -47,6 +47,7 @@ func (a *Application) initRouter() {
 	projectRouter.POST("/start/:id", a.projectHandler.StartProject)
 
 	// 流程
+	processRouter.POST("/rework/:id", a.processHandler.ReworkProcess)
 	processRouter.POST("", a.processHandler.InsertProcessLast)
 	processRouter.POST("/:id", a.processHandler.InsertProcessAt)
 	processRouter.PATCH("/:id", a.processHandler.UpdateProcess)

@@ -126,7 +126,7 @@ async function handleSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await createProcess({ sequence: event.data.sequence, req })
     toast.add({
-      title: `流程 ${state.name} 创建成功`,
+      title: `流程 ${event.data.name} 创建成功`,
       color: "success"
     })
     open.value = false

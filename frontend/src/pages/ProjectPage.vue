@@ -69,7 +69,6 @@
         :pagination-options="{
           getPaginationRowModel: getPaginationRowModel()
         }"
-        class="shrink-0"
         :data="projects"
         :columns="columns"
         :loading="isLoading"

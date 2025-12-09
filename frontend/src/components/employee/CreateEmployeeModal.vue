@@ -139,7 +139,7 @@ async function handleSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await createEmployee(req)
     toast.add({
-      title: `成员 ${state.name} 创建成功`,
+      title: `成员 ${event.data.name} 创建成功`,
       color: "success"
     })
     open.value = false

@@ -4,7 +4,7 @@
     title="创建"
     description="添加一个新小组到数据库中"
   >
-    <UButton label="创建小组" icon="i-lucide-user-round-plus" />
+    <UButton label="创建小组" icon="fluent:people-team-add-24-regular" />
     <template #body>
       <UForm
         :schema="schema"
@@ -12,64 +12,22 @@
         class="space-y-4"
         @submit="handleSubmit"
       >
-        <!-- 姓名 -->
-        <UFormField label="姓名" name="name" required>
+        <!-- 名称 -->
+        <UFormField label="名称" name="name" required>
           <UInput
             v-model="state.name"
             class="w-full"
-            placeholder="请输入姓名"
+            placeholder="请输入名称"
             autofocus
           />
         </UFormField>
-        <!-- 小组+角色 -->
-        <div class="grid grid-cols-2 gap-4">
-          <UFormField label="小组" name="team">
-            <USelect
-              v-model="state.team"
-              :items="teamItems"
-              placeholder="请选择小组"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="角色" name="roles">
-            <USelect
-              v-model="state.roles"
-              :items="[...roleItems]"
-              placeholder="请选择角色"
-              multiple
-              class="w-full"
-            />
-          </UFormField>
-        </div>
-        <!-- 用户名 -->
-        <UFormField label="用户名" name="username" required>
+        <!-- 描述 -->
+        <UFormField label="描述" name="description">
           <UInput
-            v-model="state.username"
+            v-model="state.description"
             class="w-full"
-            placeholder="请输入用户名"
+            placeholder="请输入描述"
           />
-        </UFormField>
-        <!-- 密码 -->
-        <UFormField label="密码" name="password" required>
-          <UInput
-            v-model="state.password"
-            :type="show ? 'text' : 'password'"
-            class="w-full"
-            placeholder="请输入密码"
-            :ui="{ trailing: 'pe-1' }"
-          >
-            <template #trailing>
-              <UButton
-                variant="link"
-                size="sm"
-                :icon="show ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                :aria-label="show ? 'Hide password' : 'Show password'"
-                :aria-pressed="show"
-                aria-controls="password"
-                @click="show = !show"
-              />
-            </template>
-          </UInput>
         </UFormField>
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
@@ -90,28 +48,21 @@
 import type { FormSubmitEvent } from "@nuxt/ui"
 import { reactive, ref, watch } from "vue"
 import z from "zod"
-import { roleItems, type CreateEmployeeRequest } from "../../models/employees"
-import { useEmployeeStore } from "../../composables/useEmployeeStore"
 import { useTeamStore } from "../../composables/useTeamStore"
 import { storeToRefs } from "pinia"
+import type { CreateTeamRequest } from "../../models/teams"
 
 const open = ref(false)
-const show = ref(false)
 const toast = useToast()
 
 const teamStore = useTeamStore()
-const employeeStore = useEmployeeStore()
-const { teamItems } = storeToRefs(teamStore)
-const { isCreating } = storeToRefs(employeeStore)
-const { createEmployee } = employeeStore
+const { isCreating } = storeToRefs(teamStore)
+const { createTeam } = teamStore
 
 // 定义表单数据
 const schema = z.object({
-  name: z.string().nonempty("请输入姓名"),
-  username: z.string().nonempty("请输入用户名"),
-  password: z.string().min(6, "密码不能少于6位"),
-  roles: z.array(z.enum(["admin", "manager", "employee"] as const)).default([]),
-  team: z.number().optional()
+  name: z.string().nonempty("请输入名称"),
+  description: z.string().default("")
 })
 
 type Schema = z.output<typeof schema>
@@ -119,27 +70,21 @@ type Schema = z.output<typeof schema>
 // 表单默认数据状态
 const initialState: Schema = {
   name: "",
-  username: "",
-  password: "",
-  roles: ["employee"],
-  team: undefined
+  description: ""
 }
 const state = reactive<Schema>({ ...initialState })
 
 // 表单提交
 async function handleSubmit(event: FormSubmitEvent<Schema>) {
-  const req: CreateEmployeeRequest = {
+  const req: CreateTeamRequest = {
     name: event.data.name,
-    username: event.data.username,
-    password: event.data.password,
-    teamID: event.data.team,
-    roles: event.data.roles
+    description: event.data.description
   }
 
   try {
-    await createEmployee(req)
+    await createTeam(req)
     toast.add({
-      title: `成员 ${state.name} 创建成功`,
+      title: `小组 ${event.data.name} 创建成功`,
       color: "success"
     })
     open.value = false
@@ -148,7 +93,7 @@ async function handleSubmit(event: FormSubmitEvent<Schema>) {
       title: "创建失败",
       color: "error"
     })
-    console.log("创建员工失败:", err)
+    console.log("创建小组失败:", err)
   }
 }
 

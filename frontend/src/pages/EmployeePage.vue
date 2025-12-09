@@ -40,7 +40,6 @@
         sticky
         ref="table"
         v-model:column-filters="columnFilters"
-        class="shrink-0"
         :loading="isLoading"
         :data="employees"
         :columns="columns"

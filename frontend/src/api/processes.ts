@@ -2,6 +2,7 @@ import type {
   FinishProcessRequest,
   InsertProcessRequest,
   Process,
+  ReworkProcessRequest,
   Task,
   UpdateProcessRequest
 } from "../models/processes"
@@ -41,4 +42,8 @@ export async function deleteProcess(id: number) {
 
 export async function finishProcess(id: number, req: FinishProcessRequest) {
   return service.post(`/process/finish/${id}`, req)
+}
+
+export async function reworkProcess(id: number, req: ReworkProcessRequest) {
+  return service.post(`/process/rework/${id}`, req)
 }

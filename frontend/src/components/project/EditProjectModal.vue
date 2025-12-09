@@ -103,6 +103,7 @@ import {
 import { useProjectStore } from "../../composables/useProjectStore"
 import { storeToRefs } from "pinia"
 import { useEmployeeStore } from "../../composables/useEmployeeStore"
+import type { FormSubmitEvent } from "@nuxt/ui"
 
 const props = defineProps<{
   open: boolean
@@ -148,21 +149,21 @@ const { updateProject } = projectStore
 const { isUpdating } = storeToRefs(projectStore)
 const { employeeItems } = storeToRefs(employeeStore)
 
-async function handleSubmit() {
-  if (!props.project?.id) return
+async function handleSubmit(event: FormSubmitEvent<Schema>) {
+  if (!props.project) return
   const req: UpdateProjectRequest = {
-    name: state.name,
-    description: state.description,
-    remark: state.remark,
-    status: state.status,
-    managerID: state.manager,
-    priority: state.priority,
-    duration: state.duration
+    name: event.data.name,
+    description: event.data.description,
+    remark: event.data.remark,
+    status: event.data.status,
+    managerID: event.data.manager,
+    priority: event.data.priority,
+    duration: event.data.duration
   }
   try {
     await updateProject({ id: props.project.id, req })
     toast.add({
-      title: `项目 ${state.name} 更新成功`,
+      title: `项目 ${event.data.name} 更新成功`,
       color: "success"
     })
     onOpenChange(false)

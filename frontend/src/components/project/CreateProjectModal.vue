@@ -125,7 +125,7 @@ async function handleSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await createProject(req)
     toast.add({
-      title: `项目 ${state.name} 创建成功`,
+      title: `项目 ${event.data.name} 创建成功`,
       color: "success"
     })
     open.value = false

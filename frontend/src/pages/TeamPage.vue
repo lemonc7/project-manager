@@ -7,6 +7,7 @@
         </template>
         <template #right>
           <div class="flex flex-wrap items-center gap-2">
+            <CreateTeamModal />
             <RefreshButton />
           </div>
         </template>
@@ -42,6 +43,8 @@
     color="error"
     :description="`确认要删除[${selectedTeam?.name}]么？该操作无法撤销!`"
   />
+  <!-- 编辑弹窗 -->
+  <EditTeamModal v-model:open="isEditModalOpen" :team="selectedTeam" />
 </template>
 
 <script setup lang="ts">

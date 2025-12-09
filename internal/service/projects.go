@@ -70,17 +70,12 @@ func (p *ProjectService) StartProject(ctx context.Context, id int32) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("项目状态必须为'排单'")
 		}
-		return fmt.Errorf("数据库错误: %w", err)
+		return err
 	}
 
 	return nil
 }
 
 func (p *ProjectService) FinishProject(ctx context.Context, id int32) error {
-	err := p.querier.FinishProject(ctx, id)
-	if err != nil {
-		return fmt.Errorf("数据库错误: %w", err)
-	}
-
-	return nil
+	return p.querier.FinishProject(ctx, id)
 }

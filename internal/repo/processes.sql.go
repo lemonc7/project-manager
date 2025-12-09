@@ -28,7 +28,8 @@ UPDATE processes
 SET 
   status = '完成',
   finished_at = CURRENT_TIMESTAMP,
-  spend_time = $2
+  spend_time = $2,
+  remark = $3
 WHERE
   id = $1
   AND status = '进行'
@@ -38,10 +39,11 @@ RETURNING id
 type FinishProcessParams struct {
 	ID        int32    `json:"id"`
 	SpendTime *float64 `json:"spendTime,omitempty"`
+	Remark    string   `json:"remark"`
 }
 
 func (q *Queries) FinishProcess(ctx context.Context, arg FinishProcessParams) (int32, error) {
-	row := q.db.QueryRow(ctx, finishProcess, arg.ID, arg.SpendTime)
+	row := q.db.QueryRow(ctx, finishProcess, arg.ID, arg.SpendTime, arg.Remark)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
@@ -58,6 +60,41 @@ func (q *Queries) GetMaxSequence(ctx context.Context, projectID int32) (int32, e
 	var max_seq int32
 	err := row.Scan(&max_seq)
 	return max_seq, err
+}
+
+const getProcessByID = `-- name: GetProcessByID :one
+SELECT
+  project_id,
+  name,
+  description,
+  employee_id,
+  sequence,
+  started_at
+FROM processes
+WHERE id = $1
+`
+
+type GetProcessByIDRow struct {
+	ProjectID   int32      `json:"projectID"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	EmployeeID  int32      `json:"employeeID"`
+	Sequence    int32      `json:"sequence"`
+	StartedAt   *time.Time `json:"startedAt,omitempty"`
+}
+
+func (q *Queries) GetProcessByID(ctx context.Context, id int32) (GetProcessByIDRow, error) {
+	row := q.db.QueryRow(ctx, getProcessByID, id)
+	var i GetProcessByIDRow
+	err := row.Scan(
+		&i.ProjectID,
+		&i.Name,
+		&i.Description,
+		&i.EmployeeID,
+		&i.Sequence,
+		&i.StartedAt,
+	)
+	return i, err
 }
 
 const insertProcessAt = `-- name: InsertProcessAt :exec
@@ -144,6 +181,59 @@ func (q *Queries) InsertProcessLast(ctx context.Context, arg InsertProcessLastPa
 	return err
 }
 
+const insertReworkProcess = `-- name: InsertReworkProcess :exec
+INSERT INTO processes (
+  project_id,
+  name,
+  description,
+  remark,
+  status,
+  employee_id,
+  sequence,
+  spend_time,
+  started_at,
+  finished_at
+) VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5,
+  $6,
+  $7,
+  $8,
+  $9,
+  CURRENT_TIMESTAMP
+)
+`
+
+type InsertReworkProcessParams struct {
+	ProjectID   int32         `json:"projectID"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Remark      string        `json:"remark"`
+	Status      ProcessStatus `json:"status"`
+	EmployeeID  int32         `json:"employeeID"`
+	Sequence    int32         `json:"sequence"`
+	SpendTime   *float64      `json:"spendTime,omitempty"`
+	StartedAt   *time.Time    `json:"startedAt,omitempty"`
+}
+
+func (q *Queries) InsertReworkProcess(ctx context.Context, arg InsertReworkProcessParams) error {
+	_, err := q.db.Exec(ctx, insertReworkProcess,
+		arg.ProjectID,
+		arg.Name,
+		arg.Description,
+		arg.Remark,
+		arg.Status,
+		arg.EmployeeID,
+		arg.Sequence,
+		arg.SpendTime,
+		arg.StartedAt,
+	)
+	return err
+}
+
 const listProcesses = `-- name: ListProcesses :many
 SELECT
   id,
@@ -157,7 +247,7 @@ SELECT
   spend_time,
   started_at,
   finished_at
-FROM processes p
+FROM processes
 WHERE 
   project_id = $1
 ORDER BY sequence

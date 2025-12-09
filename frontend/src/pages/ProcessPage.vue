@@ -25,7 +25,6 @@
     <template #body>
       <UTable
         sticky
-        class="shrink-0"
         :data="processes"
         :columns="columns"
         :loading="isLoading"
@@ -51,6 +50,18 @@
   />
   <!-- 编辑弹窗 -->
   <EditProcessModal v-model:open="isEditModalOpen" :process="selectedProcess" />
+  <!-- 完成弹窗 -->
+  <ReworkOrFinishProcessDrawer
+    v-model:open="isFinishDrawerOpen"
+    :process="selectedProcess"
+    type="finish"
+  />
+  <!-- 返工弹窗 -->
+  <ReworkOrFinishProcessDrawer
+    v-model:open="isReworkDrawerOpen"
+    :process="selectedProcess"
+    type="rework"
+  />
 </template>
 
 <script setup lang="ts">
@@ -77,6 +88,8 @@ const { deleteProcess, updateProcess } = processStore
 
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
+const isFinishDrawerOpen = ref(false)
+const isReworkDrawerOpen = ref(false)
 const selectedProcess = ref<Process | null>(null)
 
 const UDropdownMenu = resolveComponent("UDropdownMenu")
@@ -146,6 +159,27 @@ function getRowItems(row: Row<Process>) {
         isEditModalOpen.value = true
         selectedProcess.value = row.original
       }
+    },
+    {
+      label: "完成",
+      icon: "i-lucide-check",
+      disabled: row.original.status !== "进行",
+      onSelect: () => {
+        isFinishDrawerOpen.value = true
+        selectedProcess.value = row.original
+      }
+    },
+    {
+      label: "返工",
+      icon: "i-lucide-redo",
+      disabled: row.original.status !== "进行",
+      onSelect: () => {
+        isReworkDrawerOpen.value = true
+        selectedProcess.value = row.original
+      }
+    },
+    {
+      type: "separator"
     },
     {
       label: "删除",
@@ -227,6 +261,7 @@ const columns: TableColumn<Process>[] = [
         等待: "neutral",
         准备: "secondary",
         进行: "info",
+        返工: "warning",
         完成: "success",
         暂停: "warning",
         终止: "error"

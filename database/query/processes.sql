@@ -11,7 +11,7 @@ SELECT
   spend_time,
   started_at,
   finished_at
-FROM processes p
+FROM processes
 WHERE 
   project_id = $1
 ORDER BY sequence;
@@ -161,9 +161,45 @@ UPDATE processes
 SET 
   status = '完成',
   finished_at = CURRENT_TIMESTAMP,
-  spend_time = $2
+  spend_time = $2,
+  remark = $3
 WHERE
   id = $1
   AND status = '进行'
 RETURNING id;
 
+-- name: GetProcessByID :one
+SELECT
+  project_id,
+  name,
+  description,
+  employee_id,
+  sequence,
+  started_at
+FROM processes
+WHERE id = $1;
+
+-- name: InsertReworkProcess :exec
+INSERT INTO processes (
+  project_id,
+  name,
+  description,
+  remark,
+  status,
+  employee_id,
+  sequence,
+  spend_time,
+  started_at,
+  finished_at
+) VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5,
+  $6,
+  $7,
+  $8,
+  $9,
+  CURRENT_TIMESTAMP
+);

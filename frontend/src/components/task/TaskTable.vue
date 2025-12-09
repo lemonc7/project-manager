@@ -17,7 +17,6 @@
         sticky
         :data="data"
         :columns="columns"
-        class="shrink-0"
         :loading="isLoading"
         :column-visibility="{
           remainingDays: props.isRemainingDaysVisible

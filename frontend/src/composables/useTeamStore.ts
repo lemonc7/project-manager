@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query"
 import { defineStore } from "pinia"
 import { computed, ref, watch } from "vue"
 import { createTeam, deleteTeam, listTeams, updateTeam } from "../api/teams"
-import type { CreateTeamRequest } from "../models/teams"
+import type { CreateTeamRequest, UpdateTeamRequest } from "../models/teams"
 
 export const useTeamStore = defineStore("team", () => {
   const queryClient = useQueryClient()
@@ -50,7 +50,7 @@ export const useTeamStore = defineStore("team", () => {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, req }: { id: number; req: CreateTeamRequest }) =>
+    mutationFn: ({ id, req }: { id: number; req: UpdateTeamRequest }) =>
       updateTeam(id, req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey })

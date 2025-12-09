@@ -7,10 +7,13 @@ import {
   insertProcessAt,
   insertProcessLast,
   listProcesses,
+  reworkProcess,
   updateProcess
 } from "../api/processes"
 import type {
+  FinishProcessRequest,
   InsertProcessRequest,
+  ReworkProcessRequest,
   UpdateProcessRequest
 } from "../models/processes"
 import { computed } from "vue"
@@ -31,6 +34,12 @@ export const useProcessStore = defineStore("process", () => {
     },
     enabled: computed(() => !!projectID.value && !isNaN(projectID.value))
   })
+
+  function invalidateProcesses() {
+    queryClient.invalidateQueries({
+      queryKey: ["processes", projectID]
+    })
+  }
 
   // 派生 maxSequence
   const maxSequence = computed(() => {
@@ -61,36 +70,30 @@ export const useProcessStore = defineStore("process", () => {
         return insertProcessLast({ ...req, projectID: id })
       }
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["processes", projectID]
-      })
+    onSuccess: () => invalidateProcesses()
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, req }: { id: number; req: UpdateProcessRequest }) =>
       updateProcess(id, req),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["processes", projectID]
-      })
+    onSuccess: () => invalidateProcesses()
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteProcess(id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["processes", projectID]
-      })
+    onSuccess: () => invalidateProcesses()
   })
 
   const finishMutation = useMutation({
-    mutationFn: ({ id, spendTime }: { id: number; spendTime: number }) =>
-      finishProcess(id, { spendTime }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["processes", projectID]
-      })
+    mutationFn: ({ id, req }: { id: number; req: FinishProcessRequest }) =>
+      finishProcess(id, req),
+    onSuccess: () => invalidateProcesses()
+  })
+
+  const reworkMutation = useMutation({
+    mutationFn: ({ id, req }: { id: number; req: ReworkProcessRequest }) =>
+      reworkProcess(id, req),
+    onSuccess: () => invalidateProcesses()
   })
 
   return {
@@ -104,10 +107,12 @@ export const useProcessStore = defineStore("process", () => {
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
     isFinishing: finishMutation.isPending,
+    isReworking: reworkMutation.isPending,
 
     createProcess: createMutation.mutateAsync,
     updateProcess: updateMutation.mutateAsync,
     deleteProcess: deleteMutation.mutateAsync,
-    finishProcess: finishMutation.mutateAsync
+    finishProcess: finishMutation.mutateAsync,
+    reworkProcess: reworkMutation.mutateAsync
   }
 })

@@ -59,7 +59,7 @@ func (a *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 	// 生成token
 	accessToken, err := a.jwter.Generate(req.Username, user.ID, user.Roles)
 	if err != nil {
-		return nil, fmt.Errorf("generate access token: %w", err)
+		return nil, fmt.Errorf("生成access token: %w", err)
 	}
 
 	return &model.LoginResponse{
@@ -73,7 +73,7 @@ func (a *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 func (a *AuthService) ResetPassword(ctx context.Context, req model.ResetPasswordRequest) error {
 	passwordHash, err := a.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return err
+		return fmt.Errorf("密码加密: %w", err)
 	}
 
 	err = a.querier.UpdatePassword(ctx, repo.UpdatePasswordParams{
@@ -88,7 +88,7 @@ func (a *AuthService) ChangePassword(ctx context.Context, username string, req m
 	// 获取用户
 	user, err := a.querier.GetEmployeeByUsername(ctx, username)
 	if err != nil {
-		return err
+		return fmt.Errorf("获取用户: %w", err)
 	}
 
 	// 验证旧密码
@@ -99,7 +99,7 @@ func (a *AuthService) ChangePassword(ctx context.Context, username string, req m
 	// 生成新密码
 	newHashed, err := a.passwordHasher.HashPassword(req.NewPassword)
 	if err != nil {
-		return err
+		return fmt.Errorf("密码加密: %w", err)
 	}
 
 	// 更新密码
@@ -115,7 +115,7 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 	// 判断管理员是否可以初始化
 	allowInit, err := a.querier.AllowInitAdmin(ctx)
 	if err != nil {
-		return fmt.Errorf("获取管理员初始状态失败: %w", err)
+		return fmt.Errorf("获取管理员初始状态: %w", err)
 	}
 	if !allowInit {
 		return fmt.Errorf("管理员已存在,不允许再次初始化")
@@ -124,13 +124,13 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 	// 密码加密
 	passwordHash, err := a.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return fmt.Errorf("生成密码hash失败: %w", err)
+		return fmt.Errorf("密码加密: %w", err)
 	}
 
 	// 生成事务
 	tx, err := a.db.Begin(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("开启事务: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -145,7 +145,7 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 		Roles:        []string{"admin"},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("创建管理员: %w", err)
 	}
 
 	// 添加admin_initialized设置为true
@@ -157,7 +157,7 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 		Description: description,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("禁用管理员初始化: %w", err)
 	}
 
 	return tx.Commit(ctx)

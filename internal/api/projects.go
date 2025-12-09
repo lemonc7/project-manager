@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -36,18 +37,18 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 	// 绑定请求
 	var req model.CreateProjectRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
 	// 验证数据
 	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
 	// 业务函数
 	err := p.projectService.CreateProject(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("创建project: %w", err))
 	}
 
 	// 返回响应
@@ -64,18 +65,13 @@ func (p *ProjectHandler) UpdateProject(c echo.Context) error {
 	// 绑定请求
 	var req model.UpdateProjectRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
-
-	// 验证数据
-	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
 	// 业务函数
 	err = p.projectService.UpdateProject(c.Request().Context(), id, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("更新project: %w", err))
 	}
 
 	// 返回响应
@@ -92,7 +88,7 @@ func (p *ProjectHandler) DeleteProject(c echo.Context) error {
 	}
 	// 删除数据
 	if err := p.projectService.DeleteProject(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("删除project: %w", err))
 	}
 
 	// 返回响应
@@ -105,12 +101,12 @@ func (p *ProjectHandler) ListProjects(c echo.Context) error {
 	// 绑定请求
 	var req model.ListProjectsRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
 	projects, err := p.projectService.ListProjectsFiltered(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取project: %w", err))
 	}
 	return c.JSON(http.StatusOK, projects)
 
@@ -123,7 +119,7 @@ func (p *ProjectHandler) StartProject(c echo.Context) error {
 	}
 
 	if err := p.projectService.StartProject(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("开始project: %w", err))
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
@@ -138,7 +134,7 @@ func (p *ProjectHandler) FinishProject(c echo.Context) error {
 	}
 
 	if err := p.projectService.FinishProject(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("完成project: %w", err))
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{

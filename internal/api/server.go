@@ -30,5 +30,4 @@ func (s *ServerHandler) Ping(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "pong",
 	})
-
 }

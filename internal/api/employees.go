@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -36,12 +37,12 @@ func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
 	// 绑定请求
 	var req model.CreateEmployeeRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
 	// 验证数据
 	if err := c.Validate(req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
 	// 没传roles设置为空数组
@@ -52,7 +53,7 @@ func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
 	// 业务函数
 	err := e.employeeService.CreateEmployee(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("创建employee: %w", err))
 	}
 
 	// 返回响应
@@ -70,13 +71,13 @@ func (e *EmployeeHandler) UpdateEmployee(c echo.Context) error {
 	// 绑定请求
 	var req model.UpdateEmployeeRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
 	// 业务函数
 	err = e.employeeService.UpdateEmployee(c.Request().Context(), id, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("更新employee: %w", err))
 	}
 
 	// 返回响应
@@ -95,7 +96,7 @@ func (e *EmployeeHandler) DeleteEmployee(c echo.Context) error {
 
 	// 业务函数
 	if err := e.employeeService.DeleteEmployee(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("删除employee: %w", err))
 	}
 
 	// 返回响应
@@ -109,7 +110,7 @@ func (e *EmployeeHandler) ListEmployees(c echo.Context) error {
 	// 获取数据
 	employees, err := e.employeeService.ListEmployees(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取employees: %w", err))
 	}
 
 	// 返回响应
@@ -117,15 +118,15 @@ func (e *EmployeeHandler) ListEmployees(c echo.Context) error {
 }
 
 // 获取用户
-func (e *EmployeeHandler) GetEmployee(c echo.Context) error {
+func (e *EmployeeHandler) GetEmployeeName(c echo.Context) error {
 	username, ok := c.Get("username").(string)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "header username not found")
+		return echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("未授权"))
 	}
-	employee, err := e.employeeService.GetEmployee(c.Request().Context(), username)
+	employeeName, err := e.employeeService.GetEmployee(c.Request().Context(), username)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取employee姓名: %w", err))
 	}
 
-	return c.JSON(http.StatusOK, employee)
+	return c.JSON(http.StatusOK, employeeName)
 }

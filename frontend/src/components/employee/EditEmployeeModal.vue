@@ -65,6 +65,7 @@ import { reactive, watch } from "vue"
 import { useEmployeeStore } from "../../composables/useEmployeeStore"
 import { useTeamStore } from "../../composables/useTeamStore"
 import { storeToRefs } from "pinia"
+import type { FormSubmitEvent } from "@nuxt/ui"
 
 const props = defineProps<{
   open: boolean
@@ -102,18 +103,18 @@ function onOpenChange(open: boolean) {
   emit("update:open", open)
 }
 
-async function handleSubmit() {
-  if (!props.employee?.id) return
+async function handleSubmit(event: FormSubmitEvent<Schema>) {
+  if (!props.employee) return
   try {
     const req: UpdateEmployeeRequest = {
-      name: state.name,
-      roles: state.roles,
-      teamID: state.team
+      name: event.data.name,
+      roles: event.data.roles,
+      teamID: event.data.team
     }
 
     await updateEmployee({ id: props.employee.id, req })
     toast.add({
-      title: `成员 ${state.name} 更新成功`,
+      title: `成员 ${event.data.name} 更新成功`,
       color: "success"
     })
     onOpenChange(false)

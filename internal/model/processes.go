@@ -27,4 +27,10 @@ type UpdateProcessRequest struct {
 
 type FinishProcessRequest struct {
 	SpendTime float64 `json:"spendTime" validate:"required"`
+	Remark    string  `json:"remark"`
+}
+
+type ReworkProcessRequest struct {
+	SpendTime float64 `json:"spendTime" validate:"required"`
+	Remark    string  `json:"remark"`
 }

@@ -58,7 +58,7 @@
           </UFormField>
         </div>
         <!-- 备注 -->
-        <UFormField>
+        <UFormField label="备注" name="remark">
           <UTextarea
             v-model="state.remark"
             class="w-full"
@@ -93,6 +93,7 @@ import {
 } from "../../models/processes"
 import { useProcessStore } from "../../composables/useProcessStore"
 import { getUserID } from "../../utils/auth"
+import type { FormSubmitEvent } from "@nuxt/ui"
 
 const props = defineProps<{
   open: boolean
@@ -110,7 +111,7 @@ const schema = z.object({
   name: z.string().nonempty("请输入姓名"),
   description: z.string(),
   remark: z.string(),
-  status: z.enum(["等待", "准备", "进行", "完成", "暂停", "终止"]),
+  status: z.enum(["等待", "准备", "进行", "返工", "完成", "暂停", "终止"]),
   employee: z.number(),
   spendTime: z.number().min(0, "花费时间不能小于0").optional()
 })
@@ -138,20 +139,20 @@ const { updateProcess } = processStore
 const { isUpdating } = storeToRefs(processStore)
 const { employeeItems } = storeToRefs(employeeStore)
 
-async function handleSubmit() {
-  if (!props.process?.id) return
+async function handleSubmit(event: FormSubmitEvent<Schema>) {
+  if (!props.process) return
   const req: UpdateProcessRequest = {
-    name: state.name,
-    description: state.description,
-    remark: state.remark,
-    status: state.status,
-    employeeID: state.employee,
-    spendTime: state.spendTime
+    name: event.data.name,
+    description: event.data.description,
+    remark: event.data.remark,
+    status: event.data.status,
+    employeeID: event.data.employee,
+    spendTime: event.data.spendTime
   }
   try {
     await updateProcess({ id: props.process.id, req })
     toast.add({
-      title: `流程 ${state.name} 更新成功`,
+      title: `流程 ${event.data.name} 更新成功`,
       color: "success"
     })
     onOpenChange(false)

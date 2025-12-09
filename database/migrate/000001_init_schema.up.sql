@@ -11,6 +11,7 @@ CREATE TYPE process_status as ENUM (
   '等待',
   '准备',
   '进行',
+  '返工',
   '完成',
   '暂停',
   '终止'

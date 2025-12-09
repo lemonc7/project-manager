@@ -2,6 +2,7 @@ export const ProcessStatusOptions = [
   "等待",
   "准备",
   "进行",
+  "返工",
   "完成",
   "暂停",
   "终止"
@@ -30,6 +31,11 @@ interface UpdateProcessRequest {
 
 interface FinishProcessRequest {
   spendTime: number
+  remark: string
+}
+interface ReworkProcessRequest {
+  spendTime: number
+  remark: string
 }
 
 interface Process {
@@ -59,6 +65,7 @@ export type {
   InsertProcessRequest,
   UpdateProcessRequest,
   FinishProcessRequest,
+  ReworkProcessRequest,
   Process,
   Task
 }

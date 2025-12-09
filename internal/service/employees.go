@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
@@ -23,7 +24,7 @@ func NewEmployeeService(db *pgxpool.Pool, ph PasswordHasher) *EmployeeService {
 func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error {
 	passwordHash, err := e.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return err
+		return fmt.Errorf("密码加密: %w", err)
 	}
 	// 插入数据
 	err = e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
@@ -65,7 +66,7 @@ func (e *EmployeeService) GetEmployee(ctx context.Context, username string) (str
 	// 获取数据
 	employee, err := e.querier.GetEmployeeByUsername(ctx, username)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return employee.Name, nil
