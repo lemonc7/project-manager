@@ -53,7 +53,7 @@ interface Process {
 }
 
 interface Task {
-  id: number
+  sequence: number
   name: string
   description: string
   projectID: number

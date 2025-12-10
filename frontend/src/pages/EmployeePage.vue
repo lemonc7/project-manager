@@ -37,7 +37,7 @@
 
       <!-- table渲染 -->
       <UTable
-        sticky
+        sticky="header"
         ref="table"
         v-model:column-filters="columnFilters"
         :loading="isLoading"

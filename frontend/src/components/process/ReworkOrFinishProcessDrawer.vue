@@ -33,20 +33,6 @@
             autoresize
           />
         </UFormField>
-        <!-- 按钮 -->
-        <!-- <div class="flex justify-end gap-2">
-          <UButton
-            label="取消"
-            variant="outline"
-            @click="onOpenChange(false)"
-            @pointerdown.prevent
-          />
-          <UButton
-            label="确认"
-            type="submit"
-            :loading="props.type === 'rework' ? isReworking : isFinishing"
-          />
-        </div> -->
       </UForm>
     </template>
 

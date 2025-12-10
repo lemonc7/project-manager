@@ -4,7 +4,11 @@
     title="创建"
     description="添加一个新小组到数据库中"
   >
-    <UButton label="创建小组" icon="fluent:people-team-add-24-regular" />
+    <UButton
+      label="创建小组"
+      icon="fluent:people-team-add-24-regular"
+      color="neutral"
+    />
     <template #body>
       <UForm
         :schema="schema"
@@ -37,7 +41,7 @@
             @click="open = false"
             @pointerdown.prevent
           />
-          <UButton label="创建" type="submit" :loading="isCreating" />
+          <UButton label="创建" type="submit" :loading="isCreating" color="neutral"/>
         </div>
       </UForm>
     </template>

@@ -16,7 +16,7 @@ import type {
   ReworkProcessRequest,
   UpdateProcessRequest
 } from "../models/processes"
-import { computed } from "vue"
+import { computed, ref } from "vue"
 
 export const useProcessStore = defineStore("process", () => {
   const route = useRoute()
@@ -50,6 +50,17 @@ export const useProcessStore = defineStore("process", () => {
     }
     return 1
   })
+
+  // 新增状态: 存储要滚动的行序号
+  const sequenceToScroll = ref<number | null>(null)
+
+  const setSequenceToScroll = (seq: number) => {
+    sequenceToScroll.value = seq
+  }
+
+  const clearSequenceToScroll = () => {
+    sequenceToScroll.value = null
+  }
 
   // actions
   const createMutation = useMutation({
@@ -102,6 +113,7 @@ export const useProcessStore = defineStore("process", () => {
     isError: processQuery.isError,
 
     maxSequence,
+    sequenceToScroll,
 
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
@@ -109,6 +121,8 @@ export const useProcessStore = defineStore("process", () => {
     isFinishing: finishMutation.isPending,
     isReworking: reworkMutation.isPending,
 
+    setSequenceToScroll,
+    clearSequenceToScroll,
     createProcess: createMutation.mutateAsync,
     updateProcess: updateMutation.mutateAsync,
     deleteProcess: deleteMutation.mutateAsync,

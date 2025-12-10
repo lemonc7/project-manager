@@ -24,7 +24,8 @@
 
     <template #body>
       <UTable
-        sticky
+        sticky="header"
+        v-model:row-selection="rowSelection"
         :data="processes"
         :columns="columns"
         :loading="isLoading"
@@ -65,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, resolveComponent } from "vue"
+import { h, nextTick, ref, resolveComponent, watch } from "vue"
 import { type Row } from "@tanstack/table-core"
 import type {
   Process,
@@ -80,11 +81,12 @@ import { useProcessStore } from "../composables/useProcessStore"
 import { createReusableTemplate } from "@vueuse/core"
 
 const toast = useToast()
+
 const employeeStore = useEmployeeStore()
 const processStore = useProcessStore()
 const { employeeItems } = storeToRefs(employeeStore)
-const { processes, isLoading } = storeToRefs(processStore)
-const { deleteProcess, updateProcess } = processStore
+const { processes, isLoading, sequenceToScroll } = storeToRefs(processStore)
+const { deleteProcess, updateProcess, clearSequenceToScroll } = processStore
 
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
@@ -96,11 +98,14 @@ const UDropdownMenu = resolveComponent("UDropdownMenu")
 const UBadge = resolveComponent("UBadge")
 const USelectMenu = resolveComponent("USelectMenu")
 const UButton = resolveComponent("UButton")
+const UCheckbox = resolveComponent("UCheckbox")
 
-// 选择框复用
+// 负责人选择框复用
 const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
   process: Process
 }>()
+
+const rowSelection = ref<Record<number, boolean>>({})
 
 // 删除方法
 async function handleDelete() {
@@ -194,6 +199,25 @@ function getRowItems(row: Row<Process>) {
 }
 
 const columns: TableColumn<Process>[] = [
+  {
+    id: "select",
+    header: ({ table }) =>
+      h(UCheckbox, {
+        modelValue: table.getIsSomePageRowsSelected()
+          ? "indeterminate"
+          : table.getIsAllPageRowsSelected(),
+        "onUpdate:modelValue": (value: boolean | "indeterminate") =>
+          table.toggleAllPageRowsSelected(!!value),
+        ariaLabel: "Select all"
+      }),
+    cell: ({ row }) =>
+      h(UCheckbox, {
+        modelValue: row.getIsSelected(),
+        "onUpdate:modelValue": (value: boolean | "indeterminate") =>
+          row.toggleSelected(!!value),
+        ariaLabel: "Select row"
+      })
+  },
   {
     accessorKey: "sequence",
     header: "序号"
@@ -315,4 +339,37 @@ const columns: TableColumn<Process>[] = [
     }
   }
 ]
+
+// 滚动到选择的行
+watch(
+  [processes, sequenceToScroll],
+  async ([newVal, targetSequence]) => {
+    if (targetSequence !== null && newVal && newVal.length > 0) {
+      const selectedIndex = targetSequence - 1
+      if (selectedIndex >= 0 && selectedIndex < newVal.length) {
+        // 设置选中状态
+        rowSelection.value = { [selectedIndex]: true }
+
+        // 等table渲染完成
+        await nextTick()
+
+        // 查找目标行
+        const rows = document.querySelectorAll("tbody tr")
+        const targetRow = rows[selectedIndex] as HTMLElement
+
+        // 滚动
+        if (targetRow) {
+          targetRow.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+          })
+        }
+
+        // 滚动完成，清理store中的sequence
+        clearSequenceToScroll()
+      }
+    }
+  },
+  { immediate: true }
+)
 </script>

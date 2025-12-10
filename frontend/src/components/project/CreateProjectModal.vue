@@ -4,12 +4,13 @@
     title="创建"
     description="添加一个新项目到数据库中"
   >
-    <UButton label="创建项目" icon="i-lucide-calendar-plus" />
+    <UButton label="创建项目" icon="i-lucide-calendar-plus" color="neutral" />
     <template #body>
       <UForm
         :schema="schema"
         :state="state"
         class="space-y-4"
+        color="neutral"
         @submit="handleSubmit"
       >
         <!-- 项目名称 -->
@@ -65,7 +66,12 @@
             @click="open = false"
             @pointerdown.prevent
           />
-          <UButton label="创建" type="submit" :loading="isCreating" />
+          <UButton
+            label="创建"
+            type="submit"
+            :loading="isCreating"
+            color="neutral"
+          />
         </div>
       </UForm>
     </template>

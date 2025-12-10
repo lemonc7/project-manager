@@ -1,36 +1,38 @@
 <template>
   <div
     :class="[
-      'bg-white/50 dark:bg-gray-900/50 backdrop-blur border border-default rounded-xl shadow-md transition-shadow duration-300',
-      'hover:shadow-lg',
+      'flex flex-col h-full min-h-0 bg-white rounded-xl',
+      'border border-default transition-shadow duration-300 hover:shadow-xl',
       props.class
     ]"
   >
-    <div class="px-4 py-3">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-        {{ titleMap[props.status] }}
-      </h2>
+    <div class="px-4 py-4 shrink-0">
+      <UBadge
+        size="xl"
+        :color="titleMap[props.status].color"
+        icon="i-lucide-play"
+        variant="subtle"
+        >{{ titleMap[props.status].label }}</UBadge
+      >
     </div>
-
-    <div class="px-4 pt-2 pb-4">
-      <UTable
-        sticky
-        :data="data"
-        :columns="columns"
-        :loading="isLoading"
-        :column-visibility="{
-          remainingDays: props.isRemainingDaysVisible
-        }"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'py-2.5 border-b border-default',
-          separator: 'h-0'
-        }"
-      />
-    </div>
+    <UTable
+      sticky="header"
+      :data="data"
+      :columns="columns"
+      class="px-4"
+      :loading="isLoading"
+      :column-visibility="{
+        remainingDays: props.isRemainingDaysVisible
+      }"
+      :ui="{
+        base: 'table-fixed border-separate border-spacing-0',
+        thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+        tbody: '[&>tr]:last:[&>td]:border-b-0',
+        th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+        td: 'py-2.5 border-b border-default',
+        separator: 'h-0'
+      }"
+    />
   </div>
 </template>
 
@@ -43,6 +45,7 @@ import { listTasks } from "../../api/processes"
 import type { TableColumn } from "@nuxt/ui"
 import type { Task } from "../../models/processes"
 import { h, watch } from "vue"
+import { useProcessStore } from "../../composables/useProcessStore"
 
 const props = defineProps<{
   status: TaskStatus
@@ -65,11 +68,13 @@ const { data, isLoading } = useQuery({
     return listTasks(userID, props.status)
   }
 })
-const titleMap: Record<TaskStatus, string> = {
-  todo: "待办",
-  ready: "准备",
-  doing: "进行"
+const titleMap: Record<TaskStatus, { label: string; color: string }> = {
+  todo: { label: "待办", color: "success" },
+  ready: { label: "准备", color: "warning" },
+  doing: { label: "进行", color: "error" }
 }
+
+const { setSequenceToScroll } = useProcessStore()
 
 const columns: TableColumn<Task>[] = [
   {
@@ -80,7 +85,8 @@ const columns: TableColumn<Task>[] = [
         "span",
         {
           style: { color: "blue", cursor: "pointer" },
-          onClick: () => router.push(`/project/${row.original.projectID}`)
+          onClick: () =>
+            goToProcess(row.original.sequence, row.original.projectID)
         },
         row.original.name
       )
@@ -109,6 +115,13 @@ const columns: TableColumn<Task>[] = [
   }
 ]
 
+// 点击跳转
+function goToProcess(sequence: number, projectID: number) {
+  setSequenceToScroll(sequence)
+  router.push(`/project/${projectID}`)
+}
+
+// 监听data变化，更新长度
 watch(
   () => data.value?.length,
   (len) => {

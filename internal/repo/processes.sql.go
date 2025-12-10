@@ -301,7 +301,7 @@ func (q *Queries) ListProcesses(ctx context.Context, projectID int32) ([]ListPro
 
 const listTasksDoing = `-- name: ListTasksDoing :many
 SELECT
-  p.id,
+  p.sequence,
   p.name,
   p.description,
   p.project_id,
@@ -319,7 +319,7 @@ ORDER BY
 `
 
 type ListTasksDoingRow struct {
-	ID            int32  `json:"id"`
+	Sequence      int32  `json:"sequence"`
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	ProjectID     int32  `json:"projectID"`
@@ -337,7 +337,7 @@ func (q *Queries) ListTasksDoing(ctx context.Context, employeeID int32) ([]ListT
 	for rows.Next() {
 		var i ListTasksDoingRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.Sequence,
 			&i.Name,
 			&i.Description,
 			&i.ProjectID,
@@ -356,7 +356,7 @@ func (q *Queries) ListTasksDoing(ctx context.Context, employeeID int32) ([]ListT
 
 const listTasksReady = `-- name: ListTasksReady :many
 SELECT
-  p.id,
+  p.sequence,
   p.name,
   p.description,
   p.project_id,
@@ -371,7 +371,7 @@ ORDER BY p.id
 `
 
 type ListTasksReadyRow struct {
-	ID          int32  `json:"id"`
+	Sequence    int32  `json:"sequence"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	ProjectID   int32  `json:"projectID"`
@@ -388,7 +388,7 @@ func (q *Queries) ListTasksReady(ctx context.Context, employeeID int32) ([]ListT
 	for rows.Next() {
 		var i ListTasksReadyRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.Sequence,
 			&i.Name,
 			&i.Description,
 			&i.ProjectID,
@@ -406,7 +406,7 @@ func (q *Queries) ListTasksReady(ctx context.Context, employeeID int32) ([]ListT
 
 const listTasksTodo = `-- name: ListTasksTodo :many
 SELECT
-  p.id,
+  p.sequence,
   p.name,
   p.description,
   p.project_id,
@@ -415,13 +415,13 @@ FROM processes p
 LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
-  AND p.status NOT IN ('终止','完成')
+  AND p.status NOT IN ('终止','完成','返工')
   AND pr.status NOT IN ('终止','完成')
 ORDER BY p.id
 `
 
 type ListTasksTodoRow struct {
-	ID          int32  `json:"id"`
+	Sequence    int32  `json:"sequence"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	ProjectID   int32  `json:"projectID"`
@@ -438,7 +438,7 @@ func (q *Queries) ListTasksTodo(ctx context.Context, employeeID int32) ([]ListTa
 	for rows.Next() {
 		var i ListTasksTodoRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.Sequence,
 			&i.Name,
 			&i.Description,
 			&i.ProjectID,

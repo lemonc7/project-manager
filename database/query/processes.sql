@@ -18,7 +18,7 @@ ORDER BY sequence;
 
 -- name: ListTasksTodo :many
 SELECT
-  p.id,
+  p.sequence,
   p.name,
   p.description,
   p.project_id,
@@ -27,13 +27,13 @@ FROM processes p
 LEFT JOIN projects pr ON p.project_id = pr.id
 WHERE
   p.employee_id = $1
-  AND p.status NOT IN ('终止','完成')
+  AND p.status NOT IN ('终止','完成','返工')
   AND pr.status NOT IN ('终止','完成')
 ORDER BY p.id;
 
 -- name: ListTasksReady :many
 SELECT
-  p.id,
+  p.sequence,
   p.name,
   p.description,
   p.project_id,
@@ -48,7 +48,7 @@ ORDER BY p.id;
 
 -- name: ListTasksDoing :many
 SELECT
-  p.id,
+  p.sequence,
   p.name,
   p.description,
   p.project_id,

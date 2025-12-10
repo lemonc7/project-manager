@@ -4,7 +4,7 @@
     title="创建"
     description="为当前项目添加一个新流程"
   >
-    <UButton label="创建流程" icon="i-lucide-git-pull-request-create-arrow" />
+    <UButton label="创建流程" icon="i-lucide-git-pull-request-create-arrow" color="neutral"/>
     <template #body>
       <UForm
         :schema="schema"
@@ -67,7 +67,7 @@
             @click="open = false"
             @pointerdown.prevent
           />
-          <UButton label="创建" type="submit" :loading="isCreating" />
+          <UButton label="创建" type="submit" :loading="isCreating" color="neutral"/>
         </div>
       </UForm>
     </template>

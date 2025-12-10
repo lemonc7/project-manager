@@ -21,6 +21,7 @@
             icon="material-symbols:folder-managed"
             block
             size="xl"
+            color="neutral"
             :label="collapsed ? undefined : '项目管理平台'"
             :square="collapsed"
             @click="router.push('/')"

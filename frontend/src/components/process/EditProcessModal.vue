@@ -74,7 +74,12 @@
             @click="onOpenChange(false)"
             @pointerdown.prevent
           />
-          <UButton label="更新" type="submit" :loading="isUpdating" />
+          <UButton
+            label="更新"
+            type="submit"
+            :loading="isUpdating"
+            color="neutral"
+          />
         </div>
       </UForm>
     </template>

@@ -1,13 +1,16 @@
 package application
 
-import "github.com/lemonc7/project-manager/internal/middleware"
+import (
+	"github.com/labstack/echo/v4/middleware"
+	mw "github.com/lemonc7/project-manager/internal/middleware"
+)
 
 func (a *Application) initRouter() {
 	// 检查服务器
 	a.e.GET("/ping", a.serverHandler.Ping)
 
 	// 用户认证
-	jwtMW := middleware.JWTAuther(a.jwt)
+	jwtMW := mw.JWTAuther(a.jwt)
 	auth := a.e.Group("/api/auth")
 	authJWT := auth.Group("", jwtMW)
 
@@ -54,4 +57,11 @@ func (a *Application) initRouter() {
 	processRouter.DELETE("/:id", a.processHandler.DeleteProcess)
 	processRouter.GET("/task/:id", a.processHandler.ListTasks)
 	processRouter.POST("/finish/:id", a.processHandler.FinishProcess)
+
+	// 挂载静态文件
+	a.e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root:   "./dist",
+		HTML5:  true,
+		Browse: false,
+	}))
 }

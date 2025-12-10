@@ -9,6 +9,7 @@
         @submit="handleSubmit"
         :submit="{
           label: '登录',
+          color: 'neutral'
         }"
       >
         <template #validation v-if="error !== ''">

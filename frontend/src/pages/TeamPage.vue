@@ -17,7 +17,7 @@
     <template #body>
       <!-- table渲染 -->
       <UTable
-        sticky
+        sticky="header"
         ref="table"
         class="shrink-0"
         :loading="isLoading"

@@ -16,9 +16,10 @@ const (
 	ProcessStatusValue0 ProcessStatus = "等待"
 	ProcessStatusValue1 ProcessStatus = "准备"
 	ProcessStatusValue2 ProcessStatus = "进行"
-	ProcessStatusValue3 ProcessStatus = "完成"
-	ProcessStatusValue4 ProcessStatus = "暂停"
-	ProcessStatusValue5 ProcessStatus = "终止"
+	ProcessStatusValue3 ProcessStatus = "返工"
+	ProcessStatusValue4 ProcessStatus = "完成"
+	ProcessStatusValue5 ProcessStatus = "暂停"
+	ProcessStatusValue6 ProcessStatus = "终止"
 )
 
 func (e *ProcessStatus) Scan(src interface{}) error {

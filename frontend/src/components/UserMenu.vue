@@ -48,6 +48,7 @@ const items = computed<DropdownMenuItem[]>(() => [
   {
     label: "登出",
     icon: "i-lucide-log-out",
+    color: "error",
     onSelect: () => {
       removeToken()
       router.replace("/login")
