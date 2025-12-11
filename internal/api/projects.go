@@ -19,6 +19,7 @@ type ProjectService interface {
 	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
 	StartProject(ctx context.Context, id int32) error
 	FinishProject(ctx context.Context, id int32) error
+	GetProjectByID(ctx context.Context, id int32) (repo.GetProjectByIDRow, error)
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)
@@ -140,4 +141,18 @@ func (p *ProjectHandler) FinishProject(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "成功完成项目",
 	})
+}
+
+func (p *ProjectHandler) GetProjectByID(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+	
+	project, err := p.projectService.GetProjectByID(c.Request().Context(), id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取project: %w", err))
+	}
+
+	return c.JSON(http.StatusOK, project)
 }

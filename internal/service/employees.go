@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
@@ -24,7 +23,7 @@ func NewEmployeeService(db *pgxpool.Pool, ph PasswordHasher) *EmployeeService {
 func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error {
 	passwordHash, err := e.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return fmt.Errorf("密码加密: %w", err)
+		return err
 	}
 	// 插入数据
 	err = e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{

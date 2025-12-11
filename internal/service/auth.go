@@ -73,7 +73,7 @@ func (a *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 func (a *AuthService) ResetPassword(ctx context.Context, req model.ResetPasswordRequest) error {
 	passwordHash, err := a.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return fmt.Errorf("密码加密: %w", err)
+		return err
 	}
 
 	err = a.querier.UpdatePassword(ctx, repo.UpdatePasswordParams{
@@ -99,7 +99,7 @@ func (a *AuthService) ChangePassword(ctx context.Context, username string, req m
 	// 生成新密码
 	newHashed, err := a.passwordHasher.HashPassword(req.NewPassword)
 	if err != nil {
-		return fmt.Errorf("密码加密: %w", err)
+		return err
 	}
 
 	// 更新密码
@@ -124,7 +124,7 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 	// 密码加密
 	passwordHash, err := a.passwordHasher.HashPassword(req.Password)
 	if err != nil {
-		return fmt.Errorf("密码加密: %w", err)
+		return err
 	}
 
 	// 生成事务

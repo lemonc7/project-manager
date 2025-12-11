@@ -22,12 +22,10 @@
             variant="subtle"
             :ui="{
               leading:
-                'p-2.5 rounded-full bg-secondary/10 ring ring-inset ring-secondary/25',
+                'p-2.5 rounded-full bg-info/10 ring ring-inset ring-info/25',
               title: 'font-normal text-muted text-xs'
             }"
-            spotlight
-            spotlightColor="neutral"
-            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg"
+            class="rounded-none first:rounded-l-lg last:rounded-r-lg transition-shadow duration-300 hover:shadow-lg"
           >
             <div class="font-bold text-4xl">{{ stat.length }}</div>
           </UPageCard>
@@ -62,48 +60,32 @@
 import { computed } from "vue"
 import { useTaskStore } from "../composables/useTaskStore"
 
-// const baseStats = [
-//   {
-//     title: "进行",
-//     icon: "i-lucide-pause",
-//     description: "进行中的任务"
-//   },
-//   {
-//     title: "准备",
-//     icon: "i-lucide-play",
-//     description: "马上开始的任务"
-//   },
-//   {
-//     title: "完成",
-//     icon: "i-lucide-list-todo",
-//     description: "后续要做的任务"
-//   }
-// ]
+const statTemplates = [
+  {
+    title: "进行",
+    icon: "i-lucide-pause",
+    description: "进行中的任务"
+  },
+  {
+    title: "准备",
+    icon: "i-lucide-play",
+    description: "马上开始的任务"
+  },
+  {
+    title: "完成",
+    icon: "i-lucide-list-todo",
+    description: "后续要做的任务"
+  }
+]
 
 const taskStore = useTaskStore()
 
 const baseStats = computed(() => {
   const lengths = taskStore.lengths
-  return [
-    {
-      title: "进行",
-      icon: "i-lucide-pause",
-      description: "进行中的任务",
-      length: lengths[0] || 0
-    },
-    {
-      title: "准备",
-      icon: "i-lucide-play",
-      description: "马上开始的任务",
-      length: lengths[1] || 0
-    },
-    {
-      title: "待办",
-      icon: "i-lucide-list-todo",
-      description: "后续要做的任务",
-      length: lengths[2] || 0
-    }
-  ]
+  return statTemplates.map((t, i) => ({
+    ...t,
+    length: lengths[i] ?? 0
+  }))
 })
 
 function updateLen(index: number, length: number) {

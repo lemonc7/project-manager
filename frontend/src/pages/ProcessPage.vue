@@ -23,8 +23,40 @@
     </template>
 
     <template #body>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <UFieldGroup>
+          <UButton :label="gotProject?.name" variant="outline" />
+          <UButton :label="gotProject?.description" variant="outline" />
+          <UButton
+            :label="
+              gotProject?.remainingDays >= 0
+                ? `剩余${gotProject?.remainingDays}天`
+                : `超时${Math.abs(gotProject?.remainingDays)}天`
+            "
+            variant="outline"
+            :color="gotProject.remainingDays <= 0 ? 'error' : 'info'"
+            v-if="gotProject?.remainingDays !== undefined"
+          />
+        </UFieldGroup>
+
+        <USelectMenu
+          v-model="employeeFilter"
+          icon="i-lucide-user"
+          value-key="value"
+          :items="[{ label: '全部', value: 0 }, ...employeeItems]"
+          :ui="{
+            trailingIcon:
+              'group-date-[state=open]:rotate-180 transition-transform duration-200'
+          }"
+          class="min-w-30"
+          :search-input="{
+            placeholder: '过滤负责人...'
+          }"
+        />
+      </div>
       <UTable
         sticky="header"
+        ref="table"
         v-model:row-selection="rowSelection"
         :data="processes"
         :columns="columns"
@@ -66,8 +98,8 @@
 </template>
 
 <script setup lang="ts">
-import { h, nextTick, ref, resolveComponent, watch } from "vue"
-import { type Row } from "@tanstack/table-core"
+import { useTemplateRef, h, nextTick, ref, resolveComponent, watch } from "vue"
+import { type Row, type Table } from "@tanstack/table-core"
 import type {
   Process,
   ProcessStatus,
@@ -79,14 +111,18 @@ import { useEmployeeStore } from "../composables/useEmployeeStore"
 import { storeToRefs } from "pinia"
 import { useProcessStore } from "../composables/useProcessStore"
 import { createReusableTemplate } from "@vueuse/core"
+import { useProjectStore } from "../composables/useProjectStore"
 
 const toast = useToast()
+const table = useTemplateRef<{ tableApi: Table<Process> }>("table")
 
 const employeeStore = useEmployeeStore()
 const processStore = useProcessStore()
+const projectStore = useProjectStore()
 const { employeeItems } = storeToRefs(employeeStore)
 const { processes, isLoading, sequenceToScroll } = storeToRefs(processStore)
 const { deleteProcess, updateProcess, clearSequenceToScroll } = processStore
+const { gotProject } = storeToRefs(projectStore)
 
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
@@ -237,7 +273,7 @@ const columns: TableColumn<Process>[] = [
     }
   },
   {
-    header: "细节描述",
+    header: "描述",
     cell: ({ row }) => {
       return h(EditableCell, {
         value: row.original.description,
@@ -251,7 +287,10 @@ const columns: TableColumn<Process>[] = [
     }
   },
   {
+    id: "employee",
     header: "负责人",
+    accessorFn: (row) => row.employeeID,
+    filterFn: "equals",
     cell: ({ row }) => {
       return h(ReuseTemplate, {
         process: row.original
@@ -339,6 +378,20 @@ const columns: TableColumn<Process>[] = [
     }
   }
 ]
+
+// 负责人过滤
+const employeeFilter = ref(0)
+watch(employeeFilter, (newVal) => {
+  if (!table.value?.tableApi) return
+  const employeeColumn = table.value.tableApi.getColumn("employee")
+  if (!employeeColumn) return
+
+  if (newVal === 0) {
+    employeeColumn.setFilterValue(undefined)
+  } else {
+    employeeColumn.setFilterValue(newVal)
+  }
+})
 
 // 滚动到选择的行
 watch(

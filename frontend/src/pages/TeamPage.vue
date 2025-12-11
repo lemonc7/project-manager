@@ -19,7 +19,6 @@
       <UTable
         sticky="header"
         ref="table"
-        class="shrink-0"
         :loading="isLoading"
         :data="teams"
         :columns="columns"

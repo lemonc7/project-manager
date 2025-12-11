@@ -2,6 +2,7 @@ import type {
   CreateProjectRequest,
   ListProjectsRequest,
   Project,
+  ProjectGet,
   UpdateProjectRequest
 } from "../models/projects"
 import service from "./request"
@@ -31,4 +32,9 @@ export async function startProject(id: number) {
 
 export async function finishProject(id: number) {
   return service.post(`/project/finish/${id}`)
+}
+
+export async function getProject(id: number) {
+  const res = await service.get<ProjectGet>(`/project/${id}`)
+  return res.data
 }

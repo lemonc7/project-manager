@@ -20,7 +20,7 @@ import { computed, ref } from "vue"
 
 export const useProcessStore = defineStore("process", () => {
   const route = useRoute()
-  const projectID = computed(() => parseInt(route.params.id as string) || 0)
+  const projectID = computed(() => parseInt(route.params.id as string))
   const queryClient = useQueryClient()
   // 查询数据
   const processQuery = useQuery({

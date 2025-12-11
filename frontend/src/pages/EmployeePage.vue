@@ -79,6 +79,7 @@ import getRoleLabels from "../utils/getRoleLabels"
 import { useEmployeeStore } from "../composables/useEmployeeStore"
 import { useTeamStore } from "../composables/useTeamStore"
 import { storeToRefs } from "pinia"
+import { hasAtLeastRole } from "../utils/auth"
 
 // 数据获取
 const teamStore = useTeamStore()
@@ -135,6 +136,7 @@ function getRowItems(row: Row<Employee>) {
     {
       label: "编辑",
       icon: "i-lucide-pencil",
+      disabled: !hasAtLeastRole("admin"),
       onSelect: () => {
         isEditModalOpen.value = true
         selectedEmployee.value = row.original
@@ -144,6 +146,7 @@ function getRowItems(row: Row<Employee>) {
       label: "删除",
       icon: "i-lucide-trash",
       color: "error",
+      disabled: !hasAtLeastRole("admin"),
       onSelect: () => {
         isDeleteModalOpen.value = true
         selectedEmployee.value = row.original

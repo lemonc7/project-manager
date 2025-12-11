@@ -46,22 +46,22 @@ func (j *JWT) Generate(username string, id int32, roles []string) (string, error
 func (j *JWT) ParseToken(tokenString string) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(t *jwt.Token) (any, error) {
 		if t.Method != jwt.SigningMethodHS256 {
-			return nil, fmt.Errorf("unexpected signing method")
+			return nil, fmt.Errorf("不支持的签名方法")
 		}
 		return j.secret, nil
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("解码user信息: %w", err)
 	}
 
 	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("token已失效")
 	}
 
 	claims, ok := token.Claims.(*UserClaims)
 	if !ok {
-		return nil, fmt.Errorf("invalid token claims")
+		return nil, fmt.Errorf("无效token信息: %w", err)
 	}
 
 	return claims, nil

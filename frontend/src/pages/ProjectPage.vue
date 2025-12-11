@@ -150,6 +150,7 @@ import { useEmployeeStore } from "../composables/useEmployeeStore"
 import { storeToRefs } from "pinia"
 import { useProjectStore } from "../composables/useProjectStore"
 import { useQueryClient } from "@tanstack/vue-query"
+import { hasAtLeastRole } from "../utils/auth"
 
 const router = useRouter()
 const toast = useToast()
@@ -308,6 +309,7 @@ function getRowItems(row: Row<Project>) {
       label: "删除",
       icon: "i-lucide-trash",
       color: "error",
+      disabled: !hasAtLeastRole("manager"),
       onSelect: () => {
         isDeleteModalOpen.value = true
         selectedProject.value = row.original
@@ -338,7 +340,7 @@ const columns: TableColumn<Project>[] = [
   },
   {
     accessorKey: "description",
-    header: "细节描述"
+    header: "描述"
   },
   {
     header: "优先级",
@@ -412,7 +414,7 @@ const columns: TableColumn<Project>[] = [
   },
   {
     accessorKey: "remark",
-    header: "备注"
+    header: "备注",
   },
   {
     id: "actions",

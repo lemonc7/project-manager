@@ -10,7 +10,7 @@ import service from "./request"
 import type { TaskStatus } from "../models/projects"
 
 export async function listProcesses(projectID: number) {
-  const res = await service.get<Process[]>(`/project/${projectID}`)
+  const res = await service.get<Process[]>(`/process/${projectID}`)
   return Array.isArray(res.data) ? res.data : []
 }
 

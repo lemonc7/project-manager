@@ -10,10 +10,12 @@ import {
   createProject,
   deleteProject,
   finishProject,
+  getProject,
   listProjects,
   startProject,
   updateProject
 } from "../api/projects"
+import { useRoute } from "vue-router"
 
 function buildProjectsQueryKey(req: ListProjectsRequest) {
   return ["projects", "overview", req.startAt ?? null, req.endAt ?? null]
@@ -29,9 +31,29 @@ export const useProjectStore = defineStore("project", () => {
     return buildProjectsQueryKey(req.value)
   })
 
+  function invalidateProjects() {
+    queryClient.invalidateQueries({
+      queryKey: ["projects"]
+    })
+  }
+
   const projectQuery = useQuery({
     queryKey: queryKey,
     queryFn: () => listProjects(req.value)
+  })
+
+  const route = useRoute()
+  const projectID = computed(() => parseInt(route.params.id as string))
+  const getProjectQuery = useQuery({
+    queryKey: ["projects", projectID],
+    queryFn: () => {
+      const id = projectID.value
+      if (!id || isNaN(id)) {
+        throw new Error("缺少项目ID")
+      }
+      return getProject(id)
+    },
+    enabled: computed(() => !!projectID.value && !isNaN(projectID.value))
   })
 
   // 更改查询的key
@@ -42,44 +64,37 @@ export const useProjectStore = defineStore("project", () => {
   // actions
   const createMutations = useMutation({
     mutationFn: (req: CreateProjectRequest) => createProject(req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
-    }
+    onSuccess: () => invalidateProjects()
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, req }: { id: number; req: UpdateProjectRequest }) =>
       updateProject(id, req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
-    }
+    onSuccess: () => invalidateProjects()
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteProject(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
-    }
+    onSuccess: () => invalidateProjects()
   })
 
   const startMutation = useMutation({
     mutationFn: (id: number) => startProject(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
-    }
+    onSuccess: () => invalidateProjects()
   })
 
   const finishMutation = useMutation({
     mutationFn: (id: number) => finishProject(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects", "overview"] })
-    }
+    onSuccess: () => invalidateProjects()
   })
 
   return {
     projects: projectQuery.data,
     isLoading: projectQuery.isLoading,
     isError: projectQuery.isError,
+    gotProject: getProjectQuery.data,
+    isGetting: getProjectQuery.isLoading,
+    isGettingError: getProjectQuery.isError,
 
     isCreating: createMutations.isPending,
     isUpdating: updateMutation.isPending,

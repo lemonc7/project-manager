@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
@@ -34,6 +35,11 @@ func NewEmployeeHandler(service EmployeeService) *EmployeeHandler {
 
 // 创建员工
 func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
+	// 获取jwt中的角色
+	roles, ok := c.Get("roles").([]string)
+	if !ok || !slices.Contains(roles, "admin") {
+		return echo.NewHTTPError(http.StatusForbidden, fmt.Errorf("需要管理员权限"))
+	}
 	// 绑定请求
 	var req model.CreateEmployeeRequest
 	if err := c.Bind(&req); err != nil {

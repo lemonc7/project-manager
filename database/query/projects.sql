@@ -72,3 +72,16 @@ SET
   finished_at = CURRENT_TIMESTAMP
 WHERE
   id = $1;
+
+-- name: GetProjectByID :one
+SELECT
+  p.name,
+  p.description,
+  p.remark,
+  p.status,
+  COALESCE(e.name,'') AS manager_name,
+  p.priority,
+  p.remaining_days
+FROM projects_view p
+LEFT JOIN employees e ON p.manager_id = e.id
+WHERE p.id = $1;

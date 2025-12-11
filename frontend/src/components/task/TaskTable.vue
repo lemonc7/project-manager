@@ -10,7 +10,7 @@
       <UBadge
         size="xl"
         :color="titleMap[props.status].color"
-        icon="i-lucide-play"
+        :icon="titleMap[props.status].icon"
         variant="subtle"
         >{{ titleMap[props.status].label }}</UBadge
       >
@@ -68,10 +68,13 @@ const { data, isLoading } = useQuery({
     return listTasks(userID, props.status)
   }
 })
-const titleMap: Record<TaskStatus, { label: string; color: string }> = {
-  todo: { label: "待办", color: "success" },
-  ready: { label: "准备", color: "warning" },
-  doing: { label: "进行", color: "error" }
+const titleMap: Record<
+  TaskStatus,
+  { label: string; color: string; icon: string }
+> = {
+  todo: { label: "待办", color: "success", icon: "i-lucide-list-todo" },
+  ready: { label: "准备", color: "warning", icon: "i-lucide-play" },
+  doing: { label: "进行", color: "error", icon: "i-lucide-pause" }
 }
 
 const { setSequenceToScroll } = useProcessStore()

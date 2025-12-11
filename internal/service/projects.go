@@ -79,3 +79,7 @@ func (p *ProjectService) StartProject(ctx context.Context, id int32) error {
 func (p *ProjectService) FinishProject(ctx context.Context, id int32) error {
 	return p.querier.FinishProject(ctx, id)
 }
+
+func (p *ProjectService) GetProjectByID(ctx context.Context, id int32) (repo.GetProjectByIDRow, error) {
+	return p.querier.GetProjectByID(ctx, id)
+}

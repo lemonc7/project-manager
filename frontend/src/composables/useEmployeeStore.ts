@@ -12,6 +12,11 @@ export const useEmployeeStore = defineStore("employee", () => {
 
   const employeeMap = ref<Map<number, string>>(new Map())
   const queryKey = ["employees", "overview"]
+
+  function invalidateEmployees() {
+    queryClient.invalidateQueries({ queryKey })
+  }
+
   // 加载数据
   const employeeQuery = useQuery({
     queryKey,
@@ -46,23 +51,17 @@ export const useEmployeeStore = defineStore("employee", () => {
   // actions
   const createMutation = useMutation({
     mutationFn: (req: CreateEmployeeRequest) => createEmployee(req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
-    }
+    onSuccess: () => invalidateEmployees()
   })
   const updateMutation = useMutation({
     mutationFn: ({ id, req }: { id: number; req: UpdateEmployeeRequest }) =>
       updateEmployee(id, req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
-    }
+    onSuccess: () => invalidateEmployees()
   })
   // 软删除
   const deleteMutation = useMutation({
     mutationFn: (id: number) => updateEmployee(id, { isActive: false }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
-    }
+    onSuccess: () => invalidateEmployees()
   })
 
   return {

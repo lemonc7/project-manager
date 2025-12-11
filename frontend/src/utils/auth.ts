@@ -4,6 +4,11 @@ const TOKEN_KEY = "access_token"
 const USER_ID_KEY = "user_id"
 const USERNAME_KEY = "username"
 const ROLES_KEY = "roles"
+const RoleLevel: Record<Role, number> = {
+  employee: 1,
+  manager: 2,
+  admin: 3
+}
 
 export function setToken(
   token: string,
@@ -37,11 +42,10 @@ export function isLoggedIn() {
   return !!getToken()
 }
 
-export function hasRole(...targetRoles: Role[]) {
-  const roles = localStorage.getItem(ROLES_KEY)
-  if (!roles) {
-    return false
-  }
-  const parsed = JSON.parse(roles) as Role[]
-  return targetRoles.some((role) => parsed.includes(role))
+export function hasAtLeastRole(required: Role) {
+  const raw = localStorage.getItem(ROLES_KEY)
+  if (!raw) return false
+  const roles = JSON.parse(raw) as Role[]
+  const reqLevel = RoleLevel[required]
+  return roles.some((role) => RoleLevel[role] >= reqLevel)
 }

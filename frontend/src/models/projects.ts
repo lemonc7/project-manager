@@ -50,9 +50,20 @@ interface Project {
   remainingDays?: number
 }
 
+interface ProjectGet {
+  name: string
+  description: string
+  remark: string
+  status: ProjectStatus
+  managerName: string
+  priority: number
+  remainingDays?: number
+}
+
 export type {
   CreateProjectRequest,
   UpdateProjectRequest,
   ListProjectsRequest,
-  Project
+  Project,
+  ProjectGet
 }

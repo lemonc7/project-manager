@@ -23,6 +23,7 @@ type Querier interface {
 	GetEmployeeByUsername(ctx context.Context, username string) (GetEmployeeByUsernameRow, error)
 	GetMaxSequence(ctx context.Context, projectID int32) (int32, error)
 	GetProcessByID(ctx context.Context, id int32) (GetProcessByIDRow, error)
+	GetProjectByID(ctx context.Context, id int32) (GetProjectByIDRow, error)
 	InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error
 	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) error
 	InsertReworkProcess(ctx context.Context, arg InsertReworkProcessParams) error

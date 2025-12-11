@@ -73,6 +73,45 @@ func (q *Queries) FinishProject(ctx context.Context, id int32) error {
 	return err
 }
 
+const getProjectByID = `-- name: GetProjectByID :one
+SELECT
+  p.name,
+  p.description,
+  p.remark,
+  p.status,
+  COALESCE(e.name,'') AS manager_name,
+  p.priority,
+  p.remaining_days
+FROM projects_view p
+LEFT JOIN employees e ON p.manager_id = e.id
+WHERE p.id = $1
+`
+
+type GetProjectByIDRow struct {
+	Name          string        `json:"name"`
+	Description   string        `json:"description"`
+	Remark        string        `json:"remark"`
+	Status        ProjectStatus `json:"status"`
+	ManagerName   string        `json:"managerName"`
+	Priority      int32         `json:"priority"`
+	RemainingDays *int32        `json:"remainingDays,omitempty"`
+}
+
+func (q *Queries) GetProjectByID(ctx context.Context, id int32) (GetProjectByIDRow, error) {
+	row := q.db.QueryRow(ctx, getProjectByID, id)
+	var i GetProjectByIDRow
+	err := row.Scan(
+		&i.Name,
+		&i.Description,
+		&i.Remark,
+		&i.Status,
+		&i.ManagerName,
+		&i.Priority,
+		&i.RemainingDays,
+	)
+	return i, err
+}
+
 const listProjectsFiltered = `-- name: ListProjectsFiltered :many
 SELECT
   id,

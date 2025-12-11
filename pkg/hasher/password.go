@@ -16,7 +16,7 @@ func (p *PasswordHash) HashPassword(password string) (string, error) {
 	hashBytes, err := bcrypt.GenerateFromPassword(
 		[]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("hash password: %w", err)
+		return "", fmt.Errorf("密码加密: %w", err)
 	}
 
 	return string(hashBytes), nil

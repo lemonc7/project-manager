@@ -8,6 +8,7 @@
       label="创建小组"
       icon="fluent:people-team-add-24-regular"
       color="neutral"
+      :disabled="!hasAtLeastRole('manager')"
     />
     <template #body>
       <UForm
@@ -41,7 +42,12 @@
             @click="open = false"
             @pointerdown.prevent
           />
-          <UButton label="创建" type="submit" :loading="isCreating" color="neutral"/>
+          <UButton
+            label="创建"
+            type="submit"
+            :loading="isCreating"
+            color="neutral"
+          />
         </div>
       </UForm>
     </template>
@@ -55,6 +61,7 @@ import z from "zod"
 import { useTeamStore } from "../../composables/useTeamStore"
 import { storeToRefs } from "pinia"
 import type { CreateTeamRequest } from "../../models/teams"
+import { hasAtLeastRole } from "../../utils/auth"
 
 const open = ref(false)
 const toast = useToast()

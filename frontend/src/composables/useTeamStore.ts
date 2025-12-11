@@ -9,6 +9,9 @@ export const useTeamStore = defineStore("team", () => {
 
   const teamMap = ref<Map<number, string>>(new Map())
   const queryKey = ["teams", "overview"]
+  function invalidateTeams() {
+    queryClient.invalidateQueries({ queryKey })
+  }
 
   // 查询数据
   const teamQuery = useQuery({
@@ -44,24 +47,18 @@ export const useTeamStore = defineStore("team", () => {
   // actions
   const createMutation = useMutation({
     mutationFn: (req: CreateTeamRequest) => createTeam(req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
-    }
+    onSuccess: () => invalidateTeams()
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, req }: { id: number; req: UpdateTeamRequest }) =>
       updateTeam(id, req),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
-    }
+    onSuccess: () => invalidateTeams()
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteTeam(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
-    }
+    onSuccess: () => invalidateTeams()
   })
 
   return {

@@ -4,7 +4,12 @@
     title="创建"
     description="添加一个新成员到数据库中"
   >
-    <UButton label="创建成员" icon="i-lucide-user-round-plus" color="neutral"/>
+    <UButton
+      label="创建成员"
+      icon="i-lucide-user-round-plus"
+      color="neutral"
+      :disabled="!hasAtLeastRole('admin')"
+    />
     <template #body>
       <UForm
         :schema="schema"
@@ -79,7 +84,12 @@
             @click="open = false"
             @pointerdown.prevent
           />
-          <UButton label="创建" type="submit" :loading="isCreating" color="neutral"/>
+          <UButton
+            label="创建"
+            type="submit"
+            :loading="isCreating"
+            color="neutral"
+          />
         </div>
       </UForm>
     </template>
@@ -94,6 +104,7 @@ import { roleItems, type CreateEmployeeRequest } from "../../models/employees"
 import { useEmployeeStore } from "../../composables/useEmployeeStore"
 import { useTeamStore } from "../../composables/useTeamStore"
 import { storeToRefs } from "pinia"
+import { hasAtLeastRole } from "../../utils/auth"
 
 const open = ref(false)
 const show = ref(false)

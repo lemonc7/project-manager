@@ -2,7 +2,8 @@ import { getToken, removeToken } from "../utils/auth"
 import axios from "axios"
 
 const service = axios.create({
-  baseURL: "/api",
+  // baseURL: "/api",
+  baseURL: "http://localhost:5001/api",
   timeout: 3000,
   headers: {
     "Content-Type": "application/json;charset=UTF-8"
