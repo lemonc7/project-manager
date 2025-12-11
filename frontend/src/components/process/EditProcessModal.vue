@@ -21,7 +21,7 @@
           />
         </UFormField>
         <!-- 细节描述 -->
-        <UFormField label="细节描述" name="description">
+        <UFormField label="描述" name="description">
           <UInput
             v-model="state.description"
             class="w-full"

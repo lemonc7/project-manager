@@ -2,7 +2,9 @@ package application
 
 import (
 	"context"
+	"errors"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -107,22 +109,22 @@ func InitApp(filePath string) (*Application, error) {
 }
 
 func (a *Application) Start() {
+	// 最后关闭数据库连接
+	defer func() {
+		a.dbPool.Close()
+		logger.Info("成功关闭数据库连接")
+	}()
+
+	// 启动HTTP服务
 	go func() {
 		if err := a.e.Start(":" + strconv.Itoa(a.cfg.Server.Port)); err != nil {
-			log.Fatal(err.Error())
+			if !errors.Is(err, http.ErrServerClosed) {
+				log.Fatal("启动HTTP服务失败", err.Error())
+			}
 		}
 	}()
 
-	a.shutdown()
-}
-
-func (a *Application) shutdown() {
-	defer func() {
-		a.dbPool.Close()
-		logger.Info("database connection pool closed")
-	}()
-
-	// 监听系统信号
+	// 阻塞监听系统信号
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -132,11 +134,11 @@ func (a *Application) shutdown() {
 		5*time.Second,
 	)
 	defer cancel()
-	if err := a.e.Shutdown(ctx); err != nil {
-		logger.Error("shutdown server", zap.Error(err))
-	} else {
-		logger.Info("HTTP server shutdown successfully")
-	}
 
-	logger.Info("shutdown successfully")
+	// 关闭HTTP服务
+	if err := a.e.Shutdown(ctx); err != nil {
+		logger.Error("关闭HTTP服务失败", zap.Error(err))
+	} else {
+		logger.Info("成功关闭HTTP服务")
+	}
 }

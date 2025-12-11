@@ -17,12 +17,12 @@
           <UInput
             v-model="state.name"
             class="w-full"
-            placeholder="请输入项目名称"
+            placeholder="请输入流程名称"
             autofocus
           />
         </UFormField>
         <!-- 细节描述 -->
-        <UFormField label="细节描述" name="description">
+        <UFormField label="描述" name="description">
           <UInput
             v-model="state.description"
             class="w-full"
