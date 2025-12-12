@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/lemonc7/project-manager/internal/repo"
 )
 
@@ -20,17 +18,21 @@ type UpdateProcessRequest struct {
 	Remark      *string             `json:"remark"`
 	Status      *repo.ProcessStatus `json:"status"`
 	EmployeeID  *int32              `json:"employeeID"`
-	SpendTime   *float64            `json:"spendTime"`
-	StartedAt   *time.Time          `json:"startedAt"`
-	FinishedAt  *time.Time          `json:"finishedAt"`
+	SpendTime   *float64            `json:"spendTime" validate:"gte=0"`
 }
 
 type FinishProcessRequest struct {
-	SpendTime float64 `json:"spendTime" validate:"required"`
-	Remark    string  `json:"remark"`
+	ProjectID int32   `json:"projectID" validate:"required"`
+	Sequence  int32   `json:"sequence" validate:"required"`
+	SpendTime float64 `json:"spendTime" validate:"gte=0"`
+	Remark    *string `json:"remark"`
 }
 
 type ReworkProcessRequest struct {
-	SpendTime float64 `json:"spendTime" validate:"required"`
+	SpendTime float64 `json:"spendTime" validate:"gte=0"`
 	Remark    string  `json:"remark"`
+}
+
+type DeleteProcessesRequest struct {
+	Sequences []int32 `json:"sequences" validate:"required"`
 }

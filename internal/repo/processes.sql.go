@@ -10,6 +10,40 @@ import (
 	"time"
 )
 
+const copyProcessesByProjectID = `-- name: CopyProcessesByProjectID :execrows
+INSERT INTO processes (
+  project_id,
+  name,
+  description,
+  remark,
+  employee_id,
+  sequence
+)
+SELECT
+  $1,
+  p.name,
+  p.description,
+  p.remark,
+  p.employee_id,
+  p.sequence
+FROM processes p
+WHERE p.project_id = $2
+`
+
+type CopyProcessesByProjectIDParams struct {
+	TargetProject   int32 `json:"targetProject"`
+	OriginalProject int32 `json:"originalProject"`
+}
+
+// 用于复制项目所有流程,并重置状态
+func (q *Queries) CopyProcessesByProjectID(ctx context.Context, arg CopyProcessesByProjectIDParams) (int64, error) {
+	result, err := q.db.Exec(ctx, copyProcessesByProjectID, arg.TargetProject, arg.OriginalProject)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const deleteProcess = `-- name: DeleteProcess :one
 DELETE FROM processes
 WHERE id = $1
@@ -23,30 +57,49 @@ func (q *Queries) DeleteProcess(ctx context.Context, id int32) (int32, error) {
 	return project_id, err
 }
 
-const finishProcess = `-- name: FinishProcess :one
+const deleteProcesses = `-- name: DeleteProcesses :execrows
+DELETE FROM processes
+WHERE 
+  project_id = $1 /* :project_id */
+  AND sequence = ANY($2::INT[] /* :sequence_list */)
+`
+
+type DeleteProcessesParams struct {
+	ProjectID int32   `json:"projectID"`
+	Column2   []int32 `json:"column2"`
+}
+
+func (q *Queries) DeleteProcesses(ctx context.Context, arg DeleteProcessesParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteProcesses, arg.ProjectID, arg.Column2)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const finishProcess = `-- name: FinishProcess :execrows
 UPDATE processes
 SET 
   status = '完成',
-  finished_at = CURRENT_TIMESTAMP,
   spend_time = $2,
-  remark = $3
+  remark = COALESCE($3,remark)
 WHERE
   id = $1
   AND status = '进行'
-RETURNING id
 `
 
 type FinishProcessParams struct {
 	ID        int32    `json:"id"`
 	SpendTime *float64 `json:"spendTime,omitempty"`
-	Remark    string   `json:"remark"`
+	Remark    *string  `json:"remark"`
 }
 
-func (q *Queries) FinishProcess(ctx context.Context, arg FinishProcessParams) (int32, error) {
-	row := q.db.QueryRow(ctx, finishProcess, arg.ID, arg.SpendTime, arg.Remark)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) FinishProcess(ctx context.Context, arg FinishProcessParams) (int64, error) {
+	result, err := q.db.Exec(ctx, finishProcess, arg.ID, arg.SpendTime, arg.Remark)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getMaxSequence = `-- name: GetMaxSequence :one
@@ -55,11 +108,55 @@ FROM processes
 WHERE project_id = $1
 `
 
+// 用于InsertProcessLast,获取最大sequence
 func (q *Queries) GetMaxSequence(ctx context.Context, projectID int32) (int32, error) {
 	row := q.db.QueryRow(ctx, getMaxSequence, projectID)
 	var max_seq int32
 	err := row.Scan(&max_seq)
 	return max_seq, err
+}
+
+const getNextTwoProcesses = `-- name: GetNextTwoProcesses :many
+SELECT 
+  id,
+  status
+FROM processes
+WHERE 
+  project_id = $1
+  AND sequence > $2
+ORDER BY sequence
+LIMIT 2
+`
+
+type GetNextTwoProcessesParams struct {
+	ProjectID int32 `json:"projectID"`
+	Sequence  int32 `json:"sequence"`
+}
+
+type GetNextTwoProcessesRow struct {
+	ID     int32         `json:"id"`
+	Status ProcessStatus `json:"status"`
+}
+
+// 用于同步更新process的status
+func (q *Queries) GetNextTwoProcesses(ctx context.Context, arg GetNextTwoProcessesParams) ([]GetNextTwoProcessesRow, error) {
+	rows, err := q.db.Query(ctx, getNextTwoProcesses, arg.ProjectID, arg.Sequence)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetNextTwoProcessesRow
+	for rows.Next() {
+		var i GetNextTwoProcessesRow
+		if err := rows.Scan(&i.ID, &i.Status); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getProcessByID = `-- name: GetProcessByID :one
@@ -468,9 +565,29 @@ FROM (
 WHERE p.id = sub.id
 `
 
+// 用于DeleteProcess,调整sequence
 func (q *Queries) ReorderProcesses(ctx context.Context, projectID int32) error {
 	_, err := q.db.Exec(ctx, reorderProcesses, projectID)
 	return err
+}
+
+const resetProcessByProjectID = `-- name: ResetProcessByProjectID :execrows
+UPDATE processes
+SET 
+  status = '等待',
+  spend_time = NULL,
+  started_at = NULL,
+  finished_at = NULL
+WHERE project_id = $1
+`
+
+// 用于重置项目所有流程的状态
+func (q *Queries) ResetProcessByProjectID(ctx context.Context, projectID int32) (int64, error) {
+	result, err := q.db.Exec(ctx, resetProcessByProjectID, projectID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const shiftProcessesUp = `-- name: ShiftProcessesUp :exec
@@ -493,12 +610,13 @@ type ShiftProcessesUpParams struct {
 	Sequence  int32 `json:"sequence"`
 }
 
+// 用于InsertProcessAt时,调整sequence
 func (q *Queries) ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error {
 	_, err := q.db.Exec(ctx, shiftProcessesUp, arg.ProjectID, arg.Sequence)
 	return err
 }
 
-const updateProcess = `-- name: UpdateProcess :exec
+const updateProcess = `-- name: UpdateProcess :execrows
 UPDATE processes
 SET
   name = COALESCE($1,name),
@@ -506,10 +624,8 @@ SET
   remark = COALESCE($3,remark),
   status = COALESCE($4,status),
   employee_id = COALESCE($5,employee_id),
-  spend_time = COALESCE($6,spend_time),
-  started_at = COALESCE($7,started_at),
-  finished_at = COALESCE($8,finished_at)
-WHERE id = $9
+  spend_time = COALESCE($6,spend_time)
+WHERE id = $7
 `
 
 type UpdateProcessParams struct {
@@ -519,22 +635,43 @@ type UpdateProcessParams struct {
 	Status      *ProcessStatus `json:"status"`
 	EmployeeID  *int32         `json:"employeeID"`
 	SpendTime   *float64       `json:"spendTime,omitempty"`
-	StartedAt   *time.Time     `json:"startedAt,omitempty"`
-	FinishedAt  *time.Time     `json:"finishedAt,omitempty"`
 	ID          int32          `json:"id"`
 }
 
-func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) error {
-	_, err := q.db.Exec(ctx, updateProcess,
+func (q *Queries) UpdateProcess(ctx context.Context, arg UpdateProcessParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateProcess,
 		arg.Name,
 		arg.Description,
 		arg.Remark,
 		arg.Status,
 		arg.EmployeeID,
 		arg.SpendTime,
-		arg.StartedAt,
-		arg.FinishedAt,
 		arg.ID,
 	)
-	return err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const updateProcessStatus = `-- name: UpdateProcessStatus :execrows
+UPDATE processes
+SET status = $2
+WHERE 
+  id = $1
+  AND status = $3
+`
+
+type UpdateProcessStatusParams struct {
+	ID            int32         `json:"id"`
+	TargetStatus  ProcessStatus `json:"targetStatus"`
+	CurrentStatus ProcessStatus `json:"currentStatus"`
+}
+
+func (q *Queries) UpdateProcessStatus(ctx context.Context, arg UpdateProcessStatusParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateProcessStatus, arg.ID, arg.TargetStatus, arg.CurrentStatus)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

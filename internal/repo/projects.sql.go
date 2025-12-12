@@ -10,6 +10,39 @@ import (
 	"time"
 )
 
+const copyProject = `-- name: CopyProject :one
+INSERT INTO projects (
+  name,
+  description,
+  remark,
+  manager_id,
+  priority,
+  duration
+)
+SELECT
+  $2,
+  p.description,
+  p.remark,
+  p.manager_id,
+  p.priority,
+  p.duration
+FROM projects p
+WHERE p.id = $1
+RETURNING projects.id
+`
+
+type CopyProjectParams struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) CopyProject(ctx context.Context, arg CopyProjectParams) (int32, error) {
+	row := q.db.QueryRow(ctx, copyProject, arg.ID, arg.Name)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createProject = `-- name: CreateProject :exec
 INSERT INTO projects (
   name,
@@ -59,56 +92,25 @@ func (q *Queries) DeleteProject(ctx context.Context, id int32) error {
 	return err
 }
 
-const finishProject = `-- name: FinishProject :exec
-UPDATE projects
-SET
-  status = '完成',
-  finished_at = CURRENT_TIMESTAMP
-WHERE
-  id = $1
-`
-
-func (q *Queries) FinishProject(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, finishProject, id)
-	return err
-}
-
 const getProjectByID = `-- name: GetProjectByID :one
 SELECT
-  p.name,
-  p.description,
-  p.remark,
-  p.status,
-  COALESCE(e.name,'') AS manager_name,
-  p.priority,
-  p.remaining_days
-FROM projects_view p
-LEFT JOIN employees e ON p.manager_id = e.id
-WHERE p.id = $1
+  name,
+  description,
+  remaining_days
+FROM projects_view
+WHERE id = $1
 `
 
 type GetProjectByIDRow struct {
-	Name          string        `json:"name"`
-	Description   string        `json:"description"`
-	Remark        string        `json:"remark"`
-	Status        ProjectStatus `json:"status"`
-	ManagerName   string        `json:"managerName"`
-	Priority      int32         `json:"priority"`
-	RemainingDays *int32        `json:"remainingDays,omitempty"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	RemainingDays *int32 `json:"remainingDays,omitempty"`
 }
 
 func (q *Queries) GetProjectByID(ctx context.Context, id int32) (GetProjectByIDRow, error) {
 	row := q.db.QueryRow(ctx, getProjectByID, id)
 	var i GetProjectByIDRow
-	err := row.Scan(
-		&i.Name,
-		&i.Description,
-		&i.Remark,
-		&i.Status,
-		&i.ManagerName,
-		&i.Priority,
-		&i.RemainingDays,
-	)
+	err := row.Scan(&i.Name, &i.Description, &i.RemainingDays)
 	return i, err
 }
 
@@ -186,24 +188,24 @@ func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilt
 	return items, nil
 }
 
-const startProject = `-- name: StartProject :one
+const resetProject = `-- name: ResetProject :execrows
 UPDATE projects
 SET
-  status = '进行',
-  started_at = CURRENT_TIMESTAMP
-WHERE
-  id = $1
-  AND status = '排单'
-RETURNING id
+  status = '排单',
+  started_at = NULL,
+  finished_at = NULL
+WHERE id = $1
 `
 
-func (q *Queries) StartProject(ctx context.Context, id int32) (int32, error) {
-	row := q.db.QueryRow(ctx, startProject, id)
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) ResetProject(ctx context.Context, id int32) (int64, error) {
+	result, err := q.db.Exec(ctx, resetProject, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
-const updateProject = `-- name: UpdateProject :exec
+const updateProject = `-- name: UpdateProject :execrows
 UPDATE projects
 SET
   name = COALESCE($1,name),
@@ -212,10 +214,8 @@ SET
   status = COALESCE($4,status),
   manager_id = COALESCE($5,manager_id),
   priority = COALESCE($6,priority),
-  started_at = COALESCE($7,started_at),
-  duration = COALESCE($8,duration),
-  finished_at = COALESCE($9,finished_at)
-WHERE id = $10
+  duration = COALESCE($7,duration)
+WHERE id = $8
 `
 
 type UpdateProjectParams struct {
@@ -225,24 +225,46 @@ type UpdateProjectParams struct {
 	Status      *ProjectStatus `json:"status"`
 	ManagerID   *int32         `json:"managerID"`
 	Priority    *int32         `json:"priority"`
-	StartedAt   *time.Time     `json:"startedAt,omitempty"`
 	Duration    *int32         `json:"duration,omitempty"`
-	FinishedAt  *time.Time     `json:"finishedAt,omitempty"`
 	ID          int32          `json:"id"`
 }
 
-func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) error {
-	_, err := q.db.Exec(ctx, updateProject,
+func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateProject,
 		arg.Name,
 		arg.Description,
 		arg.Remark,
 		arg.Status,
 		arg.ManagerID,
 		arg.Priority,
-		arg.StartedAt,
 		arg.Duration,
-		arg.FinishedAt,
 		arg.ID,
 	)
-	return err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const updateProjectStatus = `-- name: UpdateProjectStatus :execrows
+UPDATE projects
+SET
+  status = $2
+WHERE
+  id = $1
+  AND status = $3
+`
+
+type UpdateProjectStatusParams struct {
+	ID            int32         `json:"id"`
+	TargetStatus  ProjectStatus `json:"targetStatus"`
+	CurrentStatus ProjectStatus `json:"currentStatus"`
+}
+
+func (q *Queries) UpdateProjectStatus(ctx context.Context, arg UpdateProjectStatusParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateProjectStatus, arg.ID, arg.TargetStatus, arg.CurrentStatus)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

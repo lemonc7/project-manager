@@ -7,11 +7,13 @@ import type {
 } from "../models/projects"
 import { computed, ref } from "vue"
 import {
+  copyProject,
   createProject,
   deleteProject,
   finishProject,
   getProject,
   listProjects,
+  resetProject,
   startProject,
   updateProject
 } from "../api/projects"
@@ -88,6 +90,17 @@ export const useProjectStore = defineStore("project", () => {
     onSuccess: () => invalidateProjects()
   })
 
+  const resetMutation = useMutation({
+    mutationFn: (id: number) => resetProject(id),
+    onSuccess: () => invalidateProjects()
+  })
+
+  const copyMutation = useMutation({
+    mutationFn: ({ id, newName }: { id: number; newName: string }) =>
+      copyProject(id, newName),
+    onSuccess: () => invalidateProjects()
+  })
+
   return {
     projects: projectQuery.data,
     isLoading: projectQuery.isLoading,
@@ -101,6 +114,8 @@ export const useProjectStore = defineStore("project", () => {
     isDeleting: deleteMutation.isPending,
     isFinishing: finishMutation.isPending,
     isStarting: startMutation.isPending,
+    isResetting: resetMutation.isPending,
+    isCopying: copyMutation.isPending,
 
     setQuery,
 
@@ -108,6 +123,8 @@ export const useProjectStore = defineStore("project", () => {
     updateProject: updateMutation.mutateAsync,
     deleteProject: deleteMutation.mutateAsync,
     finishProject: finishMutation.mutateAsync,
-    startProject: startMutation.mutateAsync
+    startProject: startMutation.mutateAsync,
+    resetProject: resetMutation.mutateAsync,
+    copyProject: copyMutation.mutateAsync
   }
 })

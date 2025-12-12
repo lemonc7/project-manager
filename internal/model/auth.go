@@ -1,7 +1,7 @@
 package model
 
 type LoginRequest struct {
-	Username string `json:"username" validate:"required,max=20"`
+	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -14,7 +14,7 @@ type LoginResponse struct {
 
 type InitAdminRequest struct {
 	Name     string `json:"name" validate:"required"`
-	Username string `json:"username" validate:"required,max=20"`
+	Username string `json:"username" validate:"required,min=2,max=20"`
 	Password string `json:"password" validate:"required,min=6,max=20"`
 }
 

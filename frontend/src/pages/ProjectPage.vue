@@ -122,6 +122,15 @@
     color="neutral"
     description="请确认项目已完成，该项目的所有流程在任务面板会隐藏。"
   />
+  <!-- 重置弹窗 -->
+  <AlertModal
+    v-model:open="isResetModalOpen"
+    :on-submit="handleReset"
+    title="重置项目"
+    label="重置"
+    color="error"
+    :description="`确认要重置[${selectedProject?.name}]项目么？该操作会重置项目和相关流程的状态和时间，无法撤销！`"
+  />
 </template>
 
 <script setup lang="ts">
@@ -158,7 +167,8 @@ const queryClient = useQueryClient()
 
 const projectStore = useProjectStore()
 const { projects, isLoading } = storeToRefs(projectStore)
-const { setQuery, deleteProject, startProject, finishProject } = projectStore
+const { setQuery, deleteProject, startProject, finishProject, resetProject } =
+  projectStore
 
 onMounted(() => {
   setQuery({})
@@ -172,6 +182,8 @@ const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const isStartModalOpen = ref(false)
 const isFinishModalOpen = ref(false)
+const isResetModalOpen = ref(false)
+const isCopyModalOpen = ref(false)
 const selectedProject = ref<Project | null>(null)
 
 const table = useTemplateRef<{ tableApi: Table<Project> }>("table")
@@ -246,6 +258,27 @@ async function handleFinish() {
   }
 }
 
+// 重置项目
+async function handleReset() {
+  if (selectedProject.value) {
+    try {
+      await resetProject(selectedProject.value.id)
+      toast.add({
+        title: `项目 ${selectedProject.value.name} 已重置`,
+        color: "success"
+      })
+    } catch (err) {
+      toast.add({
+        title: "重置失败",
+        color: "error"
+      })
+      console.log("重置项目失败:", err)
+    } finally {
+      isResetModalOpen.value = false
+    }
+  }
+}
+
 // 分页定义
 const pagination = ref({
   pageIndex: 0,
@@ -279,6 +312,7 @@ function getRowItems(row: Row<Project>) {
     {
       label: "编辑",
       icon: "i-lucide-pencil",
+      disabled: !hasAtLeastRole("manager"),
       onSelect: () => {
         isEditModalOpen.value = true
         selectedProject.value = row.original
@@ -287,7 +321,7 @@ function getRowItems(row: Row<Project>) {
     {
       label: "开始",
       icon: "i-lucide-play",
-      disabled: row.original.status !== "排单",
+      disabled: row.original.status !== "排单" || !hasAtLeastRole("manager"),
       onSelect: () => {
         isStartModalOpen.value = true
         selectedProject.value = row.original
@@ -296,9 +330,18 @@ function getRowItems(row: Row<Project>) {
     {
       label: "完成",
       icon: "i-lucide-check",
-      disabled: row.original.status !== "进行",
+      disabled: row.original.status !== "进行" || !hasAtLeastRole("manager"),
       onSelect: () => {
         isFinishModalOpen.value = true
+        selectedProject.value = row.original
+      }
+    },
+    {
+      label: "复制",
+      icon: "i-lucide-copy",
+      disabled: !hasAtLeastRole("manager"),
+      onSelect: () => {
+        isCopyModalOpen.value = true
         selectedProject.value = row.original
       }
     },
@@ -312,6 +355,16 @@ function getRowItems(row: Row<Project>) {
       disabled: !hasAtLeastRole("manager"),
       onSelect: () => {
         isDeleteModalOpen.value = true
+        selectedProject.value = row.original
+      }
+    },
+    {
+      label: "重置",
+      icon: "i-lucide-rotate-ccw",
+      color: "error",
+      disabled: !hasAtLeastRole("manager"),
+      onSelect: () => {
+        isResetModalOpen.value = true
         selectedProject.value = row.original
       }
     }
@@ -414,7 +467,7 @@ const columns: TableColumn<Project>[] = [
   },
   {
     accessorKey: "remark",
-    header: "备注",
+    header: "备注"
   },
   {
     id: "actions",

@@ -23,15 +23,15 @@ db_create:
 		echo "✅ Database '${DB_NAME}' already exists."; \
 	fi
 
-db_drop:
-	@echo "💥 Dropping database '${DB_NAME}'..."
-	@if psql "${ROOT_DB_URL}" -tAc "SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'" | grep -q 1; then \
-		psql "${ROOT_DB_URL}" -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='${DB_NAME}';"; \
-		psql "${ROOT_DB_URL}" -c "DROP DATABASE ${DB_NAME}"; \
-		echo "✅ Database '${DB_NAME}' dropped."; \
-	else \
-		echo "ℹ️ Database '${DB_NAME}' does not exist."; \
-	fi
+# db_drop:
+# 	@echo "💥 Dropping database '${DB_NAME}'..."
+# 	@if psql "${ROOT_DB_URL}" -tAc "SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'" | grep -q 1; then \
+# 		psql "${ROOT_DB_URL}" -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='${DB_NAME}';"; \
+# 		psql "${ROOT_DB_URL}" -c "DROP DATABASE ${DB_NAME}"; \
+# 		echo "✅ Database '${DB_NAME}' dropped."; \
+# 	else \
+# 		echo "ℹ️ Database '${DB_NAME}' does not exist."; \
+# 	fi
 
 # migrate_create name=xxx
 migrate_create:

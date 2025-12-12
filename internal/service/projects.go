@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,11 +10,13 @@ import (
 )
 
 type ProjectService struct {
+	db      *pgxpool.Pool
 	querier repo.Querier
 }
 
 func NewProjectService(db *pgxpool.Pool) *ProjectService {
 	return &ProjectService{
+		db:      db,
 		querier: repo.New(db),
 	}
 }
@@ -33,7 +33,7 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 }
 
 func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) error {
-	return p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
+	rows, err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
 		ID:          id,
 		Name:        req.Name,
 		Description: req.Description,
@@ -41,10 +41,17 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.
 		Status:      req.Status,
 		ManagerID:   req.ManagerID,
 		Priority:    req.Priority,
-		StartedAt:   req.StartedAt,
 		Duration:    req.Duration,
-		FinishedAt:  req.FinishedAt,
 	})
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("没有找到被更新的项目")
+	}
+
+	return nil
 }
 
 func (p *ProjectService) DeleteProject(ctx context.Context, id int32) error {
@@ -65,21 +72,150 @@ func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.Lis
 }
 
 func (p *ProjectService) StartProject(ctx context.Context, id int32) error {
-	_, err := p.querier.StartProject(ctx, id)
+	// 开启事务
+	tx, err := p.db.Begin(ctx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("项目状态必须为'排单'")
-		}
+		return fmt.Errorf("开启事务: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// 使用事务
+	qtx := repo.New(p.db).WithTx(tx)
+
+	// 获取项目前两个process
+	processes, err := p.querier.GetNextTwoProcesses(ctx, repo.GetNextTwoProcessesParams{
+		ProjectID: id,
+		Sequence:  0,
+	})
+	if err != nil {
+		return fmt.Errorf("获取process: %w", err)
+	}
+
+	// 项目没有process,开始project没有意义
+	if len(processes) == 0 {
+		return fmt.Errorf("项目没有process")
+	}
+
+	// 先将项目设置为"进行"状态
+	rows, err := p.querier.UpdateProjectStatus(ctx, repo.UpdateProjectStatusParams{
+		ID:            id,
+		TargetStatus:  "进行",
+		CurrentStatus: "排单",
+	})
+	if err != nil {
 		return err
 	}
 
-	return nil
-}
+	if rows == 0 {
+		return fmt.Errorf("项目未被更新: 项目初始状态应为'排单'")
+	}
 
-func (p *ProjectService) FinishProject(ctx context.Context, id int32) error {
-	return p.querier.FinishProject(ctx, id)
+	// 更新第一步process状态
+	rows, err = qtx.UpdateProcessStatus(ctx, repo.UpdateProcessStatusParams{
+		ID:            processes[0].ID,
+		TargetStatus:  "进行",
+		CurrentStatus: "等待",
+	})
+
+	if err != nil {
+		return fmt.Errorf("更新第一步process: %w", err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("第一步process未被更新: 第一步process初始状态应为'等待'")
+	}
+
+	// 如果有第二步
+	if len(processes) > 1 {
+		rows, err := qtx.UpdateProcessStatus(ctx, repo.UpdateProcessStatusParams{
+			ID:            processes[1].ID,
+			TargetStatus:  "准备",
+			CurrentStatus: "等待",
+		})
+
+		if err != nil {
+			return fmt.Errorf("更新第二步process: %w", err)
+		}
+
+		if rows == 0 {
+			return fmt.Errorf("第二步process未被更新: 第二步process初始状态应为'等待'")
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (p *ProjectService) GetProjectByID(ctx context.Context, id int32) (repo.GetProjectByIDRow, error) {
 	return p.querier.GetProjectByID(ctx, id)
+}
+
+func (p *ProjectService) ResetStatus(ctx context.Context, id int32) error {
+	// 开启事务
+	tx, err := p.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("开启事务: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// 使用事务
+	qtx := repo.New(p.db).WithTx(tx)
+
+	// 重置project的状态
+	rows, err := qtx.ResetProject(ctx, id)
+
+	if err != nil {
+		return fmt.Errorf("重置项目状态: %w", err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("未找到对应项目")
+	}
+
+	// 重置process的状态
+	rows, err = qtx.ResetProcessByProjectID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("重置流程状态: %w", err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("该项目中未找到对应流程或无流程")
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (p *ProjectService) CopyProject(ctx context.Context, id int32, req model.CopyProjectRequest) error {
+	tx, err := p.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("开启事务: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := repo.New(p.db).WithTx(tx)
+
+	// 复制项目并重置
+	newProjectID, err := qtx.CopyProject(ctx, repo.CopyProjectParams{
+		ID:   id,
+		Name: req.NewName,
+	})
+
+	if err != nil {
+		return fmt.Errorf("复制项目: %w", err)
+	}
+
+	// 复制process并重置
+	rows, err := qtx.CopyProcessesByProjectID(ctx, repo.CopyProcessesByProjectIDParams{
+		TargetProject:   newProjectID,
+		OriginalProject: id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("复制流程: %w", err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("未找到对应流程或无流程")
+	}
+
+	return tx.Commit(ctx)
 }

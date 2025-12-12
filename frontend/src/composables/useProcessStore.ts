@@ -3,6 +3,7 @@ import { defineStore } from "pinia"
 import { useRoute } from "vue-router"
 import {
   deleteProcess,
+  deleteProcesses,
   finishProcess,
   insertProcessAt,
   insertProcessLast,
@@ -95,6 +96,17 @@ export const useProcessStore = defineStore("process", () => {
     onSuccess: () => invalidateProcesses()
   })
 
+  const deleteSeriesMutation = useMutation({
+    mutationFn: ({
+      projectID,
+      sequences
+    }: {
+      projectID: number
+      sequences: number[]
+    }) => deleteProcesses(projectID, sequences),
+    onSuccess: () => invalidateProcesses()
+  })
+
   const finishMutation = useMutation({
     mutationFn: ({ id, req }: { id: number; req: FinishProcessRequest }) =>
       finishProcess(id, req),
@@ -118,6 +130,7 @@ export const useProcessStore = defineStore("process", () => {
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isDeletingSeries: deleteSeriesMutation.isPending,
     isFinishing: finishMutation.isPending,
     isReworking: reworkMutation.isPending,
 
@@ -126,6 +139,7 @@ export const useProcessStore = defineStore("process", () => {
     createProcess: createMutation.mutateAsync,
     updateProcess: updateMutation.mutateAsync,
     deleteProcess: deleteMutation.mutateAsync,
+    deleteProcesses: deleteSeriesMutation.mutateAsync,
     finishProcess: finishMutation.mutateAsync,
     reworkProcess: reworkMutation.mutateAsync
   }

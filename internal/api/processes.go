@@ -17,6 +17,7 @@ type ProcessService interface {
 	InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error
 	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error
 	DeleteProcess(ctx context.Context, id int32) error
+	DeleteProcesses(ctx context.Context, projectID int32, req model.DeleteProcessesRequest) error
 	ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error)
 	ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error)
 	ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error)
@@ -128,6 +129,30 @@ func (p *ProcessHandler) DeleteProcess(c echo.Context) error {
 	}
 
 	// 返回响应
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "成功删除流程",
+	})
+}
+
+func (p *ProcessHandler) DeleteProcesses(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+
+	var req model.DeleteProcessesRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	}
+
+	if err := c.Validate(req); err != nil {
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	}
+
+	if err := p.processService.DeleteProcesses(c.Request().Context(), id, req); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("删除流程: %w", err))
+	}
+
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "成功删除流程",
 	})

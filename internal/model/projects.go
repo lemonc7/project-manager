@@ -11,8 +11,8 @@ type CreateProjectRequest struct {
 	Description string `json:"description"`
 	ManagerID   int32  `json:"managerID" validate:"required"`
 	Remark      string `json:"remark"`
-	Priority    int32  `json:"priority" validate:"required,min=1,max=5"`
-	Duration    *int32 `json:"duration"`
+	Priority    int32  `json:"priority" validate:"required,gte=1,lte=5"`
+	Duration    *int32 `json:"duration" validate:"gte=0"`
 }
 
 type UpdateProjectRequest struct {
@@ -21,13 +21,15 @@ type UpdateProjectRequest struct {
 	Remark      *string             `json:"remark"`
 	Status      *repo.ProjectStatus `json:"status"`
 	ManagerID   *int32              `json:"managerID"`
-	Priority    *int32              `json:"priority"`
-	StartedAt   *time.Time          `json:"startedAt"`
-	Duration    *int32              `json:"duration"`
-	FinishedAt  *time.Time          `json:"finishedAt"`
+	Priority    *int32              `json:"priority" validate:"gte=1,lte=5"`
+	Duration    *int32              `json:"duration" validate:"gte=0"`
 }
 
 type ListProjectsRequest struct {
 	StartAt *time.Time `query:"startAt"`
 	EndAt   *time.Time `query:"endAt"`
+}
+
+type CopyProjectRequest struct {
+	NewName string `json:"newName" validate:"required"`
 }

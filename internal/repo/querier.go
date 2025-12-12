@@ -10,18 +10,24 @@ import (
 
 type Querier interface {
 	AllowInitAdmin(ctx context.Context) (bool, error)
+	// 用于复制项目所有流程,并重置状态
+	CopyProcessesByProjectID(ctx context.Context, arg CopyProcessesByProjectIDParams) (int64, error)
+	CopyProject(ctx context.Context, arg CopyProjectParams) (int32, error)
 	CreateEmployee(ctx context.Context, arg CreateEmployeeParams) error
 	CreateProject(ctx context.Context, arg CreateProjectParams) error
 	CreateSetting(ctx context.Context, arg CreateSettingParams) error
 	CreateTeam(ctx context.Context, arg CreateTeamParams) error
 	DeleteEmployee(ctx context.Context, id int32) error
 	DeleteProcess(ctx context.Context, id int32) (int32, error)
+	DeleteProcesses(ctx context.Context, arg DeleteProcessesParams) (int64, error)
 	DeleteProject(ctx context.Context, id int32) error
 	DeleteTeam(ctx context.Context, id int32) error
-	FinishProcess(ctx context.Context, arg FinishProcessParams) (int32, error)
-	FinishProject(ctx context.Context, id int32) error
+	FinishProcess(ctx context.Context, arg FinishProcessParams) (int64, error)
 	GetEmployeeByUsername(ctx context.Context, username string) (GetEmployeeByUsernameRow, error)
+	// 用于InsertProcessLast,获取最大sequence
 	GetMaxSequence(ctx context.Context, projectID int32) (int32, error)
+	// 用于同步更新process的status
+	GetNextTwoProcesses(ctx context.Context, arg GetNextTwoProcessesParams) ([]GetNextTwoProcessesRow, error)
 	GetProcessByID(ctx context.Context, id int32) (GetProcessByIDRow, error)
 	GetProjectByID(ctx context.Context, id int32) (GetProjectByIDRow, error)
 	InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error
@@ -34,13 +40,19 @@ type Querier interface {
 	ListTasksReady(ctx context.Context, employeeID int32) ([]ListTasksReadyRow, error)
 	ListTasksTodo(ctx context.Context, employeeID int32) ([]ListTasksTodoRow, error)
 	ListTeams(ctx context.Context) ([]ListTeamsRow, error)
+	// 用于DeleteProcess,调整sequence
 	ReorderProcesses(ctx context.Context, projectID int32) error
+	// 用于重置项目所有流程的状态
+	ResetProcessByProjectID(ctx context.Context, projectID int32) (int64, error)
+	ResetProject(ctx context.Context, id int32) (int64, error)
+	// 用于InsertProcessAt时,调整sequence
 	ShiftProcessesUp(ctx context.Context, arg ShiftProcessesUpParams) error
-	StartProject(ctx context.Context, id int32) (int32, error)
 	UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error
 	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error
-	UpdateProcess(ctx context.Context, arg UpdateProcessParams) error
-	UpdateProject(ctx context.Context, arg UpdateProjectParams) error
+	UpdateProcess(ctx context.Context, arg UpdateProcessParams) (int64, error)
+	UpdateProcessStatus(ctx context.Context, arg UpdateProcessStatusParams) (int64, error)
+	UpdateProject(ctx context.Context, arg UpdateProjectParams) (int64, error)
+	UpdateProjectStatus(ctx context.Context, arg UpdateProjectStatusParams) (int64, error)
 	UpdateTeam(ctx context.Context, arg UpdateTeamParams) error
 }
 

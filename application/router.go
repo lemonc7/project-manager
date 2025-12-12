@@ -42,21 +42,23 @@ func (a *Application) initRouter() {
 	// 项目
 	projectRouter.GET("/:id", a.projectHandler.GetProjectByID)
 	projectRouter.GET("", a.projectHandler.ListProjects)
-	projectRouter.POST("", a.projectHandler.CreateProject)
-	projectRouter.POST("/finish/:id", a.projectHandler.FinishProject)
-	projectRouter.POST("/start/:id", a.projectHandler.StartProject)
-	projectRouter.PATCH("/:id", a.projectHandler.UpdateProject)
+	projectRouter.POST("", a.projectHandler.CreateProject, mw.RequireRoleAtLeast("manager"))
+	projectRouter.POST("/start/:id", a.projectHandler.StartProject, mw.RequireRoleAtLeast("manager"))
+	projectRouter.POST("/reset/:id", a.projectHandler.ResetStatus, mw.RequireRoleAtLeast("manager"))
+	projectRouter.POST("/copy/:id", a.projectHandler.CopyProject, mw.RequireRoleAtLeast("manager"))
+	projectRouter.PATCH("/:id", a.projectHandler.UpdateProject, mw.RequireRoleAtLeast("manager"))
 	projectRouter.DELETE("/:id", a.projectHandler.DeleteProject, mw.RequireRoleAtLeast("manager"))
 
 	// 流程
 	processRouter.GET("/:id", a.processHandler.ListProcesses)
 	processRouter.GET("/task/:id", a.processHandler.ListTasks)
-	processRouter.POST("/rework/:id", a.processHandler.ReworkProcess)
 	processRouter.POST("", a.processHandler.InsertProcessLast)
 	processRouter.POST("/:id", a.processHandler.InsertProcessAt)
+	processRouter.POST("/rework/:id", a.processHandler.ReworkProcess)
 	processRouter.POST("/finish/:id", a.processHandler.FinishProcess)
 	processRouter.PATCH("/:id", a.processHandler.UpdateProcess)
 	processRouter.DELETE("/:id", a.processHandler.DeleteProcess)
+	processRouter.DELETE("/series/:id", a.processHandler.DeleteProcesses)
 
 	// 挂载静态文件
 	a.e.Use(middleware.StaticWithConfig(middleware.StaticConfig{

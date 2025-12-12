@@ -25,14 +25,15 @@ interface UpdateProcessRequest {
   status?: ProcessStatus
   employeeID?: number
   spendTime?: number
-  startedAt?: string
-  finishedAt?: string
 }
 
 interface FinishProcessRequest {
+  projectID: number
+  sequence: number
   spendTime: number
-  remark: string
+  remark?: string
 }
+
 interface ReworkProcessRequest {
   spendTime: number
   remark: string

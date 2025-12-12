@@ -26,9 +26,7 @@ interface UpdateProjectRequest {
   status?: ProjectStatus
   managerID?: number
   priority?: number
-  startedAt?: string
   duration?: number
-  finishedAt?: string
 }
 
 interface ListProjectsRequest {
@@ -53,10 +51,6 @@ interface Project {
 interface ProjectGet {
   name: string
   description: string
-  remark: string
-  status: ProjectStatus
-  managerName: string
-  priority: number
   remainingDays?: number
 }
 

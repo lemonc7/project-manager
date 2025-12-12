@@ -4,7 +4,12 @@
     title="创建"
     description="添加一个新项目到数据库中"
   >
-    <UButton label="创建项目" icon="i-lucide-calendar-plus" color="neutral" />
+    <UButton
+      label="创建项目"
+      icon="i-lucide-calendar-plus"
+      color="neutral"
+      :disabled="!hasAtLeastRole('manager')"
+    />
     <template #body>
       <UForm
         :schema="schema"
@@ -83,7 +88,7 @@ import type { FormSubmitEvent } from "@nuxt/ui"
 import { reactive, ref, watch } from "vue"
 import z from "zod"
 import type { CreateProjectRequest } from "../../models/projects"
-import { getUserID } from "../../utils/auth"
+import { getUserID, hasAtLeastRole } from "../../utils/auth"
 import { useProjectStore } from "../../composables/useProjectStore"
 import { storeToRefs } from "pinia"
 

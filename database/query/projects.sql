@@ -37,7 +37,7 @@ INSERT INTO projects (
   $6
 );
 
--- name: UpdateProject :exec
+-- name: UpdateProject :execrows
 UPDATE projects
 SET
   name = COALESCE(sqlc.narg('name'),name),
@@ -46,42 +46,53 @@ SET
   status = COALESCE(sqlc.narg('status'),status),
   manager_id = COALESCE(sqlc.narg('manager_id'),manager_id),
   priority = COALESCE(sqlc.narg('priority'),priority),
-  started_at = COALESCE(sqlc.narg('started_at'),started_at),
-  duration = COALESCE(sqlc.narg('duration'),duration),
-  finished_at = COALESCE(sqlc.narg('finished_at'),finished_at)
+  duration = COALESCE(sqlc.narg('duration'),duration)
 WHERE id = sqlc.arg('id');
 
 -- name: DeleteProject :exec
 DELETE FROM projects
 WHERE id = $1;
 
--- name: StartProject :one
+-- name: UpdateProjectStatus :execrows
 UPDATE projects
 SET
-  status = '进行',
-  started_at = CURRENT_TIMESTAMP
+  status = sqlc.arg('target_status')
 WHERE
   id = $1
-  AND status = '排单'
-RETURNING id;
-
--- name: FinishProject :exec
-UPDATE projects
-SET
-  status = '完成',
-  finished_at = CURRENT_TIMESTAMP
-WHERE
-  id = $1;
+  AND status = sqlc.arg('current_status');
 
 -- name: GetProjectByID :one
 SELECT
-  p.name,
+  name,
+  description,
+  remaining_days
+FROM projects_view
+WHERE id = $1;
+
+-- name: ResetProject :execrows
+UPDATE projects
+SET
+  status = '排单',
+  started_at = NULL,
+  finished_at = NULL
+WHERE id = $1;
+
+-- name: CopyProject :one
+INSERT INTO projects (
+  name,
+  description,
+  remark,
+  manager_id,
+  priority,
+  duration
+)
+SELECT
+  $2,
   p.description,
   p.remark,
-  p.status,
-  COALESCE(e.name,'') AS manager_name,
+  p.manager_id,
   p.priority,
-  p.remaining_days
-FROM projects_view p
-LEFT JOIN employees e ON p.manager_id = e.id
-WHERE p.id = $1;
+  p.duration
+FROM projects p
+WHERE p.id = $1
+RETURNING projects.id; -- 返回新的id,方便复制processes

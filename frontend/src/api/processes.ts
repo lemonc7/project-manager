@@ -40,6 +40,10 @@ export async function deleteProcess(id: number) {
   return service.delete(`/process/${id}`)
 }
 
+export async function deleteProcesses(projectID: number, sequences: number[]) {
+  return service.delete(`/process/series/${projectID}`, { data: { sequences } })
+}
+
 export async function finishProcess(id: number, req: FinishProcessRequest) {
   return service.post(`/process/finish/${id}`, req)
 }

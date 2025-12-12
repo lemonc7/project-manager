@@ -31,10 +31,18 @@ export async function startProject(id: number) {
 }
 
 export async function finishProject(id: number) {
-  return service.post(`/project/finish/${id}`)
+  return updateProject(id, { status: "完成" })
 }
 
 export async function getProject(id: number) {
   const res = await service.get<ProjectGet>(`/project/${id}`)
   return res.data
+}
+
+export async function resetProject(id: number) {
+  return service.post(`/project/reset/${id}`)
+}
+
+export async function copyProject(id: number, newName: string) {
+  return service.post(`/project/copy/${id}`, { newName })
 }
