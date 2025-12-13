@@ -41,15 +41,7 @@
           <UserMenu :collapsed="collapsed" />
         </template>
       </UDashboardSidebar>
-      <!-- 外侧容器 -->
-      <div class="flex flex-1 flex-col bg-gray-100 p-2">
-        <!-- 圆角容器 -->
-        <div
-          class="flex flex-1 flex-col rounded-xl bg-white shadow overflow-hidden"
-        >
-          <RouterView />
-        </div>
-      </div>
+      <RouterView />
     </UDashboardGroup>
   </UApp>
 </template>

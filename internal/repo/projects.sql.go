@@ -23,7 +23,7 @@ SELECT
   $2,
   p.description,
   p.remark,
-  p.manager_id,
+  $3,
   p.priority,
   p.duration
 FROM projects p
@@ -32,12 +32,13 @@ RETURNING projects.id
 `
 
 type CopyProjectParams struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
+	ID        int32  `json:"id"`
+	Name      string `json:"name"`
+	ManagerID int32  `json:"managerID"`
 }
 
 func (q *Queries) CopyProject(ctx context.Context, arg CopyProjectParams) (int32, error) {
-	row := q.db.QueryRow(ctx, copyProject, arg.ID, arg.Name)
+	row := q.db.QueryRow(ctx, copyProject, arg.ID, arg.Name, arg.ManagerID)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
@@ -112,6 +113,23 @@ func (q *Queries) GetProjectByID(ctx context.Context, id int32) (GetProjectByIDR
 	var i GetProjectByIDRow
 	err := row.Scan(&i.Name, &i.Description, &i.RemainingDays)
 	return i, err
+}
+
+const isProjectExists = `-- name: IsProjectExists :one
+
+SELECT EXISTS (
+  SELECT 1
+  FROM projects
+  WHERE name = $1
+) AS is_project_exists
+`
+
+// 返回新的id,方便复制processes
+func (q *Queries) IsProjectExists(ctx context.Context, name string) (bool, error) {
+	row := q.db.QueryRow(ctx, isProjectExists, name)
+	var is_project_exists bool
+	err := row.Scan(&is_project_exists)
+	return is_project_exists, err
 }
 
 const listProjectsFiltered = `-- name: ListProjectsFiltered :many

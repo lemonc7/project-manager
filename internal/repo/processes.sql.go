@@ -60,8 +60,8 @@ func (q *Queries) DeleteProcess(ctx context.Context, id int32) (int32, error) {
 const deleteProcesses = `-- name: DeleteProcesses :execrows
 DELETE FROM processes
 WHERE 
-  project_id = $1 /* :project_id */
-  AND sequence = ANY($2::INT[] /* :sequence_list */)
+  project_id = $1
+  AND sequence = ANY($2::INT[])
 `
 
 type DeleteProcessesParams struct {

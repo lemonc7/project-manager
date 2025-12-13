@@ -18,12 +18,12 @@
       <div class="flex flex-wrap items-center justify-between gap-2">
         <UInput
           v-model="name"
-          class="max-w-sm"
+          :class="isMobile ? 'w-36' : 'max-w-sm'"
           icon="i-lucide-search"
           placeholder="过滤项目名称..."
         />
         <div class="flex flex-wrap items-center gap-2">
-          <UFieldGroup class="px-2">
+          <UFieldGroup>
             <USelect
               v-model="statusFilter"
               multiple
@@ -34,7 +34,7 @@
                 trailingIcon:
                   'group-date-[state=open]:rotate-180 transition-transform duration-200'
               }"
-              class="min-w-44"
+              :class="isMobile ? 'w-28' : 'min-w-44'"
             />
             <UTooltip :delay-duration="100" text="重置过滤条件">
               <UButton
@@ -65,9 +65,11 @@
       <UTable
         ref="table"
         v-model:column-filters="columnFilters"
-        v-model:pagination="pagination"
-        :pagination-options="{
-          getPaginationRowModel: getPaginationRowModel()
+        v-model:row-selection="rowSelection"
+        :column-visibility="{
+          id: !isMobile,
+          startedAt: !isMobile,
+          remark: !isMobile
         }"
         :data="projects"
         :columns="columns"
@@ -81,16 +83,6 @@
           separator: 'h-0'
         }"
       />
-      <div class="flex mt-auto justify-end">
-        <UPagination
-          :default-page="
-            (table?.tableApi.getState().pagination.pageIndex || 0) + 1
-          "
-          :items-per-page="table?.tableApi.getState().pagination.pageSize"
-          :total="totalRows"
-          @update:page="(p) => table?.tableApi.setPageIndex(p - 1)"
-        />
-      </div>
     </template>
   </UDashboardPanel>
   <!-- 删除弹窗 -->
@@ -131,23 +123,13 @@
     color="error"
     :description="`确认要重置[${selectedProject?.name}]项目么？该操作会重置项目和相关流程的状态和时间，无法撤销！`"
   />
+  <!-- 复制弹窗 -->
+  <CopyProjectModal v-model:open="isCopyModalOpen" :project="selectedProject" />
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  h,
-  onMounted,
-  ref,
-  resolveComponent,
-  useTemplateRef,
-  watch
-} from "vue"
-import {
-  getPaginationRowModel,
-  type Row,
-  type Table
-} from "@tanstack/table-core"
+import { h, onMounted, ref, resolveComponent, useTemplateRef, watch } from "vue"
+import { type Row, type Table } from "@tanstack/table-core"
 import {
   ProjectStatusOptions,
   type Project,
@@ -160,15 +142,18 @@ import { storeToRefs } from "pinia"
 import { useProjectStore } from "../composables/useProjectStore"
 import { useQueryClient } from "@tanstack/vue-query"
 import { hasAtLeastRole } from "../utils/auth"
+import { useScreenStore } from "../composables/useScreenStore"
 
 const router = useRouter()
 const toast = useToast()
 const queryClient = useQueryClient()
 
 const projectStore = useProjectStore()
+const screenStore = useScreenStore()
 const { projects, isLoading } = storeToRefs(projectStore)
 const { setQuery, deleteProject, startProject, finishProject, resetProject } =
   projectStore
+const { isMobile } = storeToRefs(screenStore)
 
 onMounted(() => {
   setQuery({})
@@ -191,6 +176,7 @@ const table = useTemplateRef<{ tableApi: Table<Project> }>("table")
 const UDropdownMenu = resolveComponent("UDropdownMenu")
 const UButton = resolveComponent("UButton")
 const UBadge = resolveComponent("UBadge")
+const UCheckbox = resolveComponent("UCheckbox")
 
 // 刷新项目中的流程
 function invalidProjectProcesses() {
@@ -285,16 +271,6 @@ async function handleReset() {
   }
 }
 
-// 分页定义
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10
-})
-
-const totalRows = computed(() => {
-  return table.value?.tableApi.getFilteredRowModel().rows.length ?? 0
-})
-
 // 操作菜单定义
 function getRowItems(row: Row<Project>) {
   return [
@@ -377,8 +353,29 @@ function getRowItems(row: Row<Project>) {
   ]
 }
 
+const rowSelection = ref<Record<number, boolean>>({})
+
 // 表格列定义
 const columns: TableColumn<Project>[] = [
+  {
+    id: "select",
+    header: ({ table }) =>
+      h(UCheckbox, {
+        modelValue: table.getIsSomePageRowsSelected()
+          ? "indeterminate"
+          : table.getIsAllPageRowsSelected(),
+        "onUpdate:modelValue": (value: boolean | "indeterminate") =>
+          table.toggleAllPageRowsSelected(!!value),
+        ariaLabel: "Select all"
+      }),
+    cell: ({ row }) =>
+      h(UCheckbox, {
+        modelValue: row.getIsSelected(),
+        "onUpdate:modelValue": (value: boolean | "indeterminate") =>
+          row.toggleSelected(!!value),
+        ariaLabel: "Select row"
+      })
+  },
   {
     accessorKey: "id",
     header: "ID"
@@ -431,6 +428,7 @@ const columns: TableColumn<Project>[] = [
     cell: ({ row }) => getEmployeeName(row.original.managerID)
   },
   {
+    accessorKey: "startedAt",
     header: "开始时间",
     cell: ({ row }) => {
       const dateStr = row.original.startedAt

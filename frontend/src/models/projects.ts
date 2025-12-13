@@ -34,6 +34,11 @@ interface ListProjectsRequest {
   endAt?: string
 }
 
+interface CopyProjectRequest {
+  newName: string
+  managerID: number
+}
+
 interface Project {
   id: number
   name: string
@@ -58,6 +63,7 @@ export type {
   CreateProjectRequest,
   UpdateProjectRequest,
   ListProjectsRequest,
+  CopyProjectRequest,
   Project,
   ProjectGet
 }

@@ -1,4 +1,5 @@
 import type {
+  CopyProjectRequest,
   CreateProjectRequest,
   ListProjectsRequest,
   Project,
@@ -43,6 +44,15 @@ export async function resetProject(id: number) {
   return service.post(`/project/reset/${id}`)
 }
 
-export async function copyProject(id: number, newName: string) {
-  return service.post(`/project/copy/${id}`, { newName })
+export async function copyProject(id: number, req: CopyProjectRequest) {
+  return service.post(`/project/copy/${id}`, req)
+}
+
+export async function isProjectExists(name: string) {
+  const res = await service.get<boolean>("/project/exist", {
+    params: {
+      newName: name
+    }
+  })
+  return res.data
 }

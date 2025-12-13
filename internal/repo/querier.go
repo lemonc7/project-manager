@@ -33,6 +33,8 @@ type Querier interface {
 	InsertProcessAt(ctx context.Context, arg InsertProcessAtParams) error
 	InsertProcessLast(ctx context.Context, arg InsertProcessLastParams) error
 	InsertReworkProcess(ctx context.Context, arg InsertReworkProcessParams) error
+	// 返回新的id,方便复制processes
+	IsProjectExists(ctx context.Context, name string) (bool, error)
 	ListEmployees(ctx context.Context) ([]ListEmployeesRow, error)
 	ListProcesses(ctx context.Context, projectID int32) ([]ListProcessesRow, error)
 	ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error)

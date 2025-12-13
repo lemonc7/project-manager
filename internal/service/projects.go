@@ -195,8 +195,9 @@ func (p *ProjectService) CopyProject(ctx context.Context, id int32, req model.Co
 
 	// 复制项目并重置
 	newProjectID, err := qtx.CopyProject(ctx, repo.CopyProjectParams{
-		ID:   id,
-		Name: req.NewName,
+		ID:        id,
+		Name:      req.NewName,
+		ManagerID: req.ManagerID,
 	})
 
 	if err != nil {
@@ -218,4 +219,12 @@ func (p *ProjectService) CopyProject(ctx context.Context, id int32, req model.Co
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (p *ProjectService) IsProjectExists(ctx context.Context, name string) (bool, error) {
+	exists, err := p.querier.IsProjectExists(ctx, name)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

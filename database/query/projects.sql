@@ -90,9 +90,16 @@ SELECT
   $2,
   p.description,
   p.remark,
-  p.manager_id,
+  $3,
   p.priority,
   p.duration
 FROM projects p
 WHERE p.id = $1
 RETURNING projects.id; -- 返回新的id,方便复制processes
+
+-- name: IsProjectExists :one
+SELECT EXISTS (
+  SELECT 1
+  FROM projects
+  WHERE name = $1
+) AS is_project_exists;

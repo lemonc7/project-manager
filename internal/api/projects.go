@@ -21,6 +21,7 @@ type ProjectService interface {
 	GetProjectByID(ctx context.Context, id int32) (repo.GetProjectByIDRow, error)
 	ResetStatus(ctx context.Context, id int32) error
 	CopyProject(ctx context.Context, id int32, req model.CopyProjectRequest) error
+	IsProjectExists(ctx context.Context, name string) (bool, error)
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)
@@ -179,4 +180,21 @@ func (p *ProjectHandler) CopyProject(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "成功复制项目与相关流程",
 	})
+}
+
+func (p *ProjectHandler) IsProjectExists(c echo.Context) error {
+	var req model.IsProjectExistsRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	}
+
+	if err := c.Validate(req); err != nil {
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	}
+
+	exists, err := p.projectService.IsProjectExists(c.Request().Context(), req.NewName)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("判断项目是否存在: %w", err))
+	}
+	return c.JSON(http.StatusOK, exists)
 }

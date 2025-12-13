@@ -31,5 +31,10 @@ type ListProjectsRequest struct {
 }
 
 type CopyProjectRequest struct {
-	NewName string `json:"newName" validate:"required"`
+	NewName   string `json:"newName" validate:"required"`
+	ManagerID int32  `json:"managerID" validate:"required"`
+}
+
+type IsProjectExistsRequest struct {
+	NewName string `query:"newName" validate:"required"`
 }

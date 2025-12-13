@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query"
 import { defineStore } from "pinia"
 import type {
+  CopyProjectRequest,
   CreateProjectRequest,
   ListProjectsRequest,
   UpdateProjectRequest
@@ -12,6 +13,7 @@ import {
   deleteProject,
   finishProject,
   getProject,
+  isProjectExists,
   listProjects,
   resetProject,
   startProject,
@@ -96,9 +98,13 @@ export const useProjectStore = defineStore("project", () => {
   })
 
   const copyMutation = useMutation({
-    mutationFn: ({ id, newName }: { id: number; newName: string }) =>
-      copyProject(id, newName),
+    mutationFn: ({ id, req }: { id: number; req: CopyProjectRequest }) =>
+      copyProject(id, req),
     onSuccess: () => invalidateProjects()
+  })
+
+  const existMutation = useMutation({
+    mutationFn: (name: string) => isProjectExists(name)
   })
 
   return {
@@ -116,6 +122,7 @@ export const useProjectStore = defineStore("project", () => {
     isStarting: startMutation.isPending,
     isResetting: resetMutation.isPending,
     isCopying: copyMutation.isPending,
+    isChecking: existMutation.isPending,
 
     setQuery,
 
@@ -125,6 +132,7 @@ export const useProjectStore = defineStore("project", () => {
     finishProject: finishMutation.mutateAsync,
     startProject: startMutation.mutateAsync,
     resetProject: resetMutation.mutateAsync,
-    copyProject: copyMutation.mutateAsync
+    copyProject: copyMutation.mutateAsync,
+    checkProject: existMutation.mutateAsync
   }
 })

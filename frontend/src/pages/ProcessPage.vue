@@ -6,7 +6,8 @@
       @update:model-value="(value:number) => handleUpdate({id:process.id,req:{employeeID:value}}) "
       value-key="value"
       placeholder="请选择"
-      class="min-w-24"
+      :class="isMobile ? 'min-w-20' : 'min-w-24'"
+      :size="isMobile ? 'sm' : 'md'"
     />
   </DefineTemplate>
   <UDashboardPanel id="process">
@@ -26,16 +27,20 @@
       <div class="flex flex-wrap items-center justify-between gap-2">
         <UFieldGroup>
           <UButton :label="gotProject?.name" variant="outline" />
-          <UButton :label="gotProject?.description" variant="outline" />
           <UButton
+            v-if="gotProject?.description"
+            :label="gotProject.description"
+            variant="outline"
+          />
+          <UButton
+            v-if="gotProject?.remainingDays !== undefined"
             :label="
-              gotProject?.remainingDays >= 0
-                ? `剩余${gotProject?.remainingDays}天`
-                : `超时${Math.abs(gotProject?.remainingDays)}天`
+              gotProject.remainingDays >= 0
+                ? `剩余${gotProject.remainingDays}天`
+                : `超时${Math.abs(gotProject.remainingDays)}天`
             "
             variant="outline"
             :color="gotProject.remainingDays <= 0 ? 'error' : 'info'"
-            v-if="gotProject?.remainingDays !== undefined"
           />
         </UFieldGroup>
 
@@ -58,6 +63,9 @@
         sticky="header"
         ref="table"
         v-model:row-selection="rowSelection"
+        :column-visibility="{
+          finishedAt: !isMobile
+        }"
         :data="processes"
         :columns="columns"
         :loading="isLoading"
@@ -112,6 +120,7 @@ import { storeToRefs } from "pinia"
 import { useProcessStore } from "../composables/useProcessStore"
 import { createReusableTemplate } from "@vueuse/core"
 import { useProjectStore } from "../composables/useProjectStore"
+import { useScreenStore } from "../composables/useScreenStore"
 
 const toast = useToast()
 const table = useTemplateRef<{ tableApi: Table<Process> }>("table")
@@ -119,10 +128,12 @@ const table = useTemplateRef<{ tableApi: Table<Process> }>("table")
 const employeeStore = useEmployeeStore()
 const processStore = useProcessStore()
 const projectStore = useProjectStore()
+const screenStore = useScreenStore()
 const { employeeItems } = storeToRefs(employeeStore)
 const { processes, isLoading, sequenceToScroll } = storeToRefs(processStore)
 const { deleteProcess, updateProcess, clearSequenceToScroll } = processStore
 const { gotProject } = storeToRefs(projectStore)
+const { isMobile } = storeToRefs(screenStore)
 
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
@@ -298,6 +309,7 @@ const columns: TableColumn<Process>[] = [
     }
   },
   {
+    accessorKey: "finishedAt",
     header: "完成时间",
     cell: ({ row }) => {
       const process = row.original
