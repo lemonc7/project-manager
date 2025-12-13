@@ -192,6 +192,13 @@ const UDropdownMenu = resolveComponent("UDropdownMenu")
 const UButton = resolveComponent("UButton")
 const UBadge = resolveComponent("UBadge")
 
+// 刷新项目中的流程
+function invalidProjectProcesses() {
+  queryClient.invalidateQueries({
+    queryKey: ["processes", selectedProject.value?.id]
+  })
+}
+
 // 删除项目
 async function handleDelete() {
   if (selectedProject.value) {
@@ -222,9 +229,7 @@ async function handleStart() {
         title: `项目 ${selectedProject.value.name} 已开始`,
         color: "success"
       })
-      queryClient.invalidateQueries({
-        queryKey: ["processes", selectedProject.value.id]
-      })
+      invalidProjectProcesses()
     } catch (err) {
       toast.add({
         title: "开始失败",
@@ -267,6 +272,7 @@ async function handleReset() {
         title: `项目 ${selectedProject.value.name} 已重置`,
         color: "success"
       })
+      invalidProjectProcesses()
     } catch (err) {
       toast.add({
         title: "重置失败",
