@@ -10,4 +10,9 @@ interface LoginResponse {
   roles?: string[]
 }
 
-export type { LoginRequest, LoginResponse }
+interface ChangePasswordRequest {
+  oldPassword: string
+  newPassword: string
+}
+
+export type { LoginRequest, LoginResponse, ChangePasswordRequest }

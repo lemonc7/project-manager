@@ -54,7 +54,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const handleSubmit = async (auth: FormSubmitEvent<Schema>) => {
+async function handleSubmit(auth: FormSubmitEvent<Schema>) {
   try {
     await login({ username: auth.data.username, password: auth.data.password })
     router.replace("/")

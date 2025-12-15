@@ -7,11 +7,11 @@ export async function listTeams() {
 }
 
 export async function createTeam(req: CreateTeamRequest) {
-  return service.post<Team>("/team", req)
+  return service.post("/team", req)
 }
 
 export async function updateTeam(id: number, req: UpdateTeamRequest) {
-  return service.patch<Team>(`/team/${id}`, req)
+  return service.patch(`/team/${id}`, req)
 }
 
 export async function deleteTeam(id: number) {

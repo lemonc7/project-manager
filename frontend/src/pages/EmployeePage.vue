@@ -68,6 +68,11 @@
     v-model:open="isEditModalOpen"
     :employee="selectedEmployee"
   />
+  <!-- 重置密码弹窗 -->
+  <ResetPasswordModal
+    v-model:open="isResetPasswordModalOpen"
+    :employee="selectedEmployee"
+  />
 </template>
 
 <script setup lang="ts">
@@ -97,6 +102,7 @@ const table = useTemplateRef<{ tableApi: Table<Employee> }>("table")
 // 模态框
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
+const isResetPasswordModalOpen = ref(false)
 const selectedEmployee = ref<Employee | null>(null)
 
 async function handleDelete() {
@@ -141,6 +147,18 @@ function getRowItems(row: Row<Employee>) {
         isEditModalOpen.value = true
         selectedEmployee.value = row.original
       }
+    },
+    {
+      label: "重置密码",
+      icon: "i-lucide-key",
+      disabled: !hasAtLeastRole("admin"),
+      onSelect: () => {
+        isResetPasswordModalOpen.value = true
+        selectedEmployee.value = row.original
+      }
+    },
+    {
+      type: "separator"
     },
     {
       label: "删除",

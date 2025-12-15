@@ -19,7 +19,7 @@ func (a *Application) initRouter() {
 	api := a.e.Group("/api", jwtMW, mw.RequireRoleAtLeast("employee"))
 
 	api.POST("/password", a.authHandler.ResetPassword, mw.RequireRoleAtLeast("admin"))
-	api.PUT("/password", a.authHandler.ChangePassword)
+	api.PUT("/password/:id", a.authHandler.ChangePassword)
 
 	employeeRouter := api.Group("/employee")
 	teamRouter := api.Group("/team")

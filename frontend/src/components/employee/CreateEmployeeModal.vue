@@ -56,25 +56,7 @@
         </UFormField>
         <!-- 密码 -->
         <UFormField label="密码" name="password" required>
-          <UInput
-            v-model="state.password"
-            :type="show ? 'text' : 'password'"
-            class="w-full"
-            placeholder="请输入密码"
-            :ui="{ trailing: 'pe-1' }"
-          >
-            <template #trailing>
-              <UButton
-                variant="link"
-                size="sm"
-                :icon="show ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                :aria-label="show ? 'Hide password' : 'Show password'"
-                :aria-pressed="show"
-                aria-controls="password"
-                @click="show = !show"
-              />
-            </template>
-          </UInput>
+          <InputPassword v-model="state.password" placeholder="请输入密码" />
         </UFormField>
         <!-- 按钮 -->
         <div class="flex justify-end gap-2">
@@ -107,7 +89,6 @@ import { storeToRefs } from "pinia"
 import { hasAtLeastRole } from "../../utils/auth"
 
 const open = ref(false)
-const show = ref(false)
 const toast = useToast()
 
 const teamStore = useTeamStore()
@@ -120,7 +101,7 @@ const { createEmployee } = employeeStore
 const schema = z.object({
   name: z.string().nonempty("请输入姓名"),
   username: z.string().nonempty("请输入用户名"),
-  password: z.string().min(6, "密码不能少于6位"),
+  password: z.string().min(6, "密码不能少于6位").max(20, "密码不能超过20位"),
   roles: z.array(z.enum(["admin", "manager", "employee"] as const)).default([]),
   team: z.number().optional()
 })

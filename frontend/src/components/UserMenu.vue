@@ -19,13 +19,15 @@
       }"
     />
   </UDropdownMenu>
+  <!-- 更改密码弹窗 -->
+  <ChangePasswordModal v-model:open="isChangePasswordModalOpen" />
 </template>
 
 <script setup lang="ts">
 import { useQuery } from "@tanstack/vue-query"
 import { getEmployeeName } from "../api/employees"
 import type { DropdownMenuItem } from "@nuxt/ui"
-import { computed } from "vue"
+import { computed, ref } from "vue"
 import { removeToken } from "../utils/auth"
 import { useRouter } from "vue-router"
 
@@ -39,11 +41,15 @@ const { data } = useQuery({
 })
 
 const router = useRouter()
+const isChangePasswordModalOpen = ref(false)
 
 const items = computed<DropdownMenuItem[]>(() => [
   {
     label: "更改密码",
-    icon: "i-lucide-key"
+    icon: "i-lucide-key",
+    onSelect: () => {
+      isChangePasswordModalOpen.value = true
+    }
   },
   {
     label: "登出",

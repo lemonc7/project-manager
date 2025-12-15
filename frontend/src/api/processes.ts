@@ -22,7 +22,7 @@ export async function listTasks(id: number, status: TaskStatus) {
 }
 
 export async function insertProcessLast(req: InsertProcessRequest) {
-  return service.post<Process>("/process", req)
+  return service.post("/process", req)
 }
 
 export async function insertProcessAt(
@@ -33,7 +33,7 @@ export async function insertProcessAt(
 }
 
 export async function updateProcess(id: number, req: UpdateProcessRequest) {
-  return service.patch<Process>(`/process/${id}`, req)
+  return service.patch(`/process/${id}`, req)
 }
 
 export async function deleteProcess(id: number) {

@@ -1,4 +1,8 @@
-import type { LoginRequest, LoginResponse } from "../models/auth"
+import type {
+  ChangePasswordRequest,
+  LoginRequest,
+  LoginResponse
+} from "../models/auth"
 import service from "./request"
 import { setToken } from "../utils/auth"
 
@@ -21,4 +25,12 @@ export async function login(req: LoginRequest) {
     res.data.roles || []
   )
   return res.data
+}
+
+export async function changePassword(req: ChangePasswordRequest) {
+  return service.put("/password", req)
+}
+
+export async function resetPassword(userID: number, password: string) {
+  return service.post(`/password/${userID}`, { password })
 }

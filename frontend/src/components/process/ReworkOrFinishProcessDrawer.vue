@@ -124,6 +124,8 @@ async function handleSubmit(event: FormSubmitEvent<Schema>) {
       await finishProcess({
         id: props.process.id,
         req: {
+          projectID: props.process.projectID,
+          sequence: props.process.sequence,
           spendTime: event.data.spendTime,
           remark: event.data.remark
         }

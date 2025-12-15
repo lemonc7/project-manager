@@ -19,7 +19,6 @@ type InitAdminRequest struct {
 }
 
 type ResetPasswordRequest struct {
-	ID       int32  `json:"id" validate:"required"`
 	Password string `json:"password" validate:"required,min=6,max=20"`
 }
 

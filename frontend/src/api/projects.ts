@@ -16,11 +16,11 @@ export async function listProjects(req: ListProjectsRequest) {
 }
 
 export async function createProject(req: CreateProjectRequest) {
-  return service.post<Project>("/project", req)
+  return service.post("/project", req)
 }
 
 export async function updateProject(id: number, req: UpdateProjectRequest) {
-  return service.patch<Project>(`/project/${id}`, req)
+  return service.patch(`/project/${id}`, req)
 }
 
 export async function deleteProject(id: number) {

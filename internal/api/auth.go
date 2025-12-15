@@ -5,16 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/service"
+	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type AuthService interface {
 	Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error)
-	ResetPassword(ctx context.Context, req model.ResetPasswordRequest) error
+	ResetPassword(ctx context.Context, userID int32, password string) error
 	ChangePassword(ctx context.Context, username string, req model.ChangePasswordRequest) error
 	InitAdmin(ctx context.Context, req model.InitAdminRequest) error
 }
@@ -55,12 +55,10 @@ func (a *AuthHandler) Login(c echo.Context) error {
 }
 
 func (a *AuthHandler) ResetPassword(c echo.Context) error {
-	// 获取jwt中的角色
-	roles, ok := c.Get("roles").([]string)
-	if !ok || !slices.Contains(roles, "admin") {
-		return echo.NewHTTPError(http.StatusForbidden, fmt.Errorf("需要管理员权限"))
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
 	}
-
 	var req model.ResetPasswordRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
@@ -70,7 +68,7 @@ func (a *AuthHandler) ResetPassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
-	if err := a.authService.ResetPassword(c.Request().Context(), req); err != nil {
+	if err := a.authService.ResetPassword(c.Request().Context(), id, req.Password); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("重置密码: %w", err))
 	}
 	return c.JSON(http.StatusOK, echo.Map{

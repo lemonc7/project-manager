@@ -16,11 +16,11 @@ export async function getEmployeeName() {
 }
 
 export async function createEmployee(req: CreateEmployeeRequest) {
-  return service.post<Employee>("/employee", req)
+  return service.post("/employee", req)
 }
 
 export async function updateEmployee(id: number, req: UpdateEmployeeRequest) {
-  return service.patch<Employee>(`/employee/${id}`, req)
+  return service.patch(`/employee/${id}`, req)
 }
 
 export async function deleteEmployee(id: number) {
