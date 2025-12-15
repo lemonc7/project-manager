@@ -4,7 +4,11 @@
     title="创建"
     description="为当前项目添加一个新流程"
   >
-    <UButton label="创建流程" icon="i-lucide-git-pull-request-create-arrow" color="neutral"/>
+    <UButton
+      label="创建流程"
+      icon="i-lucide-git-pull-request-create-arrow"
+      color="neutral"
+    />
     <template #body>
       <UForm
         :schema="schema"
@@ -67,7 +71,12 @@
             @click="open = false"
             @pointerdown.prevent
           />
-          <UButton label="创建" type="submit" :loading="isCreating" color="neutral"/>
+          <UButton
+            label="创建"
+            type="submit"
+            :loading="isCreating"
+            color="neutral"
+          />
         </div>
       </UForm>
     </template>
@@ -79,10 +88,11 @@ import type { FormSubmitEvent } from "@nuxt/ui"
 import { reactive, ref, watch } from "vue"
 import z from "zod"
 import type { InsertProcessRequest } from "../../models/processes"
-import { useEmployeeStore } from "../../composables/useEmployeeStore"
 import { storeToRefs } from "pinia"
-import { useProcessStore } from "../../composables/useProcessStore"
 import { getUserID } from "../../utils/auth"
+import { useEmployeeStore } from "../../stores/employee"
+import { useProcesses } from "../../composables/useProcesses"
+import { useProcessStore } from "../../stores/process"
 
 const open = ref(false)
 const toast = useToast()
@@ -90,8 +100,8 @@ const toast = useToast()
 const employeeStore = useEmployeeStore()
 const processStore = useProcessStore()
 const { employeeItems } = storeToRefs(employeeStore)
-const { createProcess } = processStore
-const { isCreating, maxSequence } = storeToRefs(processStore)
+const { isCreating, createProcess } = useProcesses()
+const { maxSequence } = storeToRefs(processStore)
 
 // 定义表单数据
 const schema = z.object({

@@ -45,7 +45,7 @@ import { listTasks } from "../../api/processes"
 import type { TableColumn } from "@nuxt/ui"
 import type { Task } from "../../models/processes"
 import { h, watch } from "vue"
-import { useProcessStore } from "../../composables/useProcessStore"
+import { useProcessStore } from "../../stores/process"
 
 const props = defineProps<{
   status: TaskStatus

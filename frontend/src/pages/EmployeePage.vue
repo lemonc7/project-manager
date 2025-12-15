@@ -81,18 +81,17 @@ import { type Employee } from "../models/employees"
 import { h, ref, resolveComponent, useTemplateRef, watch } from "vue"
 import { type Row, type Table } from "@tanstack/table-core"
 import getRoleLabels from "../utils/getRoleLabels"
-import { useEmployeeStore } from "../composables/useEmployeeStore"
-import { useTeamStore } from "../composables/useTeamStore"
 import { storeToRefs } from "pinia"
 import { hasAtLeastRole } from "../utils/auth"
+import { useEmployees } from "../composables/useEmployees"
+import { useTeamStore } from "../stores/team"
 
 // 数据获取
 const teamStore = useTeamStore()
-const employeeStore = useEmployeeStore()
-const { deleteEmployee } = employeeStore
-const { employees, isLoading } = storeToRefs(employeeStore)
 const { getTeamName } = teamStore
 const { teamItems } = storeToRefs(teamStore)
+
+const { employees, isLoading, deleteEmployee } = useEmployees()
 
 const toast = useToast()
 

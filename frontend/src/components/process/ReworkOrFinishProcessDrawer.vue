@@ -57,10 +57,9 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from "vue"
 import z from "zod"
-import { useProcessStore } from "../../composables/useProcessStore"
-import { storeToRefs } from "pinia"
 import type { FormSubmitEvent } from "@nuxt/ui"
 import type { Process } from "../../models/processes"
+import { useProcesses } from "../../composables/useProcesses"
 
 const props = defineProps<{
   open: boolean
@@ -74,9 +73,8 @@ const emit = defineEmits<{
 
 const toast = useToast()
 
-const processStore = useProcessStore()
-const { finishProcess, reworkProcess } = processStore
-const { isFinishing, isReworking } = storeToRefs(processStore)
+const { finishProcess, reworkProcess, isFinishing, isReworking } =
+  useProcesses()
 const schema = z.object({
   spendTime: z.number().min(0, "时间不能小于0"),
   remark: z.string().default("")
@@ -84,12 +82,10 @@ const schema = z.object({
 const formRef = ref()
 type Schema = z.output<typeof schema>
 
-const initialState: Schema = {
+const state = reactive<Schema>({
   spendTime: 0,
   remark: ""
-}
-
-const state = reactive<Schema>({ ...initialState })
+})
 
 function onOpenChange(open: boolean) {
   emit("update:open", open)
@@ -150,7 +146,17 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      Object.assign(state, initialState)
+      if (props.type === "finish") {
+        Object.assign(state, {
+          spendTime: 0,
+          remark: props.process?.remark || ""
+        })
+      } else {
+        Object.assign(state, {
+          spendTime: 0,
+          remark: ""
+        })
+      }
     }
   }
 )

@@ -48,8 +48,14 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui"
-import { ref } from "vue"
+import { ref, watch } from "vue"
 import { useRouter } from "vue-router"
+import { useEmployees } from "../../composables/useEmployees"
+import { useTeams } from "../../composables/useTeams"
+import { useEmployeeStore } from "../../stores/employee"
+import { useTeamStore } from "../../stores/team"
+import { useProcesses } from "../../composables/useProcesses"
+import { useProcessStore } from "../../stores/process"
 
 const open = ref(false)
 const router = useRouter()
@@ -99,4 +105,44 @@ const links: NavigationMenuItem[] = [
     ]
   }
 ]
+
+const { employees } = useEmployees()
+const { teams } = useTeams()
+const { processes } = useProcesses()
+const { setEmployees } = useEmployeeStore()
+const { setTeams } = useTeamStore()
+const { setMaxSequence } = useProcessStore()
+
+// 同步employees
+watch(
+  () => employees.value,
+  (list) => {
+    if (list) {
+      setEmployees(list)
+    }
+  },
+  { immediate: true }
+)
+
+// 同步teams
+watch(
+  () => teams.value,
+  (list) => {
+    if (list) {
+      setTeams(list)
+    }
+  },
+  { immediate: true }
+)
+
+// 同步processes
+watch(
+  () => processes.value,
+  (list) => {
+    if (list) {
+      setMaxSequence(list)
+    }
+  },
+  { immediate: true }
+)
 </script>

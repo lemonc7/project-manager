@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { useTaskStore } from "../composables/useTaskStore"
+import { useTasks } from "../composables/useTasks"
 
 const statTemplates = [
   {
@@ -78,17 +78,16 @@ const statTemplates = [
   }
 ]
 
-const taskStore = useTaskStore()
+const { lengths, setLength } = useTasks()
 
 const baseStats = computed(() => {
-  const lengths = taskStore.lengths
   return statTemplates.map((t, i) => ({
     ...t,
-    length: lengths[i] ?? 0
+    length: lengths.value[i] ?? 0
   }))
 })
 
 function updateLen(index: number, length: number) {
-  taskStore.setLength(index, length)
+  setLength(index, length)
 }
 </script>

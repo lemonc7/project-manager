@@ -1,8 +1,7 @@
-import { defineStore } from "pinia"
 import { ref } from "vue"
 
 const BASE_STATS_LENGTH = 3
-export const useTaskStore = defineStore("task", () => {
+export function useTasks() {
   // 状态 (State): 持久化的数组
   const lengths = ref<number[]>(Array(BASE_STATS_LENGTH).fill(0))
 
@@ -14,4 +13,4 @@ export const useTaskStore = defineStore("task", () => {
   }
 
   return { lengths, setLength }
-})
+}

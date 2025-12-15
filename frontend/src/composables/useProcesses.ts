@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query"
-import { defineStore } from "pinia"
 import { useRoute } from "vue-router"
 import {
   deleteProcess,
@@ -17,9 +16,9 @@ import type {
   ReworkProcessRequest,
   UpdateProcessRequest
 } from "../models/processes"
-import { computed, ref } from "vue"
+import { computed } from "vue"
 
-export const useProcessStore = defineStore("process", () => {
+export function useProcesses() {
   const route = useRoute()
   const projectID = computed(() => parseInt(route.params.id as string))
   const queryClient = useQueryClient()
@@ -40,27 +39,6 @@ export const useProcessStore = defineStore("process", () => {
     queryClient.invalidateQueries({
       queryKey: ["processes", projectID]
     })
-  }
-
-  // 派生 maxSequence
-  const maxSequence = computed(() => {
-    const processes = processQuery.data?.value
-    if (processes?.length) {
-      const maxVal = processes.reduce((max, p) => Math.max(max, p.sequence), 0)
-      return maxVal + 1
-    }
-    return 1
-  })
-
-  // 新增状态: 存储要滚动的行序号
-  const sequenceToScroll = ref<number | null>(null)
-
-  const setSequenceToScroll = (seq: number) => {
-    sequenceToScroll.value = seq
-  }
-
-  const clearSequenceToScroll = () => {
-    sequenceToScroll.value = null
   }
 
   // actions
@@ -124,9 +102,6 @@ export const useProcessStore = defineStore("process", () => {
     isLoading: processQuery.isLoading,
     isError: processQuery.isError,
 
-    maxSequence,
-    sequenceToScroll,
-
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
@@ -134,8 +109,6 @@ export const useProcessStore = defineStore("process", () => {
     isFinishing: finishMutation.isPending,
     isReworking: reworkMutation.isPending,
 
-    setSequenceToScroll,
-    clearSequenceToScroll,
     createProcess: createMutation.mutateAsync,
     updateProcess: updateMutation.mutateAsync,
     deleteProcess: deleteMutation.mutateAsync,
@@ -143,4 +116,4 @@ export const useProcessStore = defineStore("process", () => {
     finishProcess: finishMutation.mutateAsync,
     reworkProcess: reworkMutation.mutateAsync
   }
-})
+}

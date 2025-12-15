@@ -90,15 +90,15 @@
 import z from "zod"
 import { computed, reactive, watch } from "vue"
 import { storeToRefs } from "pinia"
-import { useEmployeeStore } from "../../composables/useEmployeeStore"
 import {
   ProcessStatusOptions,
   type Process,
   type UpdateProcessRequest
 } from "../../models/processes"
-import { useProcessStore } from "../../composables/useProcessStore"
 import { getUserID } from "../../utils/auth"
 import type { FormSubmitEvent } from "@nuxt/ui"
+import { useEmployeeStore } from "../../stores/employee"
+import { useProcesses } from "../../composables/useProcesses"
 
 const props = defineProps<{
   open: boolean
@@ -138,10 +138,8 @@ function onOpenChange(open: boolean) {
   emit("update:open", open)
 }
 
-const processStore = useProcessStore()
 const employeeStore = useEmployeeStore()
-const { updateProcess } = processStore
-const { isUpdating } = storeToRefs(processStore)
+const { updateProcess, isUpdating } = useProcesses()
 const { employeeItems } = storeToRefs(employeeStore)
 
 async function handleSubmit(event: FormSubmitEvent<Schema>) {

@@ -83,19 +83,17 @@ import type { FormSubmitEvent } from "@nuxt/ui"
 import { reactive, ref, watch } from "vue"
 import z from "zod"
 import { roleItems, type CreateEmployeeRequest } from "../../models/employees"
-import { useEmployeeStore } from "../../composables/useEmployeeStore"
-import { useTeamStore } from "../../composables/useTeamStore"
 import { storeToRefs } from "pinia"
 import { hasAtLeastRole } from "../../utils/auth"
+import { useTeamStore } from "../../stores/team"
+import { useEmployees } from "../../composables/useEmployees"
 
 const open = ref(false)
 const toast = useToast()
 
 const teamStore = useTeamStore()
-const employeeStore = useEmployeeStore()
 const { teamItems } = storeToRefs(teamStore)
-const { isCreating } = storeToRefs(employeeStore)
-const { createEmployee } = employeeStore
+const { createEmployee, isCreating } = useEmployees()
 
 // 定义表单数据
 const schema = z.object({

@@ -50,13 +50,12 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia"
-import { useProjectStore } from "../../composables/useProjectStore"
 import z from "zod"
 import { getUserID } from "../../utils/auth"
 import { reactive } from "vue"
 import type { FormSubmitEvent } from "@nuxt/ui"
 import type { CopyProjectRequest, Project } from "../../models/projects"
+import { useProjects } from "../../composables/useProjects"
 
 const props = defineProps<{
   open: boolean
@@ -87,9 +86,7 @@ const initialState: Schema = {
 
 const state = reactive<Schema>({ ...initialState })
 
-const projectStore = useProjectStore()
-const { copyProject, checkProject } = projectStore
-const { isCopying, isChecking } = storeToRefs(projectStore)
+const { copyProject, checkProject,isCopying,isChecking } = useProjects()
 
 // 表单提交
 async function handleSubmit(event: FormSubmitEvent<Schema>) {

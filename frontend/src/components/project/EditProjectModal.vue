@@ -85,7 +85,12 @@
             @click="onOpenChange(false)"
             @pointerdown.prevent
           />
-          <UButton label="更新" type="submit" :loading="isUpdating" color="neutral"/>
+          <UButton
+            label="更新"
+            type="submit"
+            :loading="isUpdating"
+            color="neutral"
+          />
         </div>
       </UForm>
     </template>
@@ -100,10 +105,10 @@ import {
   type Project,
   type UpdateProjectRequest
 } from "../../models/projects"
-import { useProjectStore } from "../../composables/useProjectStore"
 import { storeToRefs } from "pinia"
-import { useEmployeeStore } from "../../composables/useEmployeeStore"
 import type { FormSubmitEvent } from "@nuxt/ui"
+import { useEmployeeStore } from "../../stores/employee"
+import { useProjects } from "../../composables/useProjects"
 
 const props = defineProps<{
   open: boolean
@@ -143,10 +148,8 @@ function onOpenChange(open: boolean) {
   emit("update:open", open)
 }
 
-const projectStore = useProjectStore()
 const employeeStore = useEmployeeStore()
-const { updateProject } = projectStore
-const { isUpdating } = storeToRefs(projectStore)
+const { updateProject, isUpdating } = useProjects()
 const { employeeItems } = storeToRefs(employeeStore)
 
 async function handleSubmit(event: FormSubmitEvent<Schema>) {

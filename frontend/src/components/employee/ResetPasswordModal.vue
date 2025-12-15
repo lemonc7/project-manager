@@ -19,10 +19,10 @@
         <div class="flex justify-end gap-2">
           <UButton
             label="取消"
-            color="neutral"
+            variant="outline"
             @click="onOpenChange(false)"
           />
-          <UButton label="确认" variant="neutral" type="submit" />
+          <UButton label="确认" color="neutral" type="submit" />
         </div>
       </UForm>
     </template>

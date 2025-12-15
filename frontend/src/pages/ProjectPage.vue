@@ -137,23 +137,27 @@ import {
 } from "../models/projects"
 import { useRouter } from "vue-router"
 import type { TableColumn } from "@nuxt/ui"
-import { useEmployeeStore } from "../composables/useEmployeeStore"
 import { storeToRefs } from "pinia"
-import { useProjectStore } from "../composables/useProjectStore"
 import { useQueryClient } from "@tanstack/vue-query"
 import { hasAtLeastRole } from "../utils/auth"
-import { useScreenStore } from "../composables/useScreenStore"
+import { useEmployeeStore } from "../stores/employee"
+import { useProjects } from "../composables/useProjects"
+import { useScreens } from "../composables/useScreens"
 
 const router = useRouter()
 const toast = useToast()
 const queryClient = useQueryClient()
 
-const projectStore = useProjectStore()
-const screenStore = useScreenStore()
-const { projects, isLoading } = storeToRefs(projectStore)
-const { setQuery, deleteProject, startProject, finishProject, resetProject } =
-  projectStore
-const { isMobile } = storeToRefs(screenStore)
+const {
+  projects,
+  isLoading,
+  setQuery,
+  deleteProject,
+  startProject,
+  finishProject,
+  resetProject
+} = useProjects()
+const { isMobile } = useScreens()
 
 onMounted(() => {
   setQuery({})

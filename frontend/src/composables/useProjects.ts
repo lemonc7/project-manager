@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query"
-import { defineStore } from "pinia"
 import type {
   CopyProjectRequest,
   CreateProjectRequest,
@@ -25,7 +24,7 @@ function buildProjectsQueryKey(req: ListProjectsRequest) {
   return ["projects", "overview", req.startAt ?? null, req.endAt ?? null]
 }
 
-export const useProjectStore = defineStore("project", () => {
+export function useProjects() {
   const queryClient = useQueryClient()
 
   // 查询数据
@@ -59,11 +58,6 @@ export const useProjectStore = defineStore("project", () => {
     },
     enabled: computed(() => !!projectID.value && !isNaN(projectID.value))
   })
-
-  // 更改查询的key
-  function setQuery(newReq: ListProjectsRequest) {
-    req.value = newReq
-  }
 
   // actions
   const createMutations = useMutation({
@@ -124,7 +118,7 @@ export const useProjectStore = defineStore("project", () => {
     isCopying: copyMutation.isPending,
     isChecking: existMutation.isPending,
 
-    setQuery,
+    setQuery: (request: ListProjectsRequest) => (req.value = request),
 
     createProject: createMutations.mutateAsync,
     updateProject: updateMutation.mutateAsync,
@@ -135,4 +129,4 @@ export const useProjectStore = defineStore("project", () => {
     copyProject: copyMutation.mutateAsync,
     checkProject: existMutation.mutateAsync
   }
-})
+}

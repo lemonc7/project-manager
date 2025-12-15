@@ -1,4 +1,3 @@
-import { defineStore } from "pinia"
 import { useWindowSize } from "@vueuse/core"
 import { computed } from "vue"
 
@@ -10,7 +9,7 @@ const BREAKPOINTS = {
   XL: 1280
 }
 
-export const useScreenStore = defineStore("screen", () => {
+export function useScreens() {
   const { width } = useWindowSize()
   const isMobile = computed(() => width.value < BREAKPOINTS.MD)
 
@@ -18,4 +17,4 @@ export const useScreenStore = defineStore("screen", () => {
     width,
     isMobile
   }
-})
+}

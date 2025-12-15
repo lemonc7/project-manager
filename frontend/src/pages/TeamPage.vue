@@ -50,14 +50,11 @@
 import type { TableColumn } from "@nuxt/ui"
 import { h, ref, resolveComponent } from "vue"
 import { type Row } from "@tanstack/table-core"
-import { useTeamStore } from "../composables/useTeamStore"
-import { storeToRefs } from "pinia"
 import type { Team } from "../models/teams"
+import { useTeams } from "../composables/useTeams"
 
 // 数据获取
-const teamStore = useTeamStore()
-const { teams, isLoading } = storeToRefs(teamStore)
-const { deleteTeam } = teamStore
+const { teams, isLoading, deleteTeam } = useTeams()
 
 const toast = useToast()
 

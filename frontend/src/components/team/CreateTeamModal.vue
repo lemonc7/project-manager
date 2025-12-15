@@ -58,17 +58,14 @@
 import type { FormSubmitEvent } from "@nuxt/ui"
 import { reactive, ref, watch } from "vue"
 import z from "zod"
-import { useTeamStore } from "../../composables/useTeamStore"
-import { storeToRefs } from "pinia"
 import type { CreateTeamRequest } from "../../models/teams"
 import { hasAtLeastRole } from "../../utils/auth"
+import { useTeams } from "../../composables/useTeams"
 
 const open = ref(false)
 const toast = useToast()
 
-const teamStore = useTeamStore()
-const { isCreating } = storeToRefs(teamStore)
-const { createTeam } = teamStore
+const { isCreating, createTeam } = useTeams()
 
 // 定义表单数据
 const schema = z.object({

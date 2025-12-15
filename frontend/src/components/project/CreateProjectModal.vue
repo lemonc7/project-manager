@@ -89,8 +89,7 @@ import { reactive, ref, watch } from "vue"
 import z from "zod"
 import type { CreateProjectRequest } from "../../models/projects"
 import { getUserID, hasAtLeastRole } from "../../utils/auth"
-import { useProjectStore } from "../../composables/useProjectStore"
-import { storeToRefs } from "pinia"
+import { useProjects } from "../../composables/useProjects"
 
 const open = ref(false)
 
@@ -118,9 +117,7 @@ const state = reactive<Schema>({ ...initialState })
 
 const toast = useToast()
 
-const projectStore = useProjectStore()
-const { createProject } = projectStore
-const { isCreating } = storeToRefs(projectStore)
+const { createProject, isCreating } = useProjects()
 
 // 表单提交
 async function handleSubmit(event: FormSubmitEvent<Schema>) {

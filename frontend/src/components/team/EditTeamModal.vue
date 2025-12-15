@@ -35,7 +35,12 @@
             @click="onOpenChange(false)"
             @pointerdown.prevent
           />
-          <UButton label="更新" type="submit" :loading="isUpdating" color="neutral"/>
+          <UButton
+            label="更新"
+            type="submit"
+            :loading="isUpdating"
+            color="neutral"
+          />
         </div>
       </UForm>
     </template>
@@ -45,10 +50,9 @@
 <script setup lang="ts">
 import z from "zod"
 import { reactive, watch } from "vue"
-import { useTeamStore } from "../../composables/useTeamStore"
-import { storeToRefs } from "pinia"
 import type { Team, UpdateTeamRequest } from "../../models/teams"
 import type { FormSubmitEvent } from "@nuxt/ui"
+import { useTeams } from "../../composables/useTeams"
 
 const props = defineProps<{
   open: boolean
@@ -59,9 +63,7 @@ const emit = defineEmits<{
   (e: "update:open", open: boolean): void
 }>()
 
-const teamStore = useTeamStore()
-const { isUpdating } = storeToRefs(teamStore)
-const { updateTeam } = teamStore
+const { updateTeam, isUpdating } = useTeams()
 
 const toast = useToast()
 

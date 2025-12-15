@@ -115,25 +115,25 @@ import type {
 } from "../models/processes"
 import type { TableColumn } from "@nuxt/ui"
 import EditableCell from "../components/EditableCell.vue"
-import { useEmployeeStore } from "../composables/useEmployeeStore"
 import { storeToRefs } from "pinia"
-import { useProcessStore } from "../composables/useProcessStore"
 import { createReusableTemplate } from "@vueuse/core"
-import { useProjectStore } from "../composables/useProjectStore"
-import { useScreenStore } from "../composables/useScreenStore"
+import { useEmployeeStore } from "../stores/employee"
+import { useProcesses } from "../composables/useProcesses"
+import { useProjects } from "../composables/useProjects"
+import { useScreens } from "../composables/useScreens"
+import { useProcessStore } from "../stores/process"
 
 const toast = useToast()
 const table = useTemplateRef<{ tableApi: Table<Process> }>("table")
 
 const employeeStore = useEmployeeStore()
 const processStore = useProcessStore()
-const projectStore = useProjectStore()
-const screenStore = useScreenStore()
 const { employeeItems } = storeToRefs(employeeStore)
-const { processes, isLoading, sequenceToScroll } = storeToRefs(processStore)
-const { deleteProcess, updateProcess, clearSequenceToScroll } = processStore
-const { gotProject } = storeToRefs(projectStore)
-const { isMobile } = storeToRefs(screenStore)
+const { processes, isLoading, deleteProcess, updateProcess } = useProcesses()
+const { clearSequenceToScroll } = processStore
+const { sequenceToScroll } = storeToRefs(processStore)
+const { gotProject } = useProjects()
+const { isMobile } = useScreens()
 
 const isEditModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
