@@ -124,6 +124,7 @@
       <!-- table渲染 -->
       <UTable
         ref="table"
+        sticky="header"
         v-model:column-filters="columnFilters"
         v-model:row-selection="rowSelection"
         :column-visibility="{

@@ -15,7 +15,8 @@ const routes: RouteRecordRaw[] = [
       {
         path: "",
         name: "task",
-        component: () => import("../pages/TaskPage.vue")
+        component: () => import("../pages/TaskPage.vue"),
+        meta: { keepAlive: true }
       },
       {
         path: "employee",
