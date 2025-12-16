@@ -147,8 +147,10 @@ SELECT
   remaining_days
 FROM projects_view
 WHERE 
-  (started_at >= $1 OR $1 IS NULL)
-  AND (started_at <= $2 OR $2 IS NULL)
+  status = ANY($1::TEXT[]::project_status[])
+  AND (manager_id = $2 OR $2 IS NULL)
+  AND (started_at >= $3 OR $3 IS NULL)
+  AND (started_at <= $4 OR $4 IS NULL)
 ORDER BY
   priority DESC,
   remaining_days NULLS LAST,
@@ -156,8 +158,10 @@ ORDER BY
 `
 
 type ListProjectsFilteredParams struct {
-	StartAt *time.Time `json:"startedAt,omitempty"`
-	EndAt   *time.Time `json:"startedAt,omitempty"`
+	Status    []string   `json:"status"`
+	ManagerID *int32     `json:"managerID"`
+	StartAt   *time.Time `json:"startedAt,omitempty"`
+	EndAt     *time.Time `json:"startedAt,omitempty"`
 }
 
 type ListProjectsFilteredRow struct {
@@ -175,7 +179,12 @@ type ListProjectsFilteredRow struct {
 }
 
 func (q *Queries) ListProjectsFiltered(ctx context.Context, arg ListProjectsFilteredParams) ([]ListProjectsFilteredRow, error) {
-	rows, err := q.db.Query(ctx, listProjectsFiltered, arg.StartAt, arg.EndAt)
+	rows, err := q.db.Query(ctx, listProjectsFiltered,
+		arg.Status,
+		arg.ManagerID,
+		arg.StartAt,
+		arg.EndAt,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -61,8 +61,10 @@ func (p *ProjectService) DeleteProject(ctx context.Context, id int32) error {
 func (p *ProjectService) ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error) {
 	// 获取数据
 	projects, err := p.querier.ListProjectsFiltered(ctx, repo.ListProjectsFilteredParams{
-		StartAt: req.StartAt,
-		EndAt:   req.EndAt,
+		Status:    req.Status,
+		ManagerID: req.ManagerID,
+		StartAt:   req.StartAt,
+		EndAt:     req.EndAt,
 	})
 	if err != nil {
 		return nil, err

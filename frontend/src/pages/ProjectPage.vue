@@ -16,6 +16,7 @@
 
     <template #body>
       <div class="flex flex-wrap items-center justify-between gap-2">
+        <!-- 项目名称过滤 -->
         <UInput
           v-model="name"
           :class="isMobile ? 'w-36' : 'max-w-sm'"
@@ -24,41 +25,100 @@
         />
         <div class="flex flex-wrap items-center gap-2">
           <UFieldGroup>
-            <USelect
-              v-model="statusFilter"
-              multiple
-              placeholder="过滤状态..."
-              icon="i-lucide-list-todo"
-              :items="[...ProjectStatusOptions]"
-              :ui="{
-                trailingIcon:
-                  'group-date-[state=open]:rotate-180 transition-transform duration-200'
-              }"
-              :class="isMobile ? 'w-28' : 'min-w-44'"
-            />
-            <UTooltip :delay-duration="100" text="重置过滤条件">
+            <!-- 起始时间 -->
+            <UTooltip text="起始日期">
+              <UInputDate v-model="startDate" ref="inputStartDate">
+                <template #trailing>
+                  <UPopover :reference="inputStartDate?.inputsRef[3]?.$el">
+                    <UButton
+                      color="neutral"
+                      variant="link"
+                      size="sm"
+                      icon="i-lucide-calendar"
+                      aria-label="选择起始日期"
+                      class="px-0"
+                    />
+                    <template #content>
+                      <UCalendar v-model="startDate" class="p-2" />
+                    </template>
+                  </UPopover>
+                </template>
+              </UInputDate>
+            </UTooltip>
+            <span
+              class="flex items-center select-none px-1 text-black relative -top-px"
+            >
+              —
+            </span>
+            <!-- 终止时间 -->
+            <UTooltip text="终止日期">
+              <UInputDate v-model="endDate" ref="inputEndDate">
+                <template #trailing>
+                  <UPopover :reference="inputEndDate?.inputsRef[3]?.$el">
+                    <UButton
+                      color="neutral"
+                      variant="link"
+                      size="sm"
+                      icon="i-lucide-calendar"
+                      aria-label="选择终止日期"
+                      class="px-0"
+                    />
+                    <template #content>
+                      <UCalendar v-model="endDate" class="p-2" />
+                    </template>
+                  </UPopover>
+                </template>
+              </UInputDate>
+            </UTooltip>
+          </UFieldGroup>
+          <UFieldGroup>
+            <!-- 状态过滤 -->
+            <UTooltip text="状态">
+              <USelect
+                v-model="projectState.status"
+                multiple
+                placeholder="过滤状态..."
+                icon="i-lucide-list-todo"
+                :items="[...ProjectStatusOptions]"
+                :ui="{
+                  trailingIcon:
+                    'group-date-[state=open]:rotate-180 transition-transform duration-200'
+                }"
+                :class="isMobile ? 'w-28' : 'min-w-44'"
+              />
+            </UTooltip>
+            <!-- 负责人过滤 -->
+            <UTooltip text="负责人">
+              <USelectMenu
+                v-model="projectState.managerID"
+                icon="i-lucide-user"
+                value-key="value"
+                :items="[{ label: '全部', value: 0 }, ...employeeItems]"
+                :ui="{
+                  trailingIcon:
+                    'group-date-[state=open]:rotate-180 transition-transform duration-200'
+                }"
+                class="min-w-30"
+                :search-input="{
+                  placeholder: '过滤负责人...'
+                }"
+              />
+            </UTooltip>
+            <UTooltip text="重置过滤条件">
               <UButton
                 icon="i-lucide-list-restart"
                 variant="outline"
-                @click="statusFilter = ['排单', '进行', '暂停']"
+                @click="handleResetFilter"
+              />
+            </UTooltip>
+            <UTooltip text="过滤项目">
+              <UButton
+                icon="i-lucide-check"
+                color="neutral"
+                @click="handleSetFilter"
               />
             </UTooltip>
           </UFieldGroup>
-
-          <USelectMenu
-            v-model="managerFilter"
-            icon="i-lucide-user"
-            value-key="value"
-            :items="[{ label: '全部', value: 0 }, ...employeeItems]"
-            :ui="{
-              trailingIcon:
-                'group-date-[state=open]:rotate-180 transition-transform duration-200'
-            }"
-            class="min-w-30"
-            :search-input="{
-              placeholder: '过滤负责人...'
-            }"
-          />
         </div>
       </div>
       <!-- table渲染 -->
@@ -128,10 +188,19 @@
 </template>
 
 <script setup lang="ts">
-import { h, onMounted, ref, resolveComponent, useTemplateRef, watch } from "vue"
+import {
+  computed,
+  h,
+  onMounted,
+  ref,
+  resolveComponent,
+  useTemplateRef,
+  watch
+} from "vue"
 import { type Row, type Table } from "@tanstack/table-core"
 import {
   ProjectStatusOptions,
+  type ListProjectsRequest,
   type Project,
   type ProjectStatus
 } from "../models/projects"
@@ -143,7 +212,14 @@ import { hasAtLeastRole } from "../utils/auth"
 import { useEmployeeStore } from "../stores/employee"
 import { useProjects } from "../composables/useProjects"
 import { useScreens } from "../composables/useScreens"
-
+import {
+  getDefaultProjectState,
+  getProjectState,
+  resetProjectState,
+  setProjectState
+} from "../utils/projectState"
+import { parseDate, CalendarDate } from "@internationalized/date"
+import { toRFC3339 } from "../utils/timeConvert"
 const router = useRouter()
 const toast = useToast()
 const queryClient = useQueryClient()
@@ -159,8 +235,50 @@ const {
 } = useProjects()
 const { isMobile } = useScreens()
 
+const projectState = ref<ListProjectsRequest>(getDefaultProjectState())
+
 onMounted(() => {
-  setQuery({})
+  const localState = getProjectState()
+  projectState.value = { ...localState }
+  setQuery({
+    managerID: localState.managerID,
+    status: localState.status,
+    startAt: toRFC3339(localState.startAt),
+    endAt: toRFC3339(localState.endAt)
+  })
+})
+
+const inputStartDate = useTemplateRef("inputStartDate")
+const inputEndDate = useTemplateRef("inputEndDate")
+
+const startDate = computed({
+  get() {
+    try {
+      return projectState.value.startAt
+        ? parseDate(projectState.value.startAt)
+        : null
+    } catch {
+      return null
+    }
+  },
+  set(val: CalendarDate | null) {
+    projectState.value.startAt = val ? val.toString() : undefined
+  }
+})
+
+const endDate = computed({
+  get() {
+    try {
+      return projectState.value.endAt
+        ? parseDate(projectState.value.endAt)
+        : null
+    } catch {
+      return null
+    }
+  },
+  set(val: CalendarDate | null) {
+    projectState.value.endAt = val ? val.toString() : undefined
+  }
 })
 
 const employeeStore = useEmployeeStore()
@@ -273,6 +391,39 @@ async function handleReset() {
       isResetModalOpen.value = false
     }
   }
+}
+
+// query过滤
+function handleSetFilter() {
+  const cleanState = JSON.parse(JSON.stringify(projectState.value))
+  setQuery({
+    managerID: cleanState.managerID,
+    status: cleanState.status,
+    startAt: toRFC3339(cleanState.startAt),
+    endAt: toRFC3339(cleanState.endAt)
+  })
+  setProjectState(cleanState)
+  toast.add({
+    title: "查询条件已更新",
+    color: "success"
+  })
+}
+
+// 重置query过滤条件
+function handleResetFilter() {
+  const defaultState = getDefaultProjectState()
+  projectState.value = { ...defaultState }
+  setQuery({
+    managerID: defaultState.managerID,
+    status: defaultState.status,
+    startAt: toRFC3339(defaultState.startAt),
+    endAt: toRFC3339(defaultState.endAt)
+  })
+  resetProjectState()
+  toast.add({
+    title: "查询条件已重置",
+    color: "success"
+  })
 }
 
 // 操作菜单定义
@@ -504,33 +655,6 @@ const columns: TableColumn<Project>[] = [
     }
   }
 ]
-
-// status过滤
-const statusFilter = ref<ProjectStatus[]>(["排单", "进行", "暂停"])
-watch(statusFilter, (newVal) => {
-  const statusColumn = table.value?.tableApi.getColumn("status")
-  if (!statusColumn) return
-
-  if (!newVal.length) {
-    statusColumn.setFilterValue([])
-  } else {
-    statusColumn.setFilterValue(newVal)
-  }
-})
-
-// 负责人过滤
-const managerFilter = ref(0)
-watch(managerFilter, (newVal) => {
-  if (!table.value?.tableApi) return
-  const managerColumn = table.value.tableApi.getColumn("manager")
-  if (!managerColumn) return
-
-  if (newVal === 0) {
-    managerColumn.setFilterValue(undefined)
-  } else {
-    managerColumn.setFilterValue(newVal)
-  }
-})
 
 // 项目名称过滤
 const columnFilters = ref([

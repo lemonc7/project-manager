@@ -39,15 +39,15 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router"
 import type { TaskStatus } from "../../models/projects"
-import { getUserID } from "../../utils/auth"
 import { useQuery } from "@tanstack/vue-query"
 import { listTasks } from "../../api/processes"
 import type { TableColumn } from "@nuxt/ui"
 import type { Task } from "../../models/processes"
-import { h, watch } from "vue"
+import { computed, h, watch } from "vue"
 import { useProcessStore } from "../../stores/process"
 
 const props = defineProps<{
+  employee?: number
   status: TaskStatus
   class?: string
   isRemainingDaysVisible: boolean
@@ -58,14 +58,18 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
-const userID = getUserID()
 const { data, isLoading } = useQuery({
-  queryKey: ["tasks", props.status, { userID }],
+  queryKey: computed(() => [
+    "tasks",
+    props.status,
+    { employeeID: props.employee }
+  ]),
   queryFn: () => {
-    if (!userID) {
-      throw new Error("缺少用户ID")
+    if (!props.employee) {
+      console.error("缺少用户ID")
+      return
     }
-    return listTasks(userID, props.status)
+    return listTasks(props.employee, props.status)
   }
 })
 const titleMap: Record<

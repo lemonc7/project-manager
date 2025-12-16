@@ -26,8 +26,10 @@ type UpdateProjectRequest struct {
 }
 
 type ListProjectsRequest struct {
-	StartAt *time.Time `query:"startAt"`
-	EndAt   *time.Time `query:"endAt"`
+	Status    []string   `json:"status"`
+	ManagerID *int32     `json:"managerID"`
+	StartAt   *time.Time `json:"startAt"`
+	EndAt     *time.Time `json:"endAt"`
 }
 
 type CopyProjectRequest struct {

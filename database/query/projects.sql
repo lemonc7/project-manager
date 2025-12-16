@@ -13,7 +13,9 @@ SELECT
   remaining_days
 FROM projects_view
 WHERE 
-  (started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
+  status = ANY(sqlc.arg('status')::TEXT[]::project_status[])
+  AND (manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
+  AND (started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
   AND (started_at <= sqlc.narg('end_at') OR sqlc.narg('end_at') IS NULL)
 ORDER BY
   priority DESC,

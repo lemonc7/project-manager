@@ -9,9 +9,7 @@ import type {
 import service from "./request"
 
 export async function listProjects(req: ListProjectsRequest) {
-  const res = await service.get<Project[]>(`/project`, {
-    params: req
-  })
+  const res = await service.post<Project[]>(`/project/list`, req)
   return Array.isArray(res.data) ? res.data : []
 }
 

@@ -30,6 +30,8 @@ interface UpdateProjectRequest {
 }
 
 interface ListProjectsRequest {
+  managerID?: number
+  status?: ProjectStatus[]
   startAt?: string
   endAt?: string
 }

@@ -6,6 +6,17 @@
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
+          <USelectMenu
+            v-model="employeeID"
+            :items="employeeItems"
+            value-key="value"
+            :search-input="{
+              placeholder: '查看成员任务...'
+            }"
+            icon="i-lucide-user"
+            :disabled="!hasAtLeastRole('manager')"
+            class="w-32"
+          />
           <RefreshButton />
         </template>
       </UDashboardNavbar>
@@ -34,17 +45,20 @@
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 grow min-h-0"
         >
           <TaskTable
+            :employee="employeeID"
             status="doing"
             :is-remaining-days-visible="true"
             @update-length="updateLen(0, $event)"
           />
           <TaskTable
+            :employee="employeeID"
             status="ready"
             class="hidden md:flex"
             :is-remaining-days-visible="false"
             @update-length="updateLen(1, $event)"
           />
           <TaskTable
+            :employee="employeeID"
             status="todo"
             class="hidden lg:flex"
             :is-remaining-days-visible="false"
@@ -57,8 +71,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, ref } from "vue"
 import { useTasks } from "../composables/useTasks"
+import { getUserID, hasAtLeastRole } from "../utils/auth"
+import { useEmployeeStore } from "../stores/employee"
+import { storeToRefs } from "pinia"
 
 const statTemplates = [
   {
@@ -79,6 +96,10 @@ const statTemplates = [
 ]
 
 const { lengths, setLength } = useTasks()
+
+const employeeID = ref(getUserID())
+const employeeStore = useEmployeeStore()
+const { employeeItems } = storeToRefs(employeeStore)
 
 const baseStats = computed(() => {
   return statTemplates.map((t, i) => ({

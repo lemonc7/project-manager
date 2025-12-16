@@ -21,7 +21,14 @@ import {
 import { useRoute } from "vue-router"
 
 function buildProjectsQueryKey(req: ListProjectsRequest) {
-  return ["projects", "overview", req.startAt ?? null, req.endAt ?? null]
+  return [
+    "projects",
+    "overview",
+    req.managerID ?? null,
+    req.status ?? null,
+    req.startAt ?? null,
+    req.endAt ?? null
+  ]
 }
 
 export function useProjects() {
@@ -118,7 +125,12 @@ export function useProjects() {
     isCopying: copyMutation.isPending,
     isChecking: existMutation.isPending,
 
-    setQuery: (request: ListProjectsRequest) => (req.value = request),
+    setQuery: (request: ListProjectsRequest) => {
+      if (request.managerID === 0) {
+        request.managerID = undefined
+      }
+      req.value = request
+    },
 
     createProject: createMutations.mutateAsync,
     updateProject: updateMutation.mutateAsync,
