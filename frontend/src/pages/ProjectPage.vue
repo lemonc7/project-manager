@@ -221,6 +221,7 @@ import {
 } from "../utils/projectState"
 import { parseDate, CalendarDate } from "@internationalized/date"
 import { toRFC3339 } from "../utils/timeConvert"
+import { exportProject } from "../api/projects"
 const router = useRouter()
 const toast = useToast()
 const queryClient = useQueryClient()
@@ -481,6 +482,13 @@ function getRowItems(row: Row<Project>) {
       onSelect: () => {
         isCopyModalOpen.value = true
         selectedProject.value = row.original
+      }
+    },
+    {
+      label: "导出",
+      icon: "i-lucide-download",
+      onSelect: () => {
+        exportProject(row.original.id, row.original.name, toast)
       }
     },
     {

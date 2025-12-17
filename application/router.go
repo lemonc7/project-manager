@@ -43,6 +43,7 @@ func (a *Application) initRouter() {
 	projectRouter.GET("/:id", a.projectHandler.GetProjectByID)
 	projectRouter.POST("/list", a.projectHandler.ListProjects)
 	projectRouter.GET("/exist", a.projectHandler.IsProjectExists)
+	projectRouter.GET("/export/:id", a.projectHandler.ExportProject)
 	projectRouter.POST("", a.projectHandler.CreateProject, mw.RequireRoleAtLeast("manager"))
 	projectRouter.POST("/start/:id", a.projectHandler.StartProject, mw.RequireRoleAtLeast("manager"))
 	projectRouter.POST("/reset/:id", a.projectHandler.ResetStatus, mw.RequireRoleAtLeast("manager"))

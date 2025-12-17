@@ -3,7 +3,10 @@ package api
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
@@ -22,6 +25,7 @@ type ProjectService interface {
 	ResetStatus(ctx context.Context, id int32) error
 	CopyProject(ctx context.Context, id int32, req model.CopyProjectRequest) error
 	IsProjectExists(ctx context.Context, name string) (bool, error)
+	ExportProject(ctx context.Context, id int32, w io.Writer) error
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)
@@ -197,4 +201,28 @@ func (p *ProjectHandler) IsProjectExists(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("判断项目是否存在: %w", err))
 	}
 	return c.JSON(http.StatusOK, exists)
+}
+
+func (p *ProjectHandler) ExportProject(c echo.Context) error {
+	id, err := util.GetParamID(c)
+	if err != nil {
+		return err
+	}
+
+	filename := fmt.Sprintf("project_%d_%d", id, time.Now().Unix())
+	// 对文件名进行编码，防止中文或特殊字符导致浏览器解析错误
+	encodedFilename := url.QueryEscape(filename)
+
+	// 设置响应头
+	c.Response().Header().Set(echo.HeaderContentType, "text/csv; charset=utf-8")
+	// 告诉浏览器这是一个附件，需要下载
+	c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=\"%s\"", encodedFilename))
+
+	err = p.projectService.ExportProject(c.Request().Context(), id, c.Response())
+	if err != nil {
+		c.Logger().Errorf("导出CSV失败: %w", err)
+		return nil
+	}
+
+	return nil
 }

@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"io"
+	"strconv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/internal/model"
@@ -229,4 +232,58 @@ func (p *ProjectService) IsProjectExists(ctx context.Context, name string) (bool
 		return false, err
 	}
 	return exists, nil
+}
+
+func (p *ProjectService) ExportProject(ctx context.Context, id int32, w io.Writer) error {
+	// excel中文支持
+	if _, err := w.Write([]byte("\xEF\xBB\xBF")); err != nil {
+		return fmt.Errorf("设置Excel支持中文: %w", err)
+	}
+
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	project, err := p.querier.GetProjectByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("获取项目: %w", err)
+	}
+
+	// 项目名
+	if err := writer.Write([]string{project.Name, project.Description}); err != nil {
+		return fmt.Errorf("写入项目名: %w", err)
+	}
+
+	processes, err := p.querier.ListProcesses(ctx, id)
+	if err != nil {
+		return fmt.Errorf("获取流程: %w", err)
+	}
+
+	// 表头
+	if err := writer.Write([]string{
+		"序号",
+		"名称",
+		"描述",
+		"机时",
+		"备注",
+	}); err != nil {
+		return fmt.Errorf("写入表头: %w", err)
+	}
+
+	for _, p := range processes {
+		spendTime := ""
+		if p.SpendTime != nil {
+			spendTime = fmt.Sprintf("%.1f", *p.SpendTime)
+		}
+		if err := writer.Write([]string{
+			strconv.Itoa(int(p.Sequence)),
+			p.Name,
+			p.Description,
+			spendTime,
+			p.Remark,
+		}); err != nil {
+			return fmt.Errorf("写入流程: %w", err)
+		}
+	}
+
+	return writer.Error()
 }
