@@ -123,6 +123,7 @@
       </div>
       <!-- table渲染 -->
       <UTable
+        id="project-table"
         ref="table"
         sticky="header"
         v-model:column-filters="columnFilters"
@@ -222,6 +223,11 @@ import {
 import { parseDate, CalendarDate } from "@internationalized/date"
 import { toRFC3339 } from "../utils/timeConvert"
 import { exportProject } from "../api/projects"
+
+defineOptions({
+  name: "project"
+})
+
 const router = useRouter()
 const toast = useToast()
 const queryClient = useQueryClient()

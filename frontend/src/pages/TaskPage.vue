@@ -77,6 +77,10 @@ import { getUserID, hasAtLeastRole } from "../utils/auth"
 import { useEmployeeStore } from "../stores/employee"
 import { storeToRefs } from "pinia"
 
+defineOptions({
+  name: "task"
+})
+
 const statTemplates = [
   {
     title: "进行",

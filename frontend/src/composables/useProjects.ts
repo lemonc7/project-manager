@@ -49,7 +49,9 @@ export function useProjects() {
 
   const projectQuery = useQuery({
     queryKey: queryKey,
-    queryFn: () => listProjects(req.value)
+    queryFn: () => listProjects(req.value),
+    refetchInterval: 1000 * 60,
+    staleTime: Infinity
   })
 
   const route = useRoute()

@@ -15,8 +15,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "",
         name: "task",
-        component: () => import("../pages/TaskPage.vue"),
-        meta: { keepAlive: true }
+        component: () => import("../pages/TaskPage.vue")
       },
       {
         path: "employee",
@@ -51,18 +50,44 @@ const router = createRouter({
   routes
 })
 
-// 导航守卫实现 ProtectElement 的逻辑
-router.beforeEach((to, _, next) => {
+// 导航守卫实现 requiresAuth 的逻辑
+router.beforeEach(async (to) => {
+  const loggedIn = isLoggedIn()
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
-  // 已登录，重定向到/页面
-  if (to.path === "/login" && isLoggedIn()) {
-    return next("/")
+  // 已登录，重定向到task页面
+  if (to.name === "login" && loggedIn) {
+    return { name: "task", replace: true }
   }
   // 未登录，重定向到login页面
-  if (requiresAuth && !isLoggedIn()) {
-    return next("/login")
+  if (requiresAuth && !loggedIn) {
+    return { name: "login" }
   }
-  next()
+  // 其他情况正常放行
+  return true
 })
+
+let projectScrollTop = 0
+// 离开 /project 时保存滚动位置
+router.beforeEach((_, from) => {
+  if (from.path === "/project") {
+    const table = document.getElementById("project-table")
+    if (table) {
+      projectScrollTop = table.scrollTop
+    }
+  }
+})
+
+// 进入 /project 时恢复滚动位置
+router.afterEach((to) => {
+  if (to.path === "/project") {
+    setTimeout(() => {
+      const table = document.getElementById("project-table")
+      if (table) {
+        table.scrollTop = projectScrollTop
+      }
+    }, 0)
+  }
+})
+
 
 export default router

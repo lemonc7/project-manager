@@ -70,8 +70,11 @@ const { data, isLoading } = useQuery({
       return
     }
     return listTasks(props.employee, props.status)
-  }
+  },
+  staleTime: Infinity,
+  refetchInterval: 1000 * 60
 })
+
 const titleMap: Record<
   TaskStatus,
   { label: string; color: string; icon: string }

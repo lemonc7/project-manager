@@ -41,11 +41,10 @@
           <UserMenu :collapsed="collapsed" />
         </template>
       </UDashboardSidebar>
-      <RouterView v-slot="{ route, Component }">
-        <KeepAlive>
-          <component v-if="route.meta.keepAlive" :is="Component" />
+      <RouterView v-slot="{ Component }">
+        <KeepAlive :include="['task', 'project']">
+          <component :is="Component" />
         </KeepAlive>
-        <component v-if="!route.meta.keepAlive" :is="Component" />
       </RouterView>
     </UDashboardGroup>
   </UApp>
