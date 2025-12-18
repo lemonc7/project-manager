@@ -107,7 +107,7 @@
 
 <script setup lang="ts">
 import { useTemplateRef, h, nextTick, ref, resolveComponent, watch } from "vue"
-import { type Row, type Table } from "@tanstack/table-core"
+import { type Row } from "@tanstack/table-core"
 import type {
   Process,
   ProcessStatus,
@@ -124,7 +124,7 @@ import { useScreens } from "../composables/useScreens"
 import { useProcessStore } from "../stores/process"
 
 const toast = useToast()
-const table = useTemplateRef<{ tableApi: Table<Process> }>("table")
+const table = useTemplateRef("table")
 
 const employeeStore = useEmployeeStore()
 const processStore = useProcessStore()

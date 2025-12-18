@@ -199,7 +199,7 @@ import {
   useTemplateRef,
   watch
 } from "vue"
-import { type Row, type Table } from "@tanstack/table-core"
+import { type Row } from "@tanstack/table-core"
 import {
   ProjectStatusOptions,
   type ListProjectsRequest,
@@ -295,7 +295,7 @@ const isResetModalOpen = ref(false)
 const isCopyModalOpen = ref(false)
 const selectedProject = ref<Project | null>(null)
 
-const table = useTemplateRef<{ tableApi: Table<Project> }>("table")
+const table = useTemplateRef("table")
 
 const UDropdownMenu = resolveComponent("UDropdownMenu")
 const UButton = resolveComponent("UButton")
