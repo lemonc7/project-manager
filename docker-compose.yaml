@@ -6,7 +6,6 @@ services:
     network_mode: bridge
     volumes:
       - ./config.yaml:/app/config.yaml:ro # 需要在宿主机中创建config.yaml挂载到容器中
-      - /etc/localtime:/etc/localtime:ro
     ports:
       - 8080:8080 # 容器内部端口由config.yaml决定
     restart: always

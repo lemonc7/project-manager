@@ -19,6 +19,8 @@ import {
   updateProject
 } from "../api/projects"
 import { useRoute } from "vue-router"
+import { getProjectState } from "../utils/projectState"
+import { toRFC3339 } from "../utils/timeConvert"
 
 function buildProjectsQueryKey(req: ListProjectsRequest) {
   return [
@@ -35,7 +37,14 @@ export function useProjects() {
   const queryClient = useQueryClient()
 
   // 查询数据
-  const req = ref<ListProjectsRequest>({})
+  const initialState = getProjectState()
+  const req = ref<ListProjectsRequest>({
+    managerID:
+      initialState.managerID === 0 ? undefined : initialState.managerID,
+    status: initialState.status,
+    startAt: toRFC3339(initialState.startAt),
+    endAt: toRFC3339(initialState.endAt)
+  })
 
   const queryKey = computed(() => {
     return buildProjectsQueryKey(req.value)
@@ -49,7 +58,12 @@ export function useProjects() {
 
   const projectQuery = useQuery({
     queryKey: queryKey,
-    queryFn: () => listProjects(req.value),
+    queryFn: async () => {
+      const data = await listProjects(req.value)
+      console.log(data)
+      console.log(req.value)
+      return data
+    },
     refetchInterval: 1000 * 60,
     staleTime: Infinity
   })

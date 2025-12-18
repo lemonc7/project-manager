@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"time"
 
 	"github.com/lemonc7/project-manager/config"
 	"go.uber.org/zap"
@@ -14,7 +15,11 @@ func InitLogger(cfg config.LoggerConfig) {
 	// 基础配置
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.TimeKey = "timestamp"
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	encoderConfig.EncodeTime = func(t time.Time, pae zapcore.PrimitiveArrayEncoder) {
+		// 设置时区为/Asia/Shanghai
+		loc := time.FixedZone("CST", 8*3600)
+		pae.AppendString(t.In(loc).Format(time.DateTime))
+	}
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 
 	// 设置日志级别

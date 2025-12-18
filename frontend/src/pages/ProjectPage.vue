@@ -248,12 +248,6 @@ const projectState = ref<ListProjectsRequest>(getDefaultProjectState())
 onMounted(() => {
   const localState = getProjectState()
   projectState.value = { ...localState }
-  setQuery({
-    managerID: localState.managerID,
-    status: localState.status,
-    startAt: toRFC3339(localState.startAt),
-    endAt: toRFC3339(localState.endAt)
-  })
 })
 
 const inputStartDate = useTemplateRef("inputStartDate")
