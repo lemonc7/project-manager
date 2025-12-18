@@ -58,12 +58,7 @@ export function useProjects() {
 
   const projectQuery = useQuery({
     queryKey: queryKey,
-    queryFn: async () => {
-      const data = await listProjects(req.value)
-      console.log(data)
-      console.log(req.value)
-      return data
-    },
+    queryFn: () => listProjects(req.value),
     refetchInterval: 1000 * 60,
     staleTime: Infinity
   })

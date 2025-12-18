@@ -2,8 +2,7 @@ import { getToken, removeToken } from "../utils/auth"
 import axios from "axios"
 
 const service = axios.create({
-  baseURL: "/api",
-  // baseURL: "http://localhost:8080/api",
+  baseURL: process.env.NODE_ENV === "production" ? "/api" : "http://localhost:8080/api",
   timeout: 3000,
   headers: {
     "Content-Type": "application/json;charset=UTF-8"

@@ -1,3 +1,4 @@
+import { nextTick } from "vue"
 import { isLoggedIn } from "../utils/auth"
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router"
 
@@ -67,27 +68,29 @@ router.beforeEach(async (to) => {
 })
 
 let projectScrollTop = 0
+let projectScrollLeft = 0
 // 离开 /project 时保存滚动位置
 router.beforeEach((_, from) => {
   if (from.path === "/project") {
     const table = document.getElementById("project-table")
     if (table) {
       projectScrollTop = table.scrollTop
+      projectScrollLeft = table.scrollLeft
     }
   }
 })
 
 // 进入 /project 时恢复滚动位置
-router.afterEach((to) => {
+router.afterEach(async (to) => {
   if (to.path === "/project") {
-    setTimeout(() => {
-      const table = document.getElementById("project-table")
-      if (table) {
-        table.scrollTop = projectScrollTop
-      }
-    }, 0)
+    // 等待渲染完成
+    await nextTick()
+    const table = document.getElementById("project-table")
+    if (table) {
+      table.scrollTop = projectScrollTop
+      table.scrollLeft = projectScrollLeft
+    }
   }
 })
-
 
 export default router
