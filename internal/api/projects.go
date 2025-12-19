@@ -48,7 +48,7 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 	}
 
 	// 验证数据
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
@@ -174,7 +174,7 @@ func (p *ProjectHandler) CopyProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 	if err := p.projectService.CopyProject(c.Request().Context(), id, req); err != nil {
@@ -192,7 +192,7 @@ func (p *ProjectHandler) IsProjectExists(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 

@@ -17,11 +17,13 @@ type Querier interface {
 	CreateProject(ctx context.Context, arg CreateProjectParams) error
 	CreateSetting(ctx context.Context, arg CreateSettingParams) error
 	CreateTeam(ctx context.Context, arg CreateTeamParams) error
+	CreateTodo(ctx context.Context, arg CreateTodoParams) error
 	DeleteEmployee(ctx context.Context, id int32) error
 	DeleteProcess(ctx context.Context, id int32) (int32, error)
 	DeleteProcesses(ctx context.Context, arg DeleteProcessesParams) (int64, error)
 	DeleteProject(ctx context.Context, id int32) error
 	DeleteTeam(ctx context.Context, id int32) error
+	DeleteTodo(ctx context.Context, id int32) (int64, error)
 	FinishProcess(ctx context.Context, arg FinishProcessParams) (int64, error)
 	GetEmployeeByUsername(ctx context.Context, username string) (GetEmployeeByUsernameRow, error)
 	// 用于InsertProcessLast,获取最大sequence
@@ -42,6 +44,7 @@ type Querier interface {
 	ListTasksReady(ctx context.Context, employeeID int32) ([]ListTasksReadyRow, error)
 	ListTasksTodo(ctx context.Context, employeeID int32) ([]ListTasksTodoRow, error)
 	ListTeams(ctx context.Context) ([]ListTeamsRow, error)
+	ListTodosFiltered(ctx context.Context, arg ListTodosFilteredParams) ([]ListTodosFilteredRow, error)
 	// 用于DeleteProcess,调整sequence
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	// 用于重置项目所有流程的状态
@@ -56,6 +59,7 @@ type Querier interface {
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) (int64, error)
 	UpdateProjectStatus(ctx context.Context, arg UpdateProjectStatusParams) (int64, error)
 	UpdateTeam(ctx context.Context, arg UpdateTeamParams) error
+	UpdateTodo(ctx context.Context, arg UpdateTodoParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

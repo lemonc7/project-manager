@@ -47,7 +47,7 @@ func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
 	}
 
 	// 验证数据
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 

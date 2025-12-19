@@ -46,7 +46,7 @@ func (p *ProcessHandler) InsertProcessLast(c echo.Context) error {
 	}
 
 	// 验证数据
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
@@ -79,7 +79,7 @@ func (p *ProcessHandler) InsertProcessAt(c echo.Context) error {
 	}
 
 	// 验证数据
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
@@ -145,7 +145,7 @@ func (p *ProcessHandler) DeleteProcesses(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
@@ -238,7 +238,7 @@ func (p *ProcessHandler) ReworkProcess(c echo.Context) error {
 	}
 
 	// 参数校验
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 

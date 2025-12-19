@@ -176,3 +176,18 @@ type Team struct {
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
+
+type Todo struct {
+	ID          int32      `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Remark      string     `json:"remark"`
+	Priority    int32      `json:"priority"`
+	Status      string     `json:"status"`
+	ReporterID  int32      `json:"reporterID"`
+	AssigneeID  int32      `json:"assigneeID"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
+	StartedAt   *time.Time `json:"startedAt,omitempty"`
+	FinishedAt  *time.Time `json:"finishedAt,omitempty"`
+}

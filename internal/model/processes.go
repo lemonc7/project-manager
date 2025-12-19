@@ -18,7 +18,7 @@ type UpdateProcessRequest struct {
 	Remark      *string             `json:"remark"`
 	Status      *repo.ProcessStatus `json:"status"`
 	EmployeeID  *int32              `json:"employeeID"`
-	SpendTime   *float64            `json:"spendTime" validate:"gte=0"`
+	SpendTime   *float64            `json:"spendTime"`
 }
 
 type FinishProcessRequest struct {

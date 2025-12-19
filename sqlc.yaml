@@ -65,3 +65,8 @@ sql:
             go_struct_tag: 'json:"startedAt,omitempty"'
           - column: "projects.finished_at"
             go_struct_tag: 'json:"finishedAt,omitempty"'
+
+          - column: "todos.started_at"
+            go_struct_tag: 'json:"startedAt,omitempty"'
+          - column: "todos.finished_at"
+            go_struct_tag: 'json:"finishedAt,omitempty"'

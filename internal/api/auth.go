@@ -37,7 +37,7 @@ func (a *AuthHandler) Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
@@ -64,7 +64,7 @@ func (a *AuthHandler) ResetPassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
@@ -88,7 +88,7 @@ func (a *AuthHandler) ChangePassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
@@ -109,7 +109,7 @@ func (a *AuthHandler) InitAdmin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
 	}
 
-	if err := c.Validate(req); err != nil {
+	if err := c.Validate(&req); err != nil {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
 	}
 
