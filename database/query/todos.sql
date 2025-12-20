@@ -1,4 +1,4 @@
--- name: ListTodosFiltered :many
+-- name: ListTodosByReporter :many
 SELECT
   t.id,
   t.name,
@@ -6,17 +6,36 @@ SELECT
   t.remark,
   t.status,
   t.priority,
-  COALESCE(r.name,'') AS reporter_name,
-  COALESCE(a.name,'') AS assignee_name,
+  t.assignee_id AS employee_id,
+  COALESCE(e.name,'') AS employee_name,
   t.started_at,
   t.finished_at
 FROM todos t
-LEFT JOIN employees r ON t.reporter_id = r.id
-LEFT JOIN employees a ON t.assignee_id = a.id
+LEFT JOIN employees e ON t.assignee_id = e.id
+WHERE
+  t.reporter_id = sqlc.arg('reporter_id')
+  AND t.status = ANY(sqlc.arg('status')::TEXT[])
+ORDER BY
+  t.priority DESC,
+  t.updated_at DESC;
+
+-- name: ListTodosByAssignee :many
+SELECT
+  t.id,
+  t.name,
+  t.description,
+  t.remark,
+  t.status,
+  t.priority,
+  t.reporter_id AS employee_id,
+  COALESCE(e.name,'') AS employee_name,
+  t.started_at,
+  t.finished_at
+FROM todos t
+LEFT JOIN employees e ON t.reporter_id = e.id
 WHERE 
-  t.status = ANY(sqlc.arg('status')::TEXT[]::todo_status[])
-  AND (t.reporter_id = sqlc.narg('reporter_id') OR sqlc.narg('reporter_id') IS NULL)
-  AND (t.assignee_id = sqlc.narg('assignee_id') OR sqlc.narg('assignee_id') IS NULL)
+  t.assignee_id = sqlc.arg('assignee_id')
+  AND t.status = ANY(sqlc.arg('status')::TEXT[])
 ORDER BY
   t.priority DESC,
   t.updated_at DESC;

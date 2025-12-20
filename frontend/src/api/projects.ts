@@ -10,7 +10,7 @@ import service from "./request"
 
 export async function listProjects(req: ListProjectsRequest) {
   const res = await service.post<Project[]>(`/project/list`, req)
-  return Array.isArray(res.data) ? res.data : []
+  return res.data
 }
 
 export async function createProject(req: CreateProjectRequest) {

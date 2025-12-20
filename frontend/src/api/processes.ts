@@ -11,14 +11,14 @@ import type { TaskStatus } from "../models/projects"
 
 export async function listProcesses(projectID: number) {
   const res = await service.get<Process[]>(`/process/${projectID}`)
-  return Array.isArray(res.data) ? res.data : []
+  return res.data
 }
 
 export async function listTasks(id: number, status: TaskStatus) {
   const res = await service.get<Task[]>(`/process/task/${id}`, {
     params: { status: status }
   })
-  return Array.isArray(res.data) ? res.data : []
+  return res.data
 }
 
 export async function insertProcessLast(req: InsertProcessRequest) {

@@ -7,7 +7,7 @@ import service from "./request"
 
 export async function listEmployees() {
   const res = await service.get<Employee[]>("/employee")
-  return Array.isArray(res.data) ? res.data : []
+  return res.data
 }
 
 export async function getEmployeeName() {

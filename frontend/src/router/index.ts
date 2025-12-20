@@ -39,6 +39,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import("../pages/ProcessPage.vue")
       },
       {
+        path: "todo",
+        name: "todo",
+        component: () => import("../pages/TodoPage.vue")
+      },
+      {
         path: "/:pathMatch(.*)*",
         component: () => import("../pages/NotFoundPage.vue")
       }

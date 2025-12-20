@@ -25,6 +25,7 @@ func (a *Application) initRouter() {
 	teamRouter := api.Group("/team")
 	projectRouter := api.Group("/project")
 	processRouter := api.Group("/process")
+	todoRouter := api.Group("/todo")
 
 	// 员工
 	employeeRouter.GET("", a.employeeHandler.ListEmployees)
@@ -61,6 +62,13 @@ func (a *Application) initRouter() {
 	processRouter.PATCH("/:id", a.processHandler.UpdateProcess)
 	processRouter.DELETE("/:id", a.processHandler.DeleteProcess)
 	processRouter.DELETE("/series/:id", a.processHandler.DeleteProcesses)
+
+	// todo
+	todoRouter.GET("/todos/reporter/:id", a.todoHandler.ListTodosByReporter)
+	todoRouter.GET("/todos/assignee/:id", a.todoHandler.ListTodosByAssignee)
+	todoRouter.POST("", a.todoHandler.CreateTodo)
+	todoRouter.PATCH("/:id", a.todoHandler.UpdateTodo)
+	todoRouter.DELETE("/:id", a.todoHandler.DeleteTodo)
 
 	// 挂载静态文件
 	a.e.Use(middleware.StaticWithConfig(middleware.StaticConfig{

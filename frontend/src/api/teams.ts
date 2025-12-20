@@ -3,7 +3,7 @@ import service from "./request"
 
 export async function listTeams() {
   const res = await service.get<Team[]>("/team")
-  return Array.isArray(res.data) ? res.data : []
+  return res.data
 }
 
 export async function createTeam(req: CreateTeamRequest) {

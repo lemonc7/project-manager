@@ -1,9 +1,7 @@
 package model
 
-type ListTodosFilteredRequest struct {
-	Status     []string `json:"status"`
-	ReporterID *int32   `json:"reporterID"`
-	AssigneeID *int32   `json:"assigneeID"`
+type ListTodosRequest struct {
+	Status []string `json:"status"`
 }
 
 type CreateTodoRequest struct {

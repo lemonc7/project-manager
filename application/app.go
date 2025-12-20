@@ -36,6 +36,7 @@ type Application struct {
 	teamHandler     *api.TeamHandler
 	projectHandler  *api.ProjectHandler
 	processHandler  *api.ProcessHandler
+	todoHandler     *api.TodoHandler
 }
 
 type CustomValidator struct {
@@ -86,6 +87,9 @@ func InitApp(filePath string) (*Application, error) {
 	processHandler := api.NewProcessHandler(
 		service.NewProcessService(dbPool),
 	)
+	todoHandler := api.NewTodoHandler(
+		service.NewTodoService(dbPool),
+	)
 
 	serverHandler := api.NewServerService(
 		service.NewServerService(dbPool),
@@ -102,6 +106,7 @@ func InitApp(filePath string) (*Application, error) {
 		teamHandler:     teamHandler,
 		projectHandler:  projectHandler,
 		processHandler:  processHandler,
+		todoHandler:     todoHandler,
 	}
 	// 注册路由
 	app.initRouter()

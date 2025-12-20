@@ -193,7 +193,6 @@
 import {
   computed,
   h,
-  onMounted,
   ref,
   resolveComponent,
   useTemplateRef,
@@ -243,12 +242,7 @@ const {
 } = useProjects()
 const { isMobile } = useScreens()
 
-const projectState = ref<ListProjectsRequest>(getDefaultProjectState())
-
-onMounted(() => {
-  const localState = getProjectState()
-  projectState.value = { ...localState }
-})
+const projectState = ref<ListProjectsRequest>(getProjectState())
 
 const inputStartDate = useTemplateRef("inputStartDate")
 const inputEndDate = useTemplateRef("inputEndDate")

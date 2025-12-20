@@ -19,11 +19,23 @@ func NewTodoService(db *pgxpool.Pool) *TodoService {
 	}
 }
 
-func (t *TodoService) ListTodosFiltered(ctx context.Context, req model.ListTodosFilteredRequest) ([]repo.ListTodosFilteredRow, error) {
-	todos, err := t.querier.ListTodosFiltered(ctx, repo.ListTodosFilteredParams{
+func (t *TodoService) ListTodosByReporter(ctx context.Context, reporterID int32, req model.ListTodosRequest) ([]repo.ListTodosByReporterRow, error) {
+	todos, err := t.querier.ListTodosByReporter(ctx, repo.ListTodosByReporterParams{
 		Status:     req.Status,
-		ReporterID: req.ReporterID,
-		AssigneeID: req.AssigneeID,
+		ReporterID: reporterID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return todos, nil
+}
+
+func (t *TodoService) ListTodosByAssignee(ctx context.Context, assigneeID int32, req model.ListTodosRequest) ([]repo.ListTodosByAssigneeRow, error) {
+	todos, err := t.querier.ListTodosByAssignee(ctx, repo.ListTodosByAssigneeParams{
+		Status:     req.Status,
+		AssigneeID: assigneeID,
 	})
 
 	if err != nil {

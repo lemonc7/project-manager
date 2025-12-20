@@ -62,7 +62,7 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int32) (int64, error) {
 	return result.RowsAffected(), nil
 }
 
-const listTodosFiltered = `-- name: ListTodosFiltered :many
+const listTodosByAssignee = `-- name: ListTodosByAssignee :many
 SELECT
   t.id,
   t.name,
@@ -70,50 +70,47 @@ SELECT
   t.remark,
   t.status,
   t.priority,
-  COALESCE(r.name,'') AS reporter_name,
-  COALESCE(a.name,'') AS assignee_name,
+  t.reporter_id AS employee_id,
+  COALESCE(e.name,'') AS employee_name,
   t.started_at,
   t.finished_at
 FROM todos t
-LEFT JOIN employees r ON t.reporter_id = r.id
-LEFT JOIN employees a ON t.assignee_id = a.id
+LEFT JOIN employees e ON t.reporter_id = e.id
 WHERE 
-  t.status = ANY($1::TEXT[]::todo_status[])
-  AND (t.reporter_id = $2 OR $2 IS NULL)
-  AND (t.assignee_id = $3 OR $3 IS NULL)
+  t.assignee_id = $1
+  AND t.status = ANY($2::TEXT[])
 ORDER BY
   t.priority DESC,
   t.updated_at DESC
 `
 
-type ListTodosFilteredParams struct {
+type ListTodosByAssigneeParams struct {
+	AssigneeID int32    `json:"assigneeID"`
 	Status     []string `json:"status"`
-	ReporterID *int32   `json:"reporterID"`
-	AssigneeID *int32   `json:"assigneeID"`
 }
 
-type ListTodosFilteredRow struct {
+type ListTodosByAssigneeRow struct {
 	ID           int32      `json:"id"`
 	Name         string     `json:"name"`
 	Description  string     `json:"description"`
 	Remark       string     `json:"remark"`
 	Status       string     `json:"status"`
 	Priority     int32      `json:"priority"`
-	ReporterName string     `json:"reporterName"`
-	AssigneeName string     `json:"assigneeName"`
+	EmployeeID   int32      `json:"employeeID"`
+	EmployeeName string     `json:"employeeName"`
 	StartedAt    *time.Time `json:"startedAt,omitempty"`
 	FinishedAt   *time.Time `json:"finishedAt,omitempty"`
 }
 
-func (q *Queries) ListTodosFiltered(ctx context.Context, arg ListTodosFilteredParams) ([]ListTodosFilteredRow, error) {
-	rows, err := q.db.Query(ctx, listTodosFiltered, arg.Status, arg.ReporterID, arg.AssigneeID)
+func (q *Queries) ListTodosByAssignee(ctx context.Context, arg ListTodosByAssigneeParams) ([]ListTodosByAssigneeRow, error) {
+	rows, err := q.db.Query(ctx, listTodosByAssignee, arg.AssigneeID, arg.Status)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListTodosFilteredRow
+	var items []ListTodosByAssigneeRow
 	for rows.Next() {
-		var i ListTodosFilteredRow
+		var i ListTodosByAssigneeRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -121,8 +118,79 @@ func (q *Queries) ListTodosFiltered(ctx context.Context, arg ListTodosFilteredPa
 			&i.Remark,
 			&i.Status,
 			&i.Priority,
-			&i.ReporterName,
-			&i.AssigneeName,
+			&i.EmployeeID,
+			&i.EmployeeName,
+			&i.StartedAt,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTodosByReporter = `-- name: ListTodosByReporter :many
+SELECT
+  t.id,
+  t.name,
+  t.description,
+  t.remark,
+  t.status,
+  t.priority,
+  t.assignee_id AS employee_id,
+  COALESCE(e.name,'') AS employee_name,
+  t.started_at,
+  t.finished_at
+FROM todos t
+LEFT JOIN employees e ON t.assignee_id = e.id
+WHERE
+  t.reporter_id = $1
+  AND t.status = ANY($2::TEXT[])
+ORDER BY
+  t.priority DESC,
+  t.updated_at DESC
+`
+
+type ListTodosByReporterParams struct {
+	ReporterID int32    `json:"reporterID"`
+	Status     []string `json:"status"`
+}
+
+type ListTodosByReporterRow struct {
+	ID           int32      `json:"id"`
+	Name         string     `json:"name"`
+	Description  string     `json:"description"`
+	Remark       string     `json:"remark"`
+	Status       string     `json:"status"`
+	Priority     int32      `json:"priority"`
+	EmployeeID   int32      `json:"employeeID"`
+	EmployeeName string     `json:"employeeName"`
+	StartedAt    *time.Time `json:"startedAt,omitempty"`
+	FinishedAt   *time.Time `json:"finishedAt,omitempty"`
+}
+
+func (q *Queries) ListTodosByReporter(ctx context.Context, arg ListTodosByReporterParams) ([]ListTodosByReporterRow, error) {
+	rows, err := q.db.Query(ctx, listTodosByReporter, arg.ReporterID, arg.Status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTodosByReporterRow
+	for rows.Next() {
+		var i ListTodosByReporterRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Remark,
+			&i.Status,
+			&i.Priority,
+			&i.EmployeeID,
+			&i.EmployeeName,
 			&i.StartedAt,
 			&i.FinishedAt,
 		); err != nil {

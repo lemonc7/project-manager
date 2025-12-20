@@ -44,7 +44,8 @@ type Querier interface {
 	ListTasksReady(ctx context.Context, employeeID int32) ([]ListTasksReadyRow, error)
 	ListTasksTodo(ctx context.Context, employeeID int32) ([]ListTasksTodoRow, error)
 	ListTeams(ctx context.Context) ([]ListTeamsRow, error)
-	ListTodosFiltered(ctx context.Context, arg ListTodosFilteredParams) ([]ListTodosFilteredRow, error)
+	ListTodosByAssignee(ctx context.Context, arg ListTodosByAssigneeParams) ([]ListTodosByAssigneeRow, error)
+	ListTodosByReporter(ctx context.Context, arg ListTodosByReporterParams) ([]ListTodosByReporterRow, error)
 	// 用于DeleteProcess,调整sequence
 	ReorderProcesses(ctx context.Context, projectID int32) error
 	// 用于重置项目所有流程的状态

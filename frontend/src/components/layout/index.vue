@@ -84,6 +84,14 @@ const links: NavigationMenuItem[] = [
     }
   },
   {
+    label: "todo",
+    to: "/todo",
+    icon: "i-lucide-list-todo",
+    onSelect: () => {
+      open.value = false
+    }
+  },
+  {
     label: "团队",
     to: "/employee",
     defaultOpen: true,
