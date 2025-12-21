@@ -44,6 +44,7 @@ type JWTConfig struct {
 
 type LoggerConfig struct {
 	Level string `yaml:"level"`
+	TZ    string `yaml:"tz"`
 }
 
 func NewConfig(filePath string) (*Config, error) {

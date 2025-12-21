@@ -15,9 +15,13 @@ func InitLogger(cfg config.LoggerConfig) {
 	// 基础配置
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.TimeKey = "timestamp"
+
+	loc, err := time.LoadLocation(cfg.TZ)
+	if err != nil {
+		loc = time.UTC
+	}
+
 	encoderConfig.EncodeTime = func(t time.Time, pae zapcore.PrimitiveArrayEncoder) {
-		// 设置时区为/Asia/Shanghai
-		loc := time.FixedZone("CST", 8*3600)
 		pae.AppendString(t.In(loc).Format(time.DateTime))
 	}
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
