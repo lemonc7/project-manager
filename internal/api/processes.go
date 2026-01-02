@@ -41,13 +41,12 @@ func NewProcessHandler(service ProcessService) *ProcessHandler {
 func (p *ProcessHandler) InsertProcessLast(c echo.Context) error {
 	// 绑定请求
 	var req model.InsertProcessRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	// 验证数据
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.InsertProcessRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	// 业务函数
@@ -74,13 +73,12 @@ func (p *ProcessHandler) InsertProcessAt(c echo.Context) error {
 
 	// 绑定请求
 	var req model.InsertProcessRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	// 验证数据
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.InsertProcessRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	// 业务函数
@@ -100,8 +98,12 @@ func (p *ProcessHandler) UpdateProcess(c echo.Context) error {
 	}
 	// 绑定请求
 	var req model.UpdateProcessRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.UpdateEmployeeSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	// 业务函数
@@ -141,12 +143,12 @@ func (p *ProcessHandler) DeleteProcesses(c echo.Context) error {
 	}
 
 	var req model.DeleteProcessesRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.DeleteProcessesRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	if err := p.processService.DeleteProcesses(c.Request().Context(), id, req); err != nil {
@@ -212,8 +214,12 @@ func (p *ProcessHandler) FinishProcess(c echo.Context) error {
 	}
 
 	var req model.FinishProcessRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.FinishProcessRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	if err := p.processService.FinishProcess(c.Request().Context(), id, req); err != nil {
@@ -233,13 +239,12 @@ func (p *ProcessHandler) ReworkProcess(c echo.Context) error {
 
 	// 绑定请求
 	var req model.ReworkProcessRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	// 参数校验
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.ReworkProcessRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	// 业务函数

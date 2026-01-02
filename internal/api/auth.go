@@ -33,12 +33,12 @@ func NewAuthHandler(service AuthService) *AuthHandler {
 
 func (a *AuthHandler) Login(c echo.Context) error {
 	var req model.LoginRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.LoginRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	res, err := a.authService.Login(c.Request().Context(), req)
@@ -60,12 +60,12 @@ func (a *AuthHandler) ResetPassword(c echo.Context) error {
 		return err
 	}
 	var req model.ResetPasswordRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.ResetPasswordRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	if err := a.authService.ResetPassword(c.Request().Context(), id, req.Password); err != nil {
@@ -84,12 +84,12 @@ func (a *AuthHandler) ChangePassword(c echo.Context) error {
 	}
 
 	var req model.ChangePasswordRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.ChangePasswordRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	if err := a.authService.ChangePassword(c.Request().Context(), username, req); err != nil {
@@ -105,12 +105,12 @@ func (a *AuthHandler) ChangePassword(c echo.Context) error {
 
 func (a *AuthHandler) InitAdmin(c echo.Context) error {
 	var req model.InitAdminRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.InitAdminRequestSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	if err := a.authService.InitAdmin(c.Request().Context(), req); err != nil {

@@ -42,13 +42,12 @@ func (e *EmployeeHandler) CreateEmployee(c echo.Context) error {
 	}
 	// 绑定请求
 	var req model.CreateEmployeeRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	// 验证数据
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.CreateEmployeeSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	// 没传roles设置为空数组
@@ -76,8 +75,12 @@ func (e *EmployeeHandler) UpdateEmployee(c echo.Context) error {
 	}
 	// 绑定请求
 	var req model.UpdateEmployeeRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	if err := util.BindRequest(
+		c.Request().Body,
+		model.UpdateEmployeeSchema,
+		&req,
+	); err != nil {
+		return err
 	}
 
 	// 业务函数

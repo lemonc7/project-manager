@@ -1,12 +1,23 @@
 package model
 
+import "github.com/Oudwins/zog"
+
 type CreateEmployeeRequest struct {
-	Name     string   `json:"name" validate:"required"`
-	Username string   `json:"username" validate:"required,min=2,max=20"`
-	Password string   `json:"password" validate:"required,min=6,max=20"`
+	Name     string   `json:"name"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
 	Roles    []string `json:"roles"`
 	TeamID   *int32   `json:"teamID"`
 }
+
+var CreateEmployeeSchema = zog.Struct(zog.Shape{
+	"name": zog.String().Required().Min(1),
+	"username": zog.String().Required().Min(2).Max(20),
+	"password": zog.String().Required().Min(6).Max(20),
+	"roles":    zog.Slice(zog.String()),
+	"teamID":   zog.Int32(),
+})
+
 
 type UpdateEmployeeRequest struct {
 	Name     *string  `json:"name"`
@@ -14,3 +25,10 @@ type UpdateEmployeeRequest struct {
 	TeamID   *int32   `json:"teamID"`
 	IsActive *bool    `json:"isActive"`
 }
+
+var UpdateEmployeeSchema = zog.Struct(zog.Shape{
+	"name":     zog.String(),
+	"roles":    zog.Slice(zog.String()),
+	"teamID":   zog.Int32(),
+	"isActive": zog.Bool(),
+})
