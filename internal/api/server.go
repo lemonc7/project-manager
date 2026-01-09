@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/lemonc7/zest"
 )
 
 type ServerService interface {
@@ -21,13 +21,11 @@ func NewServerService(service ServerService) *ServerHandler {
 	}
 }
 
-func (s *ServerHandler) Ping(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	if err := s.serverService.Ping(ctx); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+func (s *ServerHandler) Ping(c *zest.Context) error {
+	if err := s.serverService.Ping(c.Context()); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, echo.Map{
+	return c.JSON(http.StatusOK, zest.Map{
 		"message": "pong",
 	})
 }

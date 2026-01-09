@@ -4,15 +4,16 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/util"
+	"github.com/lemonc7/zest"
 )
 
 type ProjectService interface {
@@ -40,188 +41,171 @@ func NewProjectHandler(service ProjectService) *ProjectHandler {
 	}
 }
 
-func (p *ProjectHandler) CreateProject(c echo.Context) error {
+func (p *ProjectHandler) CreateProject(c *zest.Context) error {
 	// 绑定请求
 	var req model.CreateProjectRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	// 验证数据
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
+	if err := c.Bind(model.CreateProjectRequestSchema, &req); err != nil {
+		return err
 	}
 
 	// 业务函数
-	err := p.projectService.CreateProject(c.Request().Context(), req)
+	err := p.projectService.CreateProject(c.Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("创建项目: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("创建项目: %w", err))
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusCreated, echo.Map{
+	return c.JSON(http.StatusCreated, zest.Map{
 		"message": "成功创建项目",
 	})
 }
 
-func (p *ProjectHandler) UpdateProject(c echo.Context) error {
+func (p *ProjectHandler) UpdateProject(c *zest.Context) error {
 	id, err := util.GetParamID(c)
 	if err != nil {
 		return err
 	}
 	// 绑定请求
 	var req model.UpdateProjectRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	if err := c.Bind(model.UpdateProjectRequestSchema, &req); err != nil {
+		return err
 	}
 
 	// 业务函数
-	err = p.projectService.UpdateProject(c.Request().Context(), id, req)
+	err = p.projectService.UpdateProject(c.Context(), id, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("更新项目: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("更新项目: %w", err))
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusOK, echo.Map{
+	return c.JSON(http.StatusOK, zest.Map{
 		"message": "成功更新项目",
 	})
 }
 
-func (p *ProjectHandler) DeleteProject(c echo.Context) error {
+func (p *ProjectHandler) DeleteProject(c *zest.Context) error {
 	// 获取id
 	id, err := util.GetParamID(c)
 	if err != nil {
 		return err
 	}
 	// 删除数据
-	if err := p.projectService.DeleteProject(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("删除项目: %w", err))
+	if err := p.projectService.DeleteProject(c.Context(), id); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("删除项目: %w", err))
 	}
 
 	// 返回响应
-	return c.JSON(http.StatusOK, echo.Map{
+	return c.JSON(http.StatusOK, zest.Map{
 		"message": "成功删除项目",
 	})
 }
 
-func (p *ProjectHandler) ListProjects(c echo.Context) error {
+func (p *ProjectHandler) ListProjects(c *zest.Context) error {
 	// 绑定请求
 	var req model.ListProjectsRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	if err := c.Bind(model.ListProjectRequestSchema, &req); err != nil {
+		return err
 	}
 
-	projects, err := p.projectService.ListProjectsFiltered(c.Request().Context(), req)
+	projects, err := p.projectService.ListProjectsFiltered(c.Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取项目: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取项目: %w", err))
 	}
 	return c.JSON(http.StatusOK, projects)
 
 }
 
-func (p *ProjectHandler) StartProject(c echo.Context) error {
+func (p *ProjectHandler) StartProject(c *zest.Context) error {
 	id, err := util.GetParamID(c)
 	if err != nil {
 		return err
 	}
 
-	if err := p.projectService.StartProject(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("开始项目: %w", err))
+	if err := p.projectService.StartProject(c.Context(), id); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("开始项目: %w", err))
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
+	return c.JSON(http.StatusOK, zest.Map{
 		"message": "成功开始项目",
 	})
 }
 
-func (p *ProjectHandler) GetProjectByID(c echo.Context) error {
+func (p *ProjectHandler) GetProjectByID(c *zest.Context) error {
 	id, err := util.GetParamID(c)
 	if err != nil {
 		return err
 	}
 
-	project, err := p.projectService.GetProjectByID(c.Request().Context(), id)
+	project, err := p.projectService.GetProjectByID(c.Context(), id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取项目: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取项目: %w", err))
 	}
 
 	return c.JSON(http.StatusOK, project)
 }
 
-func (p *ProjectHandler) ResetStatus(c echo.Context) error {
+func (p *ProjectHandler) ResetStatus(c *zest.Context) error {
 	id, err := util.GetParamID(c)
 	if err != nil {
 		return err
 	}
 
-	if err := p.projectService.ResetStatus(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("重置项目和流程状态: %w", err))
+	if err := p.projectService.ResetStatus(c.Context(), id); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("重置项目和流程状态: %w", err))
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
+	return c.JSON(http.StatusOK, zest.Map{
 		"message": "成功重置项目状态",
 	})
 }
 
-func (p *ProjectHandler) CopyProject(c echo.Context) error {
+func (p *ProjectHandler) CopyProject(c *zest.Context) error {
 	id, err := util.GetParamID(c)
 	if err != nil {
 		return err
 	}
 
 	var req model.CopyProjectRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	if err := c.Bind(model.CopyProjectRequestSchema, &req); err != nil {
+		return err
 	}
 
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
-	}
-	if err := p.projectService.CopyProject(c.Request().Context(), id, req); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("复制项目与相关流程: %w", err))
+	if err := p.projectService.CopyProject(c.Context(), id, req); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("复制项目与相关流程: %w", err))
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
+	return c.JSON(http.StatusOK, zest.Map{
 		"message": "成功复制项目与相关流程",
 	})
 }
 
-func (p *ProjectHandler) IsProjectExists(c echo.Context) error {
+func (p *ProjectHandler) IsProjectExists(c *zest.Context) error {
 	var req model.IsProjectExistsRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
+	if err := c.Bind(model.IsProjectExistsRequestSchema, &req); err != nil {
+		return err
 	}
 
-	if err := c.Validate(&req); err != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, fmt.Errorf("校验参数: %w", err))
-	}
-
-	exists, err := p.projectService.IsProjectExists(c.Request().Context(), req.NewName)
+	exists, err := p.projectService.IsProjectExists(c.Context(), req.NewName)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("判断项目是否存在: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("判断项目是否存在: %w", err))
 	}
 	return c.JSON(http.StatusOK, exists)
 }
 
-func (p *ProjectHandler) ExportProject(c echo.Context) error {
+func (p *ProjectHandler) ExportProject(c *zest.Context) error {
 	id, err := util.GetParamID(c)
 	if err != nil {
 		return err
 	}
-
 	filename := fmt.Sprintf("project_%d_%d", id, time.Now().Unix())
-	// 对文件名进行编码，防止中文或特殊字符导致浏览器解析错误
-	encodedFilename := url.QueryEscape(filename)
 
 	// 设置响应头
-	c.Response().Header().Set(echo.HeaderContentType, "text/csv; charset=utf-8")
+	c.SetHeader(zest.HeaderContentType, "text/csv; charset=utf-8")
 	// 告诉浏览器这是一个附件，需要下载
-	c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=\"%s\"", encodedFilename))
-
-	err = p.projectService.ExportProject(c.Request().Context(), id, c.Response())
+	c.SetHeader("Content-Disposition", `attachment; filename*=UTF-8''`+url.PathEscape(filename))
+	err = p.projectService.ExportProject(c.Context(), id, c.Response())
 	if err != nil {
-		c.Logger().Errorf("导出CSV失败: %w", err)
-		return nil
+		log.Printf("[%v] 导出CSV失败: %v", c.Get("requestID"), err)
 	}
 
 	return nil

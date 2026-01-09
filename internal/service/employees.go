@@ -25,6 +25,7 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 	if err != nil {
 		return err
 	}
+
 	// 插入数据
 	err = e.querier.CreateEmployee(ctx, repo.CreateEmployeeParams{
 		Name:         req.Name,

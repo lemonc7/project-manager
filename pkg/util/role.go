@@ -1,6 +1,8 @@
 package util
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/lemonc7/zest"
+)
 
 // 角色等级，数字越大，权限越高
 var RoleLevel = map[string]int{
@@ -9,7 +11,7 @@ var RoleLevel = map[string]int{
 	"admin":    3,
 }
 
-func GetRoles(c echo.Context) []string {
+func GetRoles(c *zest.Context) []string {
 	roles, ok := c.Get("roles").([]string)
 	if !ok {
 		return []string{}

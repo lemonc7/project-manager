@@ -11,21 +11,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/labstack/echo/v4"
 	"github.com/lemonc7/project-manager/config"
 	"github.com/lemonc7/project-manager/database"
 	"github.com/lemonc7/project-manager/internal/api"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/hasher"
 	"github.com/lemonc7/project-manager/pkg/jwt"
-	"github.com/lemonc7/project-manager/pkg/logger"
-	"go.uber.org/zap"
+	"github.com/lemonc7/zest"
+	"github.com/lemonc7/zest/middleware"
 )
 
 type Application struct {
-	e      *echo.Echo
+	zest   *zest.Zest
+	server *http.Server
 	dbPool *pgxpool.Pool
 	cfg    *config.Config
 	jwt    *jwt.JWT
@@ -39,14 +38,6 @@ type Application struct {
 	todoHandler     *api.TodoHandler
 }
 
-type CustomValidator struct {
-	validator *validator.Validate
-}
-
-func (c *CustomValidator) Validate(i any) error {
-	return c.validator.Struct(i)
-}
-
 func InitApp(filePath string) (*Application, error) {
 	// 读取配置
 	cfg, err := config.NewConfig(filePath)
@@ -54,23 +45,34 @@ func InitApp(filePath string) (*Application, error) {
 		return nil, err
 	}
 
-	// 初始化logger
-	logger.InitLogger(cfg.Logger)
-
 	// 连接数据库
 	dbPool, err := database.NewDB(cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
-	// 创建echo
-	validator := &CustomValidator{validator: validator.New()}
+	jwt := jwt.NewJWT(cfg.JWT)
 
-	e := NewEcho(cfg.Server, validator)
+	// 注册Zest Handler
+	z := zest.New()
+	z.Use(middleware.RequestID())
+	z.Use(middleware.Logger())
+	z.Use(middleware.Recovery())
+	z.Use(middleware.CORS())
+	z.Use(middleware.JWT(jwt,func(c *zest.Context) bool {
+		return c.Path == "/login" || c.Path == "/init_admin" || c.Path == "/ping"
+	}))
+
+	// 注册Http Server
+	srv := &http.Server{
+		Addr:         ":" + strconv.Itoa(cfg.Server.Port),
+		Handler:      z,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+	}
 
 	// handler
 	passwordHash := hasher.NewPasswordHash()
-	jwt := jwt.NewJWT(cfg.JWT)
 
 	authHandler := api.NewAuthHandler(
 		service.NewAuthService(dbPool, passwordHash, jwt),
@@ -96,10 +98,12 @@ func InitApp(filePath string) (*Application, error) {
 	)
 
 	app := &Application{
-		e:               e,
-		dbPool:          dbPool,
-		cfg:             cfg,
-		jwt:             jwt,
+		zest:   z,
+		dbPool: dbPool,
+		cfg:    cfg,
+		jwt:    jwt,
+		server: srv,
+
 		serverHandler:   serverHandler,
 		authHandler:     authHandler,
 		employeeHandler: employeeHandler,
@@ -117,12 +121,12 @@ func (a *Application) Start() {
 	// 最后关闭数据库连接
 	defer func() {
 		a.dbPool.Close()
-		logger.Info("成功关闭数据库连接")
+		log.Println("成功关闭数据库连接")
 	}()
 
 	// 启动HTTP服务
 	go func() {
-		if err := a.e.Start(":" + strconv.Itoa(a.cfg.Server.Port)); err != nil {
+		if err := a.server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				log.Fatal("启动HTTP服务失败", err.Error())
 			}
@@ -134,6 +138,8 @@ func (a *Application) Start() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
+	log.Println("收到退出信号，开始关闭服务...")
+
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		5*time.Second,
@@ -141,9 +147,9 @@ func (a *Application) Start() {
 	defer cancel()
 
 	// 关闭HTTP服务
-	if err := a.e.Shutdown(ctx); err != nil {
-		logger.Error("关闭HTTP服务失败", zap.Error(err))
+	if err := a.server.Shutdown(ctx); err != nil {
+		log.Println("关闭HTTP服务失败: ", err)
 	} else {
-		logger.Info("成功关闭HTTP服务")
+		log.Println("成功关闭HTTP服务")
 	}
 }

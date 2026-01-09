@@ -43,7 +43,7 @@ func (j *JWT) Generate(username string, id int32, roles []string) (string, error
 	return token.SignedString(j.secret)
 }
 
-func (j *JWT) ParseToken(tokenString string) (*UserClaims, error) {
+func (j *JWT) Parse(tokenString string) (map[string]any, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(t *jwt.Token) (any, error) {
 		if t.Method != jwt.SigningMethodHS256 {
 			return nil, fmt.Errorf("不支持的签名方法")
@@ -64,5 +64,11 @@ func (j *JWT) ParseToken(tokenString string) (*UserClaims, error) {
 		return nil, fmt.Errorf("无效token信息: %w", err)
 	}
 
-	return claims, nil
+	result := map[string]any{
+		"username": claims.Username,
+		"userID":   claims.UserID,
+		"roles":    claims.Roles,
+	}
+
+	return result, nil
 }

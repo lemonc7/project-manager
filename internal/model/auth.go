@@ -19,13 +19,6 @@ type LoginResponse struct {
 	Roles       []string `json:"roles,omitempty"`
 }
 
-var LoginResponseSchema = zog.Struct(zog.Shape{
-	"accessToken": zog.String(),
-	"userID":      zog.Int32(),
-	"username":    zog.String(),
-	"roles":       zog.Slice(zog.String()),
-})
-
 type InitAdminRequest struct {
 	Name     string `json:"name"`
 	Username string `json:"username"`
