@@ -26,9 +26,9 @@ func (t *TeamService) CreateTeam(ctx context.Context, req model.CreateTeamReques
 	})
 }
 
-func (t *TeamService) UpdateTeam(ctx context.Context, id int32, req model.UpdateTeamRequest) error {
+func (t *TeamService) UpdateTeam(ctx context.Context, req model.UpdateTeamRequest) error {
 	return t.querier.UpdateTeam(ctx, repo.UpdateTeamParams{
-		ID:          id,
+		ID:          req.ID,
 		Name:        req.Name,
 		Description: req.Description,
 	})

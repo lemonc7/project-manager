@@ -1,16 +1,25 @@
 package model
 
-import "github.com/Oudwins/zog"
+import (
+	"errors"
+
+	"github.com/Oudwins/zog"
+	"github.com/lemonc7/project-manager/pkg/util"
+)
 
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-var LoginRequestSchema = zog.Struct(zog.Shape{
+var loginRequestSchema = zog.Struct(zog.Shape{
 	"username": zog.String().Required(),
 	"password": zog.String().Required(),
 })
+
+func (r *LoginRequest) Validate() error {
+	return util.SchemaValidate(loginRequestSchema, r)
+}
 
 type LoginResponse struct {
 	AccessToken string   `json:"accessToken"`
@@ -25,26 +34,38 @@ type InitAdminRequest struct {
 	Password string `json:"password"`
 }
 
-var InitAdminRequestSchema = zog.Struct(zog.Shape{
+var initAdminRequestSchema = zog.Struct(zog.Shape{
 	"name":     zog.String().Required(),
 	"username": zog.String().Required().Min(2).Max(20),
 	"password": zog.String().Required().Min(6).Max(20),
 })
 
+func (r *InitAdminRequest) Validate() error {
+	return util.SchemaValidate(initAdminRequestSchema, r)
+}
+
 type ResetPasswordRequest struct {
 	Password string `json:"password"`
 }
 
-var ResetPasswordRequestSchema = zog.Struct(zog.Shape{
-	"password": zog.String().Required().Min(6).Max(20),
-})
+func (r *ResetPasswordRequest) Validate() error {
+	size := len(r.Password)
+	if size < 6 || size > 20 {
+		return errors.New("password length must be between 6 and 20")
+	}
+	return nil
+}
 
 type ChangePasswordRequest struct {
 	OldPassword string `json:"oldPassword"`
 	NewPassword string `json:"newPassword"`
 }
 
-var ChangePasswordRequestSchema = zog.Struct(zog.Shape{
+var changePasswordRequestSchema = zog.Struct(zog.Shape{
 	"oldPassword": zog.String().Required(),
 	"newPassword": zog.String().Required().Min(6).Max(20),
 })
+
+func (r *ChangePasswordRequest) Validate() error {
+	return util.SchemaValidate(changePasswordRequestSchema, r)
+}

@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/lemonc7/project-manager/internal/model"
@@ -33,19 +32,21 @@ func NewAuthHandler(service AuthService) *AuthHandler {
 
 func (a *AuthHandler) Login(c *zest.Context) error {
 	var req model.LoginRequest
-	if err := c.Bind(model.LoginRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	res, err := a.authService.Login(c.Context(), req)
 	if err != nil {
+		var code int
 		if errors.Is(err, model.ErrUsernameOrPasswordInvalid) {
-			return zest.NewHTTPError(http.StatusBadRequest, fmt.Errorf("登录: %w", err))
+			code = http.StatusBadRequest
+		} else if errors.Is(err, model.ErrNoPermission) {
+			code = http.StatusForbidden
+		} else {
+			code = http.StatusInternalServerError
 		}
-		if errors.Is(err, model.ErrNoPermission) {
-			return zest.NewHTTPError(http.StatusForbidden, fmt.Errorf("登录: %w", err))
-		}
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("登录: %w", err))
+		return zest.NewHTTPError(code, err.Error()).Wrap(err)
 	}
 	return c.JSON(http.StatusOK, res)
 }
@@ -56,12 +57,12 @@ func (a *AuthHandler) ResetPassword(c *zest.Context) error {
 		return err
 	}
 	var req model.ResetPasswordRequest
-	if err := c.Bind(model.ResetPasswordRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	if err := a.authService.ResetPassword(c.Context(), id, req.Password); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("重置密码: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "重置密码失败").Wrap(err)
 	}
 	return c.JSON(http.StatusOK, zest.Map{
 		"message": "成功重置密码",
@@ -72,19 +73,20 @@ func (a *AuthHandler) ChangePassword(c *zest.Context) error {
 	// 获取jwt中的user
 	username, ok := c.Get("username").(string)
 	if !ok {
-		return zest.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("未授权"))
+		return zest.NewHTTPError(http.StatusUnauthorized)
 	}
 
 	var req model.ChangePasswordRequest
-	if err := c.Bind(model.ChangePasswordRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	if err := a.authService.ChangePassword(c.Context(), username, req); err != nil {
+		code := http.StatusInternalServerError
 		if errors.Is(err, model.ErrOldPasswordInvalid) {
-			return zest.NewHTTPError(http.StatusBadRequest, fmt.Errorf("更改密码: %w", err))
+			code = http.StatusBadRequest
 		}
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("更改密码: %w", err))
+		return zest.NewHTTPError(code, "更改密码失败").Wrap(err)
 	}
 	return c.JSON(http.StatusOK, zest.Map{
 		"message": "成功修改密码",
@@ -93,12 +95,12 @@ func (a *AuthHandler) ChangePassword(c *zest.Context) error {
 
 func (a *AuthHandler) InitAdmin(c *zest.Context) error {
 	var req model.InitAdminRequest
-	if err := c.Bind(model.InitAdminRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	if err := a.authService.InitAdmin(c.Context(), req); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("管理员初始化: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "管理员初始化失败").Wrap(err)
 	}
 	return c.JSON(http.StatusOK, zest.Map{
 		"message": "成功初始化管理员",

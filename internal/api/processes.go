@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/lemonc7/project-manager/internal/model"
@@ -14,16 +14,16 @@ import (
 
 type ProcessService interface {
 	InsertProcessLast(ctx context.Context, req model.InsertProcessRequest) error
-	InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error
-	UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error
+	InsertProcessAt(ctx context.Context, req model.InsertProcessRequest) error
+	UpdateProcess(ctx context.Context, req model.UpdateProcessRequest) error
 	DeleteProcess(ctx context.Context, id int32) error
-	DeleteProcesses(ctx context.Context, projectID int32, req model.DeleteProcessesRequest) error
+	DeleteProcesses(ctx context.Context, req model.DeleteProcessesRequest) error
 	ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error)
 	ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error)
 	ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error)
 	ListTasksDoing(ctx context.Context, employeeID int32) ([]repo.ListTasksDoingRow, error)
-	FinishProcess(ctx context.Context, id int32, req model.FinishProcessRequest) error
-	ReworkProcess(ctx context.Context, id int32, req model.ReworkProcessRequest) error
+	FinishProcess(ctx context.Context, req model.FinishProcessRequest) error
+	ReworkProcess(ctx context.Context, req model.ReworkProcessRequest) error
 }
 
 var _ ProcessService = (*service.ProcessService)(nil)
@@ -41,14 +41,14 @@ func NewProcessHandler(service ProcessService) *ProcessHandler {
 func (p *ProcessHandler) InsertProcessLast(c *zest.Context) error {
 	// 绑定请求
 	var req model.InsertProcessRequest
-	if err := c.Bind(model.InsertProcessRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	// 业务函数
 	err := p.processService.InsertProcessLast(c.Context(), req)
 	if err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("插入process: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "创建流程失败").Wrap(err)
 	}
 
 	// 返回响应
@@ -58,24 +58,15 @@ func (p *ProcessHandler) InsertProcessLast(c *zest.Context) error {
 }
 
 func (p *ProcessHandler) InsertProcessAt(c *zest.Context) error {
-	sequence, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
-
-	if sequence < 1 {
-		return zest.NewHTTPError(http.StatusBadRequest, fmt.Errorf("sequence参数错误"))
-	}
-
 	// 绑定请求
 	var req model.InsertProcessRequest
-	if err := c.Bind(model.InsertProcessRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	// 业务函数
-	if err := p.processService.InsertProcessAt(c.Context(), sequence, req); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("插入process: %w", err))
+	if err := p.processService.InsertProcessAt(c.Context(), req); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, "插入流程失败").Wrap(err)
 	}
 
 	return c.JSON(http.StatusCreated, zest.Map{
@@ -84,20 +75,15 @@ func (p *ProcessHandler) InsertProcessAt(c *zest.Context) error {
 }
 
 func (p *ProcessHandler) UpdateProcess(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
 	// 绑定请求
 	var req model.UpdateProcessRequest
-	if err := c.Bind(model.UpdateProcessRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	// 业务函数
-	err = p.processService.UpdateProcess(c.Context(), id, req)
-	if err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("更新process: %w", err))
+	if err := p.processService.UpdateProcess(c.Context(), req); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, "更新流程失败").Wrap(err)
 	}
 
 	// 返回响应
@@ -115,7 +101,7 @@ func (p *ProcessHandler) DeleteProcess(c *zest.Context) error {
 
 	// 业务函数
 	if err := p.processService.DeleteProcess(c.Context(), id); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("删除process: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "删除流程失败").Wrap(err)
 	}
 
 	// 返回响应
@@ -125,18 +111,13 @@ func (p *ProcessHandler) DeleteProcess(c *zest.Context) error {
 }
 
 func (p *ProcessHandler) DeleteProcesses(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
-
 	var req model.DeleteProcessesRequest
-	if err := c.Bind(model.DeleteProcessesRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	if err := p.processService.DeleteProcesses(c.Context(), id, req); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("删除流程: %w", err))
+	if err := p.processService.DeleteProcesses(c.Context(), req); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, "删除流程失败").Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, zest.Map{
@@ -153,7 +134,7 @@ func (p *ProcessHandler) ListProcesses(c *zest.Context) error {
 	// 获取数据
 	processes, err := p.processService.ListProcesses(c.Context(), id)
 	if err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取process: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "获取流程信息失败").Wrap(err)
 	}
 
 	// 返回响应
@@ -161,49 +142,43 @@ func (p *ProcessHandler) ListProcesses(c *zest.Context) error {
 }
 
 func (p *ProcessHandler) ListTasks(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.ListTasksRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	statusStr := c.Request.URL.Query().Get("status")
-	switch statusStr {
+	switch req.Status {
 	case "todo":
-		tasks, err := p.processService.ListTasksTodo(c.Context(), id)
+		tasks, err := p.processService.ListTasksTodo(c.Context(), req.EmployeeID)
 		if err != nil {
-			return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取task todo: %w", err))
+			return zest.NewHTTPError(http.StatusInternalServerError, "获取todo任务失败").Wrap(err)
 		}
 		return c.JSON(http.StatusOK, tasks)
 	case "ready":
-		tasks, err := p.processService.ListTasksReady(c.Context(), id)
+		tasks, err := p.processService.ListTasksReady(c.Context(), req.EmployeeID)
 		if err != nil {
-			return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取task ready: %w", err))
+			return zest.NewHTTPError(http.StatusInternalServerError, "获取ready任务失败").Wrap(err)
 		}
 		return c.JSON(http.StatusOK, tasks)
 	case "doing":
-		tasks, err := p.processService.ListTasksDoing(c.Context(), id)
+		tasks, err := p.processService.ListTasksDoing(c.Context(), req.EmployeeID)
 		if err != nil {
-			return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取task doing: %w", err))
+			return zest.NewHTTPError(http.StatusInternalServerError, "获取doing任务失败").Wrap(err)
 		}
 		return c.JSON(http.StatusOK, tasks)
 	default:
-		return zest.NewHTTPError(http.StatusBadRequest, fmt.Errorf("status参数错误: %s", statusStr))
+		return zest.NewHTTPError(http.StatusBadRequest, "status参数错误").Wrap(errors.New("status参数错误"))
 	}
 }
 
 func (p *ProcessHandler) FinishProcess(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
-
 	var req model.FinishProcessRequest
-	if err := c.Bind(model.FinishProcessRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	if err := p.processService.FinishProcess(c.Context(), id, req); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("完成process: %w", err))
+	if err := p.processService.FinishProcess(c.Context(), req); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, "完成流程失败").Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, zest.Map{
@@ -212,20 +187,15 @@ func (p *ProcessHandler) FinishProcess(c *zest.Context) error {
 }
 
 func (p *ProcessHandler) ReworkProcess(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
-
 	// 绑定请求
 	var req model.ReworkProcessRequest
-	if err := c.Bind(model.ReworkProcessRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	// 业务函数
-	if err := p.processService.ReworkProcess(c.Context(), id, req); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("返工process: %w", err))
+	if err := p.processService.ReworkProcess(c.Context(), req); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, "返工流程失败").Wrap(err)
 	}
 
 	// 返回响应

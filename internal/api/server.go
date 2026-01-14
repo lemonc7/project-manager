@@ -23,7 +23,7 @@ func NewServerService(service ServerService) *ServerHandler {
 
 func (s *ServerHandler) Ping(c *zest.Context) error {
 	if err := s.serverService.Ping(c.Context()); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, err)
+		return zest.NewHTTPError(http.StatusInternalServerError).Wrap(err)
 	}
 	return c.JSON(http.StatusOK, zest.Map{
 		"message": "pong",

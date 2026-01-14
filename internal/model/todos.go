@@ -1,14 +1,23 @@
 package model
 
-import "github.com/Oudwins/zog"
+import (
+	"github.com/Oudwins/zog"
+	"github.com/lemonc7/project-manager/pkg/util"
+)
 
 type ListTodosRequest struct {
+	ID     int32    `param:"id"`
 	Status []string `json:"status"`
 }
 
-var ListTodoRequestSchema = zog.Struct(zog.Shape{
+var listTodosRequestSchema = zog.Struct(zog.Shape{
+	"id":     zog.Int32().Required(),
 	"status": zog.Slice(zog.String()).Default([]string{}),
 })
+
+func (r *ListTodosRequest) Validate() error {
+	return util.SchemaValidate(listTodosRequestSchema, r)
+}
 
 type CreateTodoRequest struct {
 	Name        string `json:"name"`
@@ -19,7 +28,7 @@ type CreateTodoRequest struct {
 	AssigneeID  int32  `json:"assigneeID"`
 }
 
-var CreateTodoRequestSchema = zog.Struct(zog.Shape{
+var createTodoRequestSchema = zog.Struct(zog.Shape{
 	"name":        zog.String().Required(),
 	"description": zog.String(),
 	"remark":      zog.String(),
@@ -28,7 +37,12 @@ var CreateTodoRequestSchema = zog.Struct(zog.Shape{
 	"assigneeID":  zog.Int32().Required(),
 })
 
+func (r *CreateTodoRequest) Validate() error {
+	return util.SchemaValidate(createTodoRequestSchema, r)
+}
+
 type UpdateTodoRequest struct {
+	ID          int32   `param:"id"`
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	Remark      *string `json:"remark"`
@@ -38,7 +52,8 @@ type UpdateTodoRequest struct {
 	AssigneeID  *int32  `json:"assigneeID"`
 }
 
-var UpdateTodoRequestSchema = zog.Struct(zog.Shape{
+var updateTodoRequestSchema = zog.Struct(zog.Shape{
+	"id":          zog.Int32().Required(),
 	"name":        zog.Ptr(zog.String()),
 	"description": zog.Ptr(zog.String()),
 	"remark":      zog.Ptr(zog.String()),
@@ -47,3 +62,7 @@ var UpdateTodoRequestSchema = zog.Struct(zog.Shape{
 	"reporterID":  zog.Ptr(zog.Int32()),
 	"assigneeID":  zog.Ptr(zog.Int32()),
 })
+
+func (r *UpdateTodoRequest) Validate() error {
+	return util.SchemaValidate(updateTodoRequestSchema, r)
+}

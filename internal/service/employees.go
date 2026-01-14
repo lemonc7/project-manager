@@ -38,9 +38,9 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 	return err
 }
 
-func (e *EmployeeService) UpdateEmployee(ctx context.Context, id int32, req model.UpdateEmployeeRequest) error {
+func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEmployeeRequest) error {
 	return e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
-		ID:       id,
+		ID:       req.ID,
 		Name:     req.Name,
 		Roles:    req.Roles,
 		TeamID:   req.TeamID,

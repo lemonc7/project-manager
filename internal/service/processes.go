@@ -31,13 +31,14 @@ func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.Insert
 	})
 }
 
-func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, req model.InsertProcessRequest) error {
+func (p *ProcessService) InsertProcessAt(ctx context.Context, req model.InsertProcessRequest) error {
 	// 验证sequence
 	maxSeq, err := p.querier.GetMaxSequence(ctx, req.ProjectID)
 	if err != nil {
 		return fmt.Errorf("获取最大序号: %w", err)
 	}
 
+	sequence := req.Sequence
 	if sequence < 1 || sequence > maxSeq+1 {
 		return fmt.Errorf("序号无效: %d", sequence)
 	}
@@ -78,7 +79,7 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, sequence int32, re
 	return tx.Commit(ctx)
 }
 
-func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.UpdateProcessRequest) error {
+func (p *ProcessService) UpdateProcess(ctx context.Context, req model.UpdateProcessRequest) error {
 	rows, err := p.querier.UpdateProcess(ctx, repo.UpdateProcessParams{
 		Name:        req.Name,
 		Description: req.Description,
@@ -86,7 +87,7 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, id int32, req model.
 		Status:      req.Status,
 		EmployeeID:  req.EmployeeID,
 		SpendTime:   req.SpendTime,
-		ID:          id,
+		ID:          req.ID,
 	})
 
 	if err != nil {
@@ -125,7 +126,7 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 	return tx.Commit(ctx)
 }
 
-func (p *ProcessService) DeleteProcesses(ctx context.Context, id int32, req model.DeleteProcessesRequest) error {
+func (p *ProcessService) DeleteProcesses(ctx context.Context, req model.DeleteProcessesRequest) error {
 	// 开启事务
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
@@ -138,7 +139,7 @@ func (p *ProcessService) DeleteProcesses(ctx context.Context, id int32, req mode
 
 	// 先删除processes
 	rows, err := qtx.DeleteProcesses(ctx, repo.DeleteProcessesParams{
-		ProjectID: id,
+		ProjectID: req.ProjectID,
 		Column2:   req.Sequences,
 	})
 
@@ -151,7 +152,7 @@ func (p *ProcessService) DeleteProcesses(ctx context.Context, id int32, req mode
 	}
 
 	// 重新排序
-	if err := qtx.ReorderProcesses(ctx, id); err != nil {
+	if err := qtx.ReorderProcesses(ctx, req.ProjectID); err != nil {
 		return fmt.Errorf("重新排序流程: %w", err)
 	}
 
@@ -195,7 +196,7 @@ func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) (
 	return tasks, nil
 }
 
-func (p *ProcessService) FinishProcess(ctx context.Context, id int32, req model.FinishProcessRequest) error {
+func (p *ProcessService) FinishProcess(ctx context.Context, req model.FinishProcessRequest) error {
 	// 开启事务
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
@@ -208,7 +209,7 @@ func (p *ProcessService) FinishProcess(ctx context.Context, id int32, req model.
 
 	// 现将process设置为"完成"状态
 	rows, err := qtx.FinishProcess(ctx, repo.FinishProcessParams{
-		ID:        id,
+		ID:        req.ID,
 		SpendTime: &req.SpendTime,
 		Remark:    req.Remark,
 	})
@@ -267,9 +268,9 @@ func (p *ProcessService) FinishProcess(ctx context.Context, id int32, req model.
 	return tx.Commit(ctx)
 }
 
-func (p *ProcessService) ReworkProcess(ctx context.Context, id int32, req model.ReworkProcessRequest) error {
+func (p *ProcessService) ReworkProcess(ctx context.Context, req model.ReworkProcessRequest) error {
 	// 查询当前process
-	process, err := p.querier.GetProcessByID(ctx, id)
+	process, err := p.querier.GetProcessByID(ctx, req.ID)
 	if err != nil {
 		return fmt.Errorf("获取目前的流程: %w", err)
 	}

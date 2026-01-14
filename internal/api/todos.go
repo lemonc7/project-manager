@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/lemonc7/project-manager/internal/model"
@@ -13,10 +12,10 @@ import (
 )
 
 type TodoService interface {
-	ListTodosByReporter(ctx context.Context, reporterID int32, req model.ListTodosRequest) ([]repo.ListTodosByReporterRow, error)
-	ListTodosByAssignee(ctx context.Context, assigneeID int32, req model.ListTodosRequest) ([]repo.ListTodosByAssigneeRow, error)
+	ListTodosByReporter(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosByReporterRow, error)
+	ListTodosByAssignee(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosByAssigneeRow, error)
 	CreateTodo(ctx context.Context, req model.CreateTodoRequest) error
-	UpdateTodo(ctx context.Context, id int32, req model.UpdateTodoRequest) error
+	UpdateTodo(ctx context.Context, req model.UpdateTodoRequest) error
 	DeleteTodo(ctx context.Context, id int32) error
 }
 
@@ -33,38 +32,28 @@ func NewTodoHandler(service TodoService) *TodoHandler {
 }
 
 func (t *TodoHandler) ListTodosByReporter(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
-
 	var req model.ListTodosRequest
-	if err := c.Bind(model.ListTodoRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	todos, err := t.todoService.ListTodosByReporter(c.Context(), id, req)
+	todos, err := t.todoService.ListTodosByReporter(c.Context(), req)
 	if err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取todos: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "获取todo失败").Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, todos)
 }
 
 func (t *TodoHandler) ListTodosByAssignee(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.ListTodosRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	var req model.ListTodosRequest
-	if err := c.Bind(model.ListTodoRequestSchema, &req); err != nil {
-		return zest.NewHTTPError(http.StatusBadRequest, fmt.Errorf("绑定参数: %w", err))
-	}
-
-	todos, err := t.todoService.ListTodosByAssignee(c.Context(), id, req)
+	todos, err := t.todoService.ListTodosByAssignee(c.Context(), req)
 	if err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("获取todos: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "获取分配todo失败").Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, todos)
@@ -72,12 +61,12 @@ func (t *TodoHandler) ListTodosByAssignee(c *zest.Context) error {
 
 func (t *TodoHandler) CreateTodo(c *zest.Context) error {
 	var req model.CreateTodoRequest
-	if err := c.Bind(model.CreateTodoRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	if err := t.todoService.CreateTodo(c.Context(), req); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("创建todo: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "创建todo失败").Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, zest.Map{
@@ -86,18 +75,13 @@ func (t *TodoHandler) CreateTodo(c *zest.Context) error {
 }
 
 func (t *TodoHandler) UpdateTodo(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
-
 	var req model.UpdateTodoRequest
-	if err := c.Bind(model.UpdateTodoRequestSchema, &req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	if err := t.todoService.UpdateTodo(c.Context(), id, req); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("更新todo: %w", err))
+	if err := t.todoService.UpdateTodo(c.Context(), req); err != nil {
+		return zest.NewHTTPError(http.StatusInternalServerError, "更新todo失败").Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, zest.Map{
@@ -112,7 +96,7 @@ func (t *TodoHandler) DeleteTodo(c *zest.Context) error {
 	}
 
 	if err := t.todoService.DeleteTodo(c.Context(), id); err != nil {
-		return zest.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("删除todo: %w", err))
+		return zest.NewHTTPError(http.StatusInternalServerError, "更新todo失败").Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, zest.Map{

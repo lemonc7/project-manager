@@ -14,7 +14,7 @@ func RequireRoleAtLeast(role string) zest.MiddlewareFunc {
 			roles := util.GetRoles(c)
 
 			if !util.HasAtLeastRole(roles, role) {
-				return zest.NewHTTPError(http.StatusForbidden, model.ErrNoPermission)
+				return zest.NewHTTPError(http.StatusForbidden, "没有权限").Wrap(model.ErrNoPermission)
 			}
 
 			return next(c)

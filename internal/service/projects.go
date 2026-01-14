@@ -35,9 +35,9 @@ func (p *ProjectService) CreateProject(ctx context.Context, req model.CreateProj
 	})
 }
 
-func (p *ProjectService) UpdateProject(ctx context.Context, id int32, req model.UpdateProjectRequest) error {
+func (p *ProjectService) UpdateProject(ctx context.Context, req model.UpdateProjectRequest) error {
 	rows, err := p.querier.UpdateProject(ctx, repo.UpdateProjectParams{
-		ID:          id,
+		ID:          req.ID,
 		Name:        req.Name,
 		Description: req.Description,
 		Remark:      req.Remark,
@@ -189,7 +189,7 @@ func (p *ProjectService) ResetStatus(ctx context.Context, id int32) error {
 	return tx.Commit(ctx)
 }
 
-func (p *ProjectService) CopyProject(ctx context.Context, id int32, req model.CopyProjectRequest) error {
+func (p *ProjectService) CopyProject(ctx context.Context,req model.CopyProjectRequest) error {
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("开启事务: %w", err)
@@ -200,7 +200,7 @@ func (p *ProjectService) CopyProject(ctx context.Context, id int32, req model.Co
 
 	// 复制项目并重置
 	newProjectID, err := qtx.CopyProject(ctx, repo.CopyProjectParams{
-		ID:        id,
+		ID:        req.ID,
 		Name:      req.NewName,
 		ManagerID: req.ManagerID,
 	})
@@ -212,7 +212,7 @@ func (p *ProjectService) CopyProject(ctx context.Context, id int32, req model.Co
 	// 复制process并重置
 	rows, err := qtx.CopyProcessesByProjectID(ctx, repo.CopyProcessesByProjectIDParams{
 		TargetProject:   newProjectID,
-		OriginalProject: id,
+		OriginalProject: req.ID,
 	})
 
 	if err != nil {

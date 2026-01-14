@@ -19,10 +19,10 @@ func NewTodoService(db *pgxpool.Pool) *TodoService {
 	}
 }
 
-func (t *TodoService) ListTodosByReporter(ctx context.Context, reporterID int32, req model.ListTodosRequest) ([]repo.ListTodosByReporterRow, error) {
+func (t *TodoService) ListTodosByReporter(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosByReporterRow, error) {
 	todos, err := t.querier.ListTodosByReporter(ctx, repo.ListTodosByReporterParams{
 		Status:     req.Status,
-		ReporterID: reporterID,
+		ReporterID: req.ID,
 	})
 
 	if err != nil {
@@ -32,10 +32,10 @@ func (t *TodoService) ListTodosByReporter(ctx context.Context, reporterID int32,
 	return todos, nil
 }
 
-func (t *TodoService) ListTodosByAssignee(ctx context.Context, assigneeID int32, req model.ListTodosRequest) ([]repo.ListTodosByAssigneeRow, error) {
+func (t *TodoService) ListTodosByAssignee(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosByAssigneeRow, error) {
 	todos, err := t.querier.ListTodosByAssignee(ctx, repo.ListTodosByAssigneeParams{
 		Status:     req.Status,
-		AssigneeID: assigneeID,
+		AssigneeID: req.ID,
 	})
 
 	if err != nil {
@@ -56,9 +56,9 @@ func (t *TodoService) CreateTodo(ctx context.Context, req model.CreateTodoReques
 	})
 }
 
-func (t *TodoService) UpdateTodo(ctx context.Context, id int32, req model.UpdateTodoRequest) error {
+func (t *TodoService) UpdateTodo(ctx context.Context, req model.UpdateTodoRequest) error {
 	rows, err := t.querier.UpdateTodo(ctx, repo.UpdateTodoParams{
-		ID:          id,
+		ID:          req.ID,
 		Name:        req.Name,
 		Description: req.Description,
 		Remark:      req.Remark,

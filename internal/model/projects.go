@@ -1,13 +1,12 @@
 package model
 
 import (
-	"fmt"
-	"slices"
+	"errors"
 	"time"
 
 	"github.com/Oudwins/zog"
-	"github.com/Oudwins/zog/internals"
 	"github.com/lemonc7/project-manager/internal/repo"
+	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type CreateProjectRequest struct {
@@ -19,7 +18,7 @@ type CreateProjectRequest struct {
 	Duration    *int32 `json:"duration"`
 }
 
-var CreateProjectRequestSchema = zog.Struct(zog.Shape{
+var createProjectRequestSchema = zog.Struct(zog.Shape{
 	"name":        zog.String().Required(),
 	"description": zog.String(),
 	"managerID":   zog.Int32().Required(),
@@ -28,7 +27,12 @@ var CreateProjectRequestSchema = zog.Struct(zog.Shape{
 	"duration":    zog.Ptr(zog.Int32()),
 })
 
+func (r *CreateProjectRequest) Validate() error {
+	return util.SchemaValidate(createProjectRequestSchema, r)
+}
+
 type UpdateProjectRequest struct {
+	ID          int32               `param:"id"`
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
 	Remark      *string             `json:"remark"`
@@ -38,27 +42,21 @@ type UpdateProjectRequest struct {
 	Duration    *int32              `json:"duration"`
 }
 
-var UpdateProjectRequestSchema = zog.Struct(zog.Shape{
+var updateProjectRequestSchema = zog.Struct(zog.Shape{
+	"id":          zog.Int32().Required(),
 	"name":        zog.Ptr(zog.String()),
 	"description": zog.Ptr(zog.String()),
 	"remark":      zog.Ptr(zog.String()),
-	"status": zog.Ptr(zog.String().TestFunc(func(val *string, ctx internals.Ctx) bool {
-		if val == nil {
-			return true //字段可选，允许为nil
-		}
-
-		exists := slices.Contains([]string{"排单", "进行", "完成", "暂停", "终止"}, *val)
-		if !exists {
-			ctx.AddIssue(ctx.Issue().SetMessage(fmt.Sprintf("status(%s) is invalid", *val)))
-			return false
-		}
-
-		return true
-	})),
+	"status": zog.Ptr(zog.String().OneOf([]string{
+		"排单", "进行", "完成", "暂停", "终止"})),
 	"managerID": zog.Ptr(zog.Int32()),
 	"priority":  zog.Ptr(zog.Int32().GTE(1).LTE(5)),
 	"duration":  zog.Ptr(zog.Int32()),
 })
+
+func (r *UpdateProjectRequest) Validate() error {
+	return util.SchemaValidate(updateProjectRequestSchema, r)
+}
 
 type ListProjectsRequest struct {
 	Status    []string   `json:"status"`
@@ -67,27 +65,40 @@ type ListProjectsRequest struct {
 	EndAt     *time.Time `json:"endAt"`
 }
 
-var ListProjectRequestSchema = zog.Struct(zog.Shape{
+var listProjectRequestSchema = zog.Struct(zog.Shape{
 	"status":    zog.Slice(zog.String()).Default([]string{}),
 	"managerID": zog.Ptr(zog.Int32()),
 	"startAt":   zog.Ptr(zog.Time()),
 	"endAt":     zog.Ptr(zog.Time()),
 })
 
+func (r *ListProjectsRequest) Validate() error {
+	return util.SchemaValidate(listProjectRequestSchema, r)
+}
+
 type CopyProjectRequest struct {
+	ID        int32  `param:"id"`
 	NewName   string `json:"newName"`
 	ManagerID int32  `json:"managerID"`
 }
 
-var CopyProjectRequestSchema = zog.Struct(zog.Shape{
+var copyProjectRequestSchema = zog.Struct(zog.Shape{
+	"id":       zog.Int32().Required(),
 	"newName":  zog.String().Required(),
 	"mangerID": zog.Int32().Required(),
 })
+
+func (r *CopyProjectRequest) Validate() error {
+	return util.SchemaValidate(copyProjectRequestSchema, r)
+}
 
 type IsProjectExistsRequest struct {
 	NewName string `query:"newName"`
 }
 
-var IsProjectExistsRequestSchema = zog.Struct(zog.Shape{
-	"newName": zog.String().Required(),
-})
+func (r *IsProjectExistsRequest) Validate() error {
+	if r.NewName == "" {
+		return errors.New("newName is empty")
+	}
+	return nil
+}
