@@ -4,17 +4,18 @@ SELECT
   t.name,
   t.description,
   t.remark,
-  t.status,
+  COALESCE(s.name, '') AS status,
   t.priority,
   t.assignee_id AS employee_id,
-  COALESCE(e.name,'') AS employee_name,
+  COALESCE(e.name, '') AS employee_name,
   t.started_at,
   t.finished_at
 FROM todos t
 LEFT JOIN employees e ON t.assignee_id = e.id
+LEFT JOIN todo_status s ON t.status_id = s.id
 WHERE
   t.reporter_id = sqlc.arg('reporter_id')
-  AND t.status = ANY(sqlc.arg('status')::TEXT[])
+  AND s.name = ANY(sqlc.arg('status')::TEXT[])
 ORDER BY
   t.priority DESC,
   t.updated_at DESC;

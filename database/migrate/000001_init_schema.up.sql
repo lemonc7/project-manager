@@ -1,21 +1,55 @@
--- 创建枚举类型
-CREATE TYPE project_status AS ENUM (
-  '排单',
-  '进行',
-  '完成', 
-  '暂停',
-  '终止'
+-- 创建状态表
+CREATE TABLE IF NOT EXISTS project_status (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name VARCHAR(20) NOT NULL UNIQUE,
+  sort_order INT NOT NULL
 );
 
-CREATE TYPE process_status as ENUM (
-  '等待',
-  '准备',
-  '进行',
-  '返工',
-  '完成',
-  '暂停',
-  '终止'
+CREATE TABLE process_status (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name VARCHAR(20) NOT NULL UNIQUE,
+  sort_order INT NOT NULL
 );
+
+CREATE TABLE todo_status (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name VARCHAR(20) NOT NULL UNIQUE,
+  sort_order INT NOT NULL
+);
+
+CREATE TABLE roles (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name VARCHAR(20) NOT NULL UNIQUE,
+  description TEXT NOT NULL DEFAULT ''
+);
+
+INSERT INTO project_status (name, sort_order) VALUES
+('进行', 10),
+('排单', 20),
+('暂停', 30),
+('完成', 40),
+('终止', 100);
+
+INSERT INTO process_status (name, sort_order) VALUES
+('进行', 10),
+('准备', 20),
+('等待', 30),
+('暂停', 40),
+('返工', 50),
+('完成', 60),
+('终止', 100);
+
+INSERT INTO todo_status (name, sort_order) VALUES
+('进行', 10),
+('待办', 20),
+('完成', 30),
+('终止', 40);
+
+INSERT INTO roles (name, description) VALUES
+('admin', '管理员'),
+('manager', '项目经理'),
+('employee', '员工'),
+('viewer', '用户');
 
 -- 小组表
 CREATE TABLE teams (
@@ -29,64 +63,55 @@ CREATE TABLE teams (
 -- 员工表
 CREATE TABLE employees (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(10) NOT NULL,
+  name VARCHAR(20) NOT NULL,
   username VARCHAR(20) NOT NULL UNIQUE,
-  password_hash VARCHAR(60) NOT NULL,
-  roles TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
+  password_hash VARCHAR(255) NOT NULL,
   team_id INT REFERENCES teams(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+CREATE TABLE employee_roles (
+  employee_id INT REFERENCES employees(id) ON DELETE CASCADE,
+  role_id INT REFERENCES roles(id) ON DELETE CASCADE,
+  PRIMARY KEY (employee_id, role_id)
+);
+
 -- 项目表
 CREATE TABLE projects (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(50) NOT NULL UNIQUE,
+  name VARCHAR(50) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   remark TEXT NOT NULL DEFAULT '',
-  status project_status NOT NULL DEFAULT '排单',
+  status_id INT NOT NULL REFERENCES project_status(id),
   manager_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
   priority INT NOT NULL DEFAULT 1,
   started_at TIMESTAMPTZ,
-  duration INT,
+  duration_days INT,
   finished_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT check_duration_positive CHECK (duration >= 0),
-  CONSTRAINT check_priority_range CHECK (priority BETWEEN 1 AND 5)
+  CONSTRAINT check_duration_days_positive CHECK (duration_days >= 0),
+  CONSTRAINT check_projects_priority_range CHECK (priority BETWEEN 1 AND 5)
 );
 
--- 项目视图，用来计算剩余天数
-CREATE OR REPLACE VIEW projects_view AS
-SELECT
-  p.id,
-  p.name,
-  p.description,
-  p.remark,
-  p.status,
-  p.manager_id,
-  p.priority,
-  p.started_at,
-  p.duration,
-  p.finished_at,
-  p.created_at,
-  p.updated_at,
-  -- 剩余天数 (必须用于排序，保留在数据库计算)
-  (
-    CASE 
-      WHEN 
-        p.status NOT IN ('完成', '终止') 
-        AND p.started_at IS NOT NULL 
-        AND p.duration IS NOT NULL THEN
-        CEIL(
-            EXTRACT(EPOCH FROM ((p.started_at + make_interval(days => p.duration)) - NOW())) / 86400.0
-        )::INTEGER
-      ELSE NULL
-    END
-  ) AS remaining_days
-FROM 
-  projects p;
+-- todos表
+CREATE TABLE todos (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  remark TEXT NOT NULL DEFAULT '',
+  priority INT NOT NULL DEFAULT 1,
+  status_id INT NOT NULL REFERENCES todo_status(id),
+  reporter_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
+  assignee_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  started_at TIMESTAMPTZ,
+  finished_at TIMESTAMPTZ,
+  CONSTRAINT check_todos_priority_range CHECK (priority BETWEEN 1 AND 5)
+);
 
 -- 工艺流程表
 CREATE TABLE processes (
@@ -95,18 +120,18 @@ CREATE TABLE processes (
   name VARCHAR(50) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   remark TEXT NOT NULL DEFAULT '',
-  status process_status NOT NULL DEFAULT '等待',
+  status_id INT NOT NULL REFERENCES process_status(id),
   employee_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
-  sequence INT NOT NULL,
-  spend_time DOUBLE PRECISION,
+  step_order INT NOT NULL,
+  spend_hours NUMERIC(10, 2),
   started_at TIMESTAMPTZ,
   finished_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT unique_project_sequence UNIQUE(project_id, sequence)
+  CONSTRAINT unique_project_step_order UNIQUE(project_id, step_order)
   DEFERRABLE INITIALLY DEFERRED,
-  CONSTRAINT check_sequence_positive CHECK (sequence > 0),
-  CONSTRAINT check_spend_time_positive CHECK (spend_time >= 0)
+  CONSTRAINT check_step_order_positive CHECK (step_order > 0),
+  CONSTRAINT check_spend_hours_positive CHECK (spend_hours >= 0)
 );
 
 -- 系统设置表
@@ -122,15 +147,21 @@ CREATE TABLE system_settings (
 -- projects
 CREATE INDEX idx_projects_manager_id ON projects(manager_id);
 CREATE INDEX idx_projects_manager_status_started
-  ON projects(manager_id, status, started_at);
+  ON projects(manager_id, status_id, started_at);
 CREATE INDEX idx_projects_priority_started
   ON projects(priority, started_at);
 
 -- processes
-CREATE INDEX idx_processes_project_sequence
-  ON processes(project_id, sequence);
+CREATE INDEX idx_processes_project_step_order
+  ON processes(project_id, step_order);
 CREATE INDEX idx_processes_employee_status
-  ON processes(employee_id, status);
+  ON processes(employee_id, status_id);
+
+-- todos
+CREATE INDEX todos_reporter_id_status
+  ON todos(reporter_id, status_id);
+CREATE INDEX todos_assignee_id_status
+  ON todos(assignee_id, status_id);
 
 -- 创建更新时间触发器
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -171,80 +202,8 @@ BEFORE UPDATE ON system_settings
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
-
--- 创建工艺流程状态流转监听器
-CREATE OR REPLACE FUNCTION update_next_processes_status()
-RETURNS TRIGGER AS $$
-DECLARE
-  current_sequence INT;
-  next_sequence INT;
-  next_next_sequence INT;
-BEGIN
-  -- 确保新的状态是完成，旧的状态不是完成
-  IF NEW.status = '完成' AND OLD.status <> '完成' THEN
-    current_sequence := NEW.sequence;
-    next_sequence := current_sequence + 1;
-    next_next_sequence := current_sequence + 2;
-    -- 更新下一步工艺为进行，确认下一步工艺是准备状态
-    UPDATE processes
-    SET 
-      status = '进行',
-      started_at = CURRENT_TIMESTAMP
-    WHERE 
-      project_id = NEW.project_id 
-      AND sequence = next_sequence
-      AND status = '准备';
-
-    -- 更新下下步工艺为准备，确认工艺是等待状态
-    UPDATE processes
-    SET status = '准备'
-    WHERE 
-      project_id = NEW.project_id 
-      AND sequence = next_next_sequence
-      AND status = '等待';
-    
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- 创建项目开始状态监听器
-CREATE OR REPLACE FUNCTION start_project_processes()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- 确保项目新的状态是进行，旧的状态不是进行
-  IF NEW.status = '进行' AND OLD.status <> '进行' THEN
-    -- 更新第一步工艺为进行，确认工艺是等待状态
-    UPDATE processes
-    SET 
-      status = '进行',
-      started_at = CURRENT_TIMESTAMP
-    WHERE 
-      project_id = NEW.id 
-      AND sequence = 1
-      AND status = '等待';
-    
-    -- 更新第二步工艺为准备，确认工艺是等待状态
-    UPDATE processes
-    SET status = '准备'
-    WHERE 
-      project_id = NEW.id 
-      AND sequence = 2
-      AND status = '等待';
-
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- 应用到processes表
-CREATE TRIGGER trigger_update_next_processes_status
-AFTER UPDATE ON processes
+-- 应用到todos表
+CREATE TRIGGER trigger_update_updated_at_todos
+BEFORE UPDATE ON todos
 FOR EACH ROW
-EXECUTE FUNCTION update_next_processes_status();
-
--- 应用到projects表
-CREATE TRIGGER trigger_start_project_processes
-AFTER UPDATE ON projects
-FOR EACH ROW
-EXECUTE FUNCTION start_project_processes();
+EXECUTE FUNCTION update_updated_at();
