@@ -1,6 +1,6 @@
 module github.com/lemonc7/project-manager
 
-go 1.25.4
+go 1.26.0
 
 require (
 	github.com/Oudwins/zog v0.22.0

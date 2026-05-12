@@ -42,8 +42,8 @@ sql:
             go_type:
               type: "int32"
               pointer: true
-          - column: "projects_view.duration"
-            go_struct_tag: 'json:"duration,omitempty"'
+          - column: "projects_view.duration_days"
+            go_struct_tag: 'json:"durationDays,omitempty"'
           - column: "projects_view.started_at"
             go_struct_tag: 'json:"startedAt,omitempty"'
           - column: "projects_view.finished_at"
@@ -52,15 +52,15 @@ sql:
           - column: "employees.team_id"
             go_struct_tag: 'json:"teamID,omitempty"'
 
-          - column: "processes.spend_time"
-            go_struct_tag: 'json:"spendTime,omitempty"'
+          - column: "processes.spend_hours"
+            go_struct_tag: 'json:"spendHours,omitempty"'
           - column: "processes.started_at"
             go_struct_tag: 'json:"startedAt,omitempty"'
           - column: "processes.finished_at"
             go_struct_tag: 'json:"finishedAt,omitempty"'
 
-          - column: "projects.duration"
-            go_struct_tag: 'json:"duration,omitempty"'
+          - column: "projects.duration_days"
+            go_struct_tag: 'json:"durationDays,omitempty"'
           - column: "projects.started_at"
             go_struct_tag: 'json:"startedAt,omitempty"'
           - column: "projects.finished_at"

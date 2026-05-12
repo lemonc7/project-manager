@@ -1,44 +1,45 @@
--- name: ListTodosByReporter :many
+-- name: ListTodosForCreator :many
 SELECT
   t.id,
   t.name,
   t.description,
   t.remark,
-  COALESCE(s.name, '') AS status,
+  s.name AS status,
   t.priority,
-  t.assignee_id AS employee_id,
-  COALESCE(e.name, '') AS employee_name,
+  t.assignee_id,
+  e.name AS assignee_name,
   t.started_at,
   t.finished_at
 FROM todos t
-LEFT JOIN employees e ON t.assignee_id = e.id
-LEFT JOIN todo_status s ON t.status_id = s.id
+INNER JOIN employees e ON t.assignee_id = e.id
+INNER JOIN todo_status s ON t.status_id = s.id
 WHERE
-  t.reporter_id = sqlc.arg('reporter_id')
-  AND s.name = ANY(sqlc.arg('status')::TEXT[])
+  t.creator_id = sqlc.arg('creator_id')
+  AND s.category != 'finished'
 ORDER BY
-  t.priority DESC,
+  t.priority ASC,
   t.updated_at DESC;
 
--- name: ListTodosByAssignee :many
+-- name: ListTodosForAssignee :many
 SELECT
   t.id,
   t.name,
   t.description,
   t.remark,
-  t.status,
+  s.name AS status,
   t.priority,
-  t.reporter_id AS employee_id,
-  COALESCE(e.name,'') AS employee_name,
+  t.creator_id,
+  e.name AS creator_name,
   t.started_at,
   t.finished_at
 FROM todos t
-LEFT JOIN employees e ON t.reporter_id = e.id
-WHERE 
+INNER JOIN employees e ON t.creator_id = e.id
+INNER JOIN todo_status s ON t.status_id = s.id
+WHERE
   t.assignee_id = sqlc.arg('assignee_id')
-  AND t.status = ANY(sqlc.arg('status')::TEXT[])
+  AND s.category != 'finished'
 ORDER BY
-  t.priority DESC,
+  t.priority ASC,
   t.updated_at DESC;
 
 
@@ -48,7 +49,8 @@ INSERT INTO todos (
   description,
   remark,
   priority,
-  reporter_id,
+  status_id,
+  creator_id,
   assignee_id
 ) VALUES (
   $1,
@@ -56,22 +58,23 @@ INSERT INTO todos (
   $3,
   $4,
   $5,
-  $6
+  $6,
+  $7
 );
 
 -- name: UpdateTodo :execrows
 UPDATE todos
 SET
-  name = COALESCE(sqlc.narg('name'),name),
-  description = COALESCE(sqlc.narg('description'),description),
-  remark = COALESCE(sqlc.narg('remark'),remark),
-  priority = COALESCE(sqlc.narg('priority'),priority),
-  status = COALESCE(sqlc.narg('status'),status),
-  reporter_id = COALESCE(sqlc.narg('reporter_id'),reporter_id),
-  assignee_id = COALESCE(sqlc.narg('assignee_id'),assignee_id)
+  name = COALESCE(sqlc.narg('name'), name),
+  description = COALESCE(sqlc.narg('description'), description),
+  remark = COALESCE(sqlc.narg('remark'), remark),
+  priority = COALESCE(sqlc.narg('priority'), priority),
+  status_id = COALESCE(sqlc.narg('status_id'), status_id),
+  creator_id = COALESCE(sqlc.narg('creator_id'), creator_id),
+  assignee_id = COALESCE(sqlc.narg('assignee_id'), assignee_id),
+  started_at = COALESCE(sqlc.narg('started_at'), started_at),
+  finished_at = COALESCE(sqlc.narg('finished_at'), finished_at)
 WHERE id = sqlc.arg('id');
 
 -- name: DeleteTodo :execrows
-DELETE FROM todos
-WHERE id = $1;
-
+DELETE FROM todos WHERE id = $1;

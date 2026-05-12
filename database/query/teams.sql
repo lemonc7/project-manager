@@ -18,10 +18,9 @@ INSERT INTO teams (
 -- name: UpdateTeam :exec
 UPDATE teams
 SET
-  name = COALESCE(sqlc.narg('name'),name),
-  description = COALESCE(sqlc.narg('description'),description)
+  name = COALESCE(sqlc.narg('name'), name),
+  description = COALESCE(sqlc.narg('description'), description)
 WHERE id = sqlc.arg('id');
 
 -- name: DeleteTeam :exec
-DELETE FROM teams
-WHERE id = $1;
+DELETE FROM teams WHERE id = $1;

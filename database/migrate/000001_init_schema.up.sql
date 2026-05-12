@@ -1,69 +1,79 @@
+-- 状态大类枚举
+CREATE TYPE status_category AS ENUM ('todo', 'ready', 'doing', 'finished');
+
 -- 创建状态表
 CREATE TABLE IF NOT EXISTS project_status (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(20) NOT NULL UNIQUE,
-  sort_order INT NOT NULL
+  sort_order INT NOT NULL,
+  category status_category NOT NULL
 );
 
-CREATE TABLE process_status (
+CREATE TABLE IF NOT EXISTS process_status (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(20) NOT NULL UNIQUE,
-  sort_order INT NOT NULL
+  sort_order INT NOT NULL,
+  category status_category NOT NULL
 );
 
-CREATE TABLE todo_status (
+CREATE TABLE IF NOT EXISTS todo_status (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(20) NOT NULL UNIQUE,
-  sort_order INT NOT NULL
+  sort_order INT NOT NULL,
+  category status_category NOT NULL
 );
 
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(20) NOT NULL UNIQUE,
   description TEXT NOT NULL DEFAULT ''
 );
 
-INSERT INTO project_status (name, sort_order) VALUES
-('进行', 10),
-('排单', 20),
-('暂停', 30),
-('完成', 40),
-('终止', 100);
+INSERT INTO project_status (name, sort_order, category) VALUES
+('排单', 20, 'todo'),
+('进行', 10, 'doing'),
+('暂停', 30, 'ready'),
+('完成', 40, 'finished'),
+('终止', 100, 'finished')
+ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO process_status (name, sort_order) VALUES
-('进行', 10),
-('准备', 20),
-('等待', 30),
-('暂停', 40),
-('返工', 50),
-('完成', 60),
-('终止', 100);
+INSERT INTO process_status (name, sort_order, category) VALUES
+('等待', 30, 'todo'),
+('准备', 20, 'ready'),
+('进行', 10, 'doing'),
+('暂停', 40, 'ready'),
+('返工', 50, 'finished'),
+('完成', 60, 'finished'),
+('终止', 100, 'finished')
+ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO todo_status (name, sort_order) VALUES
-('进行', 10),
-('待办', 20),
-('完成', 30),
-('终止', 40);
+INSERT INTO todo_status (name, sort_order, category) VALUES
+('待办', 20, 'todo'),
+('进行', 10, 'doing'),
+('完成', 30, 'finished'),
+('终止', 40, 'finished')
+ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO roles (name, description) VALUES
 ('admin', '管理员'),
 ('manager', '项目经理'),
 ('employee', '员工'),
-('viewer', '用户');
+('viewer', '用户')
+ON CONFLICT (name) DO NOTHING;
 
 -- 小组表
-CREATE TABLE teams (
+CREATE TABLE IF NOT EXISTS teams (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(20) NOT NULL UNIQUE,
+  name VARCHAR(50) NOT NULL UNIQUE,
   description TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 员工表
-CREATE TABLE employees (
+CREATE TABLE IF NOT EXISTS employees (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(20) NOT NULL,
+  name VARCHAR(50) NOT NULL,
   username VARCHAR(20) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   team_id INT REFERENCES teams(id) ON DELETE SET NULL,
@@ -72,21 +82,21 @@ CREATE TABLE employees (
   is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE employee_roles (
+CREATE TABLE IF NOT EXISTS employee_roles (
   employee_id INT REFERENCES employees(id) ON DELETE CASCADE,
   role_id INT REFERENCES roles(id) ON DELETE CASCADE,
   PRIMARY KEY (employee_id, role_id)
 );
 
 -- 项目表
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   remark TEXT NOT NULL DEFAULT '',
   status_id INT NOT NULL REFERENCES project_status(id),
   manager_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
-  priority INT NOT NULL DEFAULT 1,
+  priority INT NOT NULL DEFAULT 5,
   started_at TIMESTAMPTZ,
   duration_days INT,
   finished_at TIMESTAMPTZ,
@@ -97,14 +107,14 @@ CREATE TABLE projects (
 );
 
 -- todos表
-CREATE TABLE todos (
+CREATE TABLE IF NOT EXISTS todos (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   remark TEXT NOT NULL DEFAULT '',
-  priority INT NOT NULL DEFAULT 1,
+  priority INT NOT NULL DEFAULT 5,
   status_id INT NOT NULL REFERENCES todo_status(id),
-  reporter_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
+  creator_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
   assignee_id INT NOT NULL REFERENCES employees(id) ON DELETE RESTRICT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -114,7 +124,7 @@ CREATE TABLE todos (
 );
 
 -- 工艺流程表
-CREATE TABLE processes (
+CREATE TABLE IF NOT EXISTS processes (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name VARCHAR(50) NOT NULL,
@@ -135,7 +145,7 @@ CREATE TABLE processes (
 );
 
 -- 系统设置表
-CREATE TABLE system_settings (
+CREATE TABLE IF NOT EXISTS system_settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
@@ -145,23 +155,56 @@ CREATE TABLE system_settings (
 
 -- 创建索引
 -- projects
-CREATE INDEX idx_projects_manager_id ON projects(manager_id);
-CREATE INDEX idx_projects_manager_status_started
+CREATE INDEX IF NOT EXISTS idx_projects_manager_id ON projects(manager_id);
+CREATE INDEX IF NOT EXISTS idx_projects_manager_status_started
   ON projects(manager_id, status_id, started_at);
-CREATE INDEX idx_projects_priority_started
+CREATE INDEX IF NOT EXISTS idx_projects_priority_started
   ON projects(priority, started_at);
+CREATE INDEX IF NOT EXISTS idx_projects_status_id ON projects(status_id);
 
 -- processes
-CREATE INDEX idx_processes_project_step_order
+CREATE INDEX IF NOT EXISTS idx_processes_project_step_order
   ON processes(project_id, step_order);
-CREATE INDEX idx_processes_employee_status
+CREATE INDEX IF NOT EXISTS idx_processes_employee_status
   ON processes(employee_id, status_id);
+CREATE INDEX IF NOT EXISTS idx_processes_status_id ON processes(status_id);
 
 -- todos
-CREATE INDEX todos_reporter_id_status
+CREATE INDEX IF NOT EXISTS todos_reporter_id_status
   ON todos(reporter_id, status_id);
-CREATE INDEX todos_assignee_id_status
+CREATE INDEX IF NOT EXISTS todos_assignee_id_status
   ON todos(assignee_id, status_id);
+CREATE INDEX IF NOT EXISTS todos_status_id ON todos(status_id);
+
+-- 项目视图：解析状态名称 + 计算剩余天数
+CREATE OR REPLACE VIEW projects_view AS
+SELECT
+  p.id,
+  p.name,
+  p.description,
+  p.remark,
+  ps.name AS status,
+  p.manager_id,
+  e.name AS manager_name,
+  p.priority,
+  p.started_at,
+  p.duration_days,
+  p.finished_at,
+  p.created_at,
+  p.updated_at,
+  ps.category,
+  CASE
+    WHEN ps.category != 'finished'
+     AND p.started_at IS NOT NULL
+     AND p.duration_days IS NOT NULL
+    THEN CEIL(
+      EXTRACT(EPOCH FROM (p.started_at + make_interval(days => p.duration_days) - NOW())) / 86400.0
+    )::INTEGER
+    ELSE NULL
+  END AS remaining_days
+FROM projects p
+INNER JOIN project_status ps ON p.status_id = ps.id
+INNER JOIN employees e ON p.manager_id = e.id;
 
 -- 创建更新时间触发器
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -173,37 +216,37 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 应用到teams表
-CREATE TRIGGER trigger_update_updated_at_teams
+CREATE OR REPLACE TRIGGER trigger_update_updated_at_teams
 BEFORE UPDATE ON teams
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
 -- 应用到employees表
-CREATE TRIGGER trigger_update_updated_at_employees
+CREATE OR REPLACE TRIGGER trigger_update_updated_at_employees
 BEFORE UPDATE ON employees
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
 -- 应用到projects表
-CREATE TRIGGER trigger_update_updated_at_projects
+CREATE OR REPLACE TRIGGER trigger_update_updated_at_projects
 BEFORE UPDATE ON projects
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
 -- 应用到processes表
-CREATE TRIGGER trigger_update_updated_at_processes
+CREATE OR REPLACE TRIGGER trigger_update_updated_at_processes
 BEFORE UPDATE ON processes
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
 -- 应用到system_settings表
-CREATE TRIGGER trigger_update_updated_at_system_settings
+CREATE OR REPLACE TRIGGER trigger_update_updated_at_system_settings
 BEFORE UPDATE ON system_settings
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
 -- 应用到todos表
-CREATE TRIGGER trigger_update_updated_at_todos
+CREATE OR REPLACE TRIGGER trigger_update_updated_at_todos
 BEFORE UPDATE ON todos
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();

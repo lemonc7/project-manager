@@ -8,7 +8,8 @@ FROM employees e
 LEFT JOIN teams t ON e.team_id = t.id
 LEFT JOIN employee_roles er ON e.id = er.employee_id
 LEFT JOIN roles r ON er.role_id = r.id
-WHERE is_active = true
+WHERE e.is_active = true
+GROUP BY e.id, t.name
 ORDER BY e.id, t.name;
 
 -- name: CreateEmployee :exec
@@ -47,9 +48,10 @@ SELECT
 FROM employees e
 LEFT JOIN employee_roles er ON e.id = er.employee_id
 LEFT JOIN roles r ON er.role_id = r.id
-WHERE 
-  username = $1
-  AND is_active = true;
+WHERE
+  e.username = $1
+  AND e.is_active = true
+GROUP BY e.id;
 
 -- name: UpdatePassword :exec
 UPDATE employees
