@@ -106,9 +106,9 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEm
 	return tx.Commit(ctx)
 }
 
-func (e *EmployeeService) DeleteEmployee(ctx context.Context, id int32) error {
+func (e *EmployeeService) DeleteEmployee(ctx context.Context, req model.DeleteEmployeeRequest) error {
 	return e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
-		ID:       id,
+		ID:       req.ID,
 		IsActive: new(false),
 	})
 }

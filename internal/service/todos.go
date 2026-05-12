@@ -19,12 +19,12 @@ func NewTodoService(db *pgxpool.Pool) *TodoService {
 	}
 }
 
-func (t *TodoService) ListTodosForCreator(ctx context.Context, id int32) ([]repo.ListTodosForCreatorRow, error) {
-	return t.querier.ListTodosForCreator(ctx, id)
+func (t *TodoService) ListTodosForCreator(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosForCreatorRow, error) {
+	return t.querier.ListTodosForCreator(ctx, req.ID)
 }
 
-func (t *TodoService) ListTodosByAssignee(ctx context.Context, id int32) ([]repo.ListTodosForAssigneeRow, error) {
-	return t.querier.ListTodosForAssignee(ctx, id)
+func (t *TodoService) ListTodosForAssignee(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosForAssigneeRow, error) {
+	return t.querier.ListTodosForAssignee(ctx, req.ID)
 }
 
 func (t *TodoService) CreateTodo(ctx context.Context, req model.CreateTodoRequest) error {
@@ -64,8 +64,8 @@ func (t *TodoService) UpdateTodo(ctx context.Context, req model.UpdateTodoReques
 	return nil
 }
 
-func (t *TodoService) DeleteTodo(ctx context.Context, id int32) error {
-	rows, err := t.querier.DeleteTodo(ctx, id)
+func (t *TodoService) DeleteTodo(ctx context.Context, req model.DeleteTodoRequest) error {
+	rows, err := t.querier.DeleteTodo(ctx, req.ID)
 	if err != nil {
 		return err
 	}

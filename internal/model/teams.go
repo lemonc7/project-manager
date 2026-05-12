@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/Oudwins/zog"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type CreateTeamRequest struct {
@@ -16,7 +15,7 @@ var createTeamRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *CreateTeamRequest) Validate() error {
-	return util.SchemaValidate(createTeamRequestSchema, r)
+	return SchemaValidate(createTeamRequestSchema, r)
 }
 
 type UpdateTeamRequest struct {
@@ -32,5 +31,13 @@ var updateTeamRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *UpdateTeamRequest) Validate() error {
-	return util.SchemaValidate(updateTeamRequestSchema, r)
+	return SchemaValidate(updateTeamRequestSchema, r)
+}
+
+type DeleteTeamRequest struct {
+	ID int32 `param:"id"`
+}
+
+func (r *DeleteTeamRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
 }

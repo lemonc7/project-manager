@@ -70,14 +70,14 @@ func (a *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 	}, nil
 }
 
-func (a *AuthService) ResetPassword(ctx context.Context, userID int32, password string) error {
-	passwordHash, err := a.passwordHasher.HashPassword(password)
+func (a *AuthService) ResetPassword(ctx context.Context, req model.ResetPasswordRequest) error {
+	passwordHash, err := a.passwordHasher.HashPassword(req.Password)
 	if err != nil {
 		return err
 	}
 
 	err = a.querier.UpdatePassword(ctx, repo.UpdatePasswordParams{
-		ID:           userID,
+		ID:           req.ID,
 		PasswordHash: passwordHash,
 	})
 

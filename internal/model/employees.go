@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/Oudwins/zog"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type CreateEmployeeRequest struct {
@@ -22,7 +21,7 @@ var createEmployeeSchema = zog.Struct(zog.Shape{
 })
 
 func (r *CreateEmployeeRequest) Validate() error {
-	return util.SchemaValidate(createEmployeeSchema, r)
+	return SchemaValidate(createEmployeeSchema, r)
 }
 
 type UpdateEmployeeRequest struct {
@@ -44,5 +43,17 @@ var updateEmployeeSchema = zog.Struct(zog.Shape{
 })
 
 func (r *UpdateEmployeeRequest) Validate() error {
-	return util.SchemaValidate(updateEmployeeSchema, r)
+	return SchemaValidate(updateEmployeeSchema, r)
+}
+
+type DeleteEmployeeRequest struct {
+	ID int32 `json:"id"`
+}
+
+var idSchema = zog.Struct(zog.Shape{
+	"id": zog.Int32().Required(),
+})
+
+func (r *DeleteEmployeeRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
 }

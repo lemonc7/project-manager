@@ -2,31 +2,24 @@ package api
 
 import (
 	"context"
-	"fmt"
-	"io"
-	"log"
 	"net/http"
-	"net/url"
-	"time"
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
-	"github.com/lemonc7/project-manager/pkg/util"
 	"github.com/lemonc7/zest"
 )
 
 type ProjectService interface {
 	CreateProject(ctx context.Context, req model.CreateProjectRequest) error
 	UpdateProject(ctx context.Context, req model.UpdateProjectRequest) error
-	DeleteProject(ctx context.Context, id int32) error
-	ListProjectsFiltered(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsFilteredRow, error)
-	StartProject(ctx context.Context, id int32) error
-	GetProjectByID(ctx context.Context, id int32) (repo.GetProjectByIDRow, error)
-	ResetStatus(ctx context.Context, id int32) error
-	CopyProject(ctx context.Context,req model.CopyProjectRequest) error
-	IsProjectExists(ctx context.Context, name string) (bool, error)
-	ExportProject(ctx context.Context, id int32, w io.Writer) error
+	DeleteProject(ctx context.Context, req model.DeleteProjectRequest) error
+	ListProjects(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsRow, error)
+	StartProject(ctx context.Context, req model.StartProjectRequest) error
+	GetProjectByID(ctx context.Context, req model.GetProjectRequest) (repo.GetProjectByIDRow, error)
+	ResetStatus(ctx context.Context, req model.ResetStatusRequest) error
+	CopyProject(ctx context.Context, req model.CopyProjectRequest) error
+	IsProjectExists(ctx context.Context, req model.IsProjectExistsRequest) (bool, error)
 }
 
 var _ ProjectService = (*service.ProjectService)(nil)
@@ -79,13 +72,12 @@ func (p *ProjectHandler) UpdateProject(c *zest.Context) error {
 }
 
 func (p *ProjectHandler) DeleteProject(c *zest.Context) error {
-	// 获取id
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.DeleteProjectRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 	// 删除数据
-	if err := p.projectService.DeleteProject(c.Context(), id); err != nil {
+	if err := p.projectService.DeleteProject(c.Context(), req); err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "删除项目失败").Wrap(err)
 	}
 
@@ -102,21 +94,20 @@ func (p *ProjectHandler) ListProjects(c *zest.Context) error {
 		return err
 	}
 
-	projects, err := p.projectService.ListProjectsFiltered(c.Context(), req)
+	projects, err := p.projectService.ListProjects(c.Context(), req)
 	if err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "获取项目失败").Wrap(err)
 	}
 	return c.JSON(http.StatusOK, projects)
-
 }
 
 func (p *ProjectHandler) StartProject(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.StartProjectRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	if err := p.projectService.StartProject(c.Context(), id); err != nil {
+	if err := p.projectService.StartProject(c.Context(), req); err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "开始项目失败").Wrap(err)
 	}
 
@@ -126,12 +117,12 @@ func (p *ProjectHandler) StartProject(c *zest.Context) error {
 }
 
 func (p *ProjectHandler) GetProjectByID(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.GetProjectRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	project, err := p.projectService.GetProjectByID(c.Context(), id)
+	project, err := p.projectService.GetProjectByID(c.Context(), req)
 	if err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "获取项目失败").Wrap(err)
 	}
@@ -140,12 +131,12 @@ func (p *ProjectHandler) GetProjectByID(c *zest.Context) error {
 }
 
 func (p *ProjectHandler) ResetStatus(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.ResetStatusRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	if err := p.projectService.ResetStatus(c.Context(), id); err != nil {
+	if err := p.projectService.ResetStatus(c.Context(), req); err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "重置状态失败").Wrap(err)
 	}
 
@@ -175,28 +166,9 @@ func (p *ProjectHandler) IsProjectExists(c *zest.Context) error {
 		return err
 	}
 
-	exists, err := p.projectService.IsProjectExists(c.Context(), req.NewName)
+	exists, err := p.projectService.IsProjectExists(c.Context(), req)
 	if err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "判断项目存在失败").Wrap(err)
 	}
 	return c.JSON(http.StatusOK, exists)
-}
-
-func (p *ProjectHandler) ExportProject(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
-	filename := fmt.Sprintf("project_%d_%d", id, time.Now().Unix())
-
-	// 设置响应头
-	c.SetHeader(zest.HeaderContentType, "text/csv; charset=utf-8")
-	// 告诉浏览器这是一个附件，需要下载
-	c.SetHeader(zest.HeaderContentDisposition, `attachment; filename*=UTF-8''`+url.PathEscape(filename))
-	err = p.projectService.ExportProject(c.Context(), id, c.Response())
-	if err != nil {
-		log.Printf("[%v] 导出CSV失败: %v", c.Get("requestID"), err)
-	}
-
-	return nil
 }

@@ -7,14 +7,13 @@ import (
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
-	"github.com/lemonc7/project-manager/pkg/util"
 	"github.com/lemonc7/zest"
 )
 
 type TeamService interface {
 	CreateTeam(ctx context.Context, req model.CreateTeamRequest) error
 	UpdateTeam(ctx context.Context, req model.UpdateTeamRequest) error
-	DeleteTeam(ctx context.Context, id int32) error
+	DeleteTeam(ctx context.Context, req model.DeleteTeamRequest) error
 	ListTeams(ctx context.Context) ([]repo.ListTeamsRow, error)
 }
 
@@ -71,13 +70,12 @@ func (t *TeamHandler) UpdateTeam(c *zest.Context) error {
 
 // 删除小组
 func (t *TeamHandler) DeleteTeam(c *zest.Context) error {
-	// 获取id
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.DeleteTeamRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 	// 删除数据
-	if err := t.teamService.DeleteTeam(c.Context(), id); err != nil {
+	if err := t.teamService.DeleteTeam(c.Context(), req); err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "删除小组失败").Wrap(err)
 	}
 

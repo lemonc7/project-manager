@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/Oudwins/zog"
-	"github.com/lemonc7/project-manager/pkg/util"
+	"github.com/lemonc7/project-manager/internal/repo"
 )
 
 type InsertProcessRequest struct {
@@ -24,7 +24,7 @@ var insertProcessRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *InsertProcessRequest) Validate() error {
-	return util.SchemaValidate(insertProcessRequestSchema, r)
+	return SchemaValidate(insertProcessRequestSchema, r)
 }
 
 type UpdateProcessRequest struct {
@@ -48,69 +48,93 @@ var updateProcessRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *UpdateProcessRequest) Validate() error {
-	return util.SchemaValidate(updateProcessRequestSchema, r)
+	return SchemaValidate(updateProcessRequestSchema, r)
 }
 
 type FinishProcessRequest struct {
-	ID        int32   `param:"id"`
-	ProjectID int32   `json:"projectID"`
-	Sequence  int32   `json:"sequence"`
-	SpendTime float64 `json:"spendTime"`
-	Remark    *string `json:"remark"`
+	ID         int32   `param:"id"`
+	ProjectID  int32   `json:"projectID"`
+	StepOrder  int32   `json:"stepOrder"`
+	SpendHours float64 `json:"spendHours"`
+	Remark     *string `json:"remark"`
 }
 
 var finishProcessRequestSchema = zog.Struct(zog.Shape{
-	"id":        zog.Int32().Required(),
-	"projectID": zog.Int32().Required(),
-	"sequence":  zog.Int32().Required(),
-	"spendTime": zog.Float64().GTE(0),
-	"remark":    zog.Ptr(zog.String()),
+	"id":         zog.Int32().Required(),
+	"projectID":  zog.Int32().Required(),
+	"stepOrder":  zog.Int32().Required(),
+	"spendHours": zog.Float64().GTE(0),
+	"remark":     zog.Ptr(zog.String()),
 })
 
 func (r *FinishProcessRequest) Validate() error {
-	return util.SchemaValidate(finishProcessRequestSchema, r)
+	return SchemaValidate(finishProcessRequestSchema, r)
 }
 
 type ReworkProcessRequest struct {
-	ID        int32   `param:"id"`
-	SpendTime float64 `json:"spendTime"`
-	Remark    string  `json:"remark"`
+	ID         int32   `param:"id"`
+	SpendHours float64 `json:"spendHours"`
+	Remark     string  `json:"remark"`
 }
 
 var reworkProcessRequestSchema = zog.Struct(zog.Shape{
-	"id":        zog.Int32().Required(),
-	"spendTime": zog.Float64().GTE(0),
-	"remark":    zog.String(),
+	"id":         zog.Int32().Required(),
+	"spendHours": zog.Float64().GTE(0),
+	"remark":     zog.String(),
 })
 
 func (r *ReworkProcessRequest) Validate() error {
-	return util.SchemaValidate(reworkProcessRequestSchema, r)
+	return SchemaValidate(reworkProcessRequestSchema, r)
+}
+
+type DeleteProcessRequest struct {
+	ID int32 `param:"id"`
+}
+
+func (r *DeleteProcessRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
 }
 
 type DeleteProcessesRequest struct {
-	ProjectID int32   `param:"projectID"`
-	Sequences []int32 `json:"sequences"`
+	ProjectID  int32   `param:"projectID"`
+	StepOrders []int32 `json:"stepOrders"`
 }
 
 var deleteProcessesRequestSchema = zog.Struct(zog.Shape{
-	"projectID": zog.Int32().Required(),
-	"sequence":  zog.Slice(zog.Int32().Required().GTE(1)).Required(),
+	"projectID":  zog.Int32().Required(),
+	"stepOrders": zog.Slice(zog.Int32().Required().GTE(1)).Required(),
 })
 
 func (r *DeleteProcessesRequest) Validate() error {
-	return util.SchemaValidate(deleteProcessesRequestSchema, r)
+	return SchemaValidate(deleteProcessesRequestSchema, r)
+}
+
+type ListProcessesRequest struct {
+	ID int32 `param:"id"`
+}
+
+func (r *ListProcessesRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
 }
 
 type ListTasksRequest struct {
-	EmployeeID int32  `param:"employeeID"`
-	Status     string `query:"status"`
+	EmployeeID int32               `param:"employeeID"`
+	Status     repo.StatusCategory `query:"status"`
 }
+
+var SchemaStatusCategory = zog.StringLike[repo.StatusCategory]().
+	OneOf([]repo.StatusCategory{
+		repo.StatusCategoryTodo,
+		repo.StatusCategoryReady,
+		repo.StatusCategoryDoing,
+		repo.StatusCategoryFinished,
+	})
 
 var listTasksRequestSchema = zog.Struct(zog.Shape{
 	"employeeID": zog.Int32().Required(),
-	"status":     zog.String().Required().OneOf([]string{"todo", "ready", "doing"}),
+	"status":     SchemaStatusCategory.Required(),
 })
 
 func (r *ListTasksRequest) Validate() error {
-	return util.SchemaValidate(listTasksRequestSchema, r)
+	return SchemaValidate(listTasksRequestSchema, r)
 }

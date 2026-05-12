@@ -4,19 +4,14 @@ import (
 	"time"
 
 	"github.com/Oudwins/zog"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type ListTodosRequest struct {
 	ID int32 `param:"id"`
 }
 
-var listTodosRequestSchema = zog.Struct(zog.Shape{
-	"id": zog.Int32().Required(),
-})
-
 func (r *ListTodosRequest) Validate() error {
-	return util.SchemaValidate(listTodosRequestSchema, r)
+	return SchemaValidate(idSchema, r)
 }
 
 type CreateTodoRequest struct {
@@ -38,7 +33,7 @@ var createTodoRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *CreateTodoRequest) Validate() error {
-	return util.SchemaValidate(createTodoRequestSchema, r)
+	return SchemaValidate(createTodoRequestSchema, r)
 }
 
 type UpdateTodoRequest struct {
@@ -68,5 +63,13 @@ var updateTodoRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *UpdateTodoRequest) Validate() error {
-	return util.SchemaValidate(updateTodoRequestSchema, r)
+	return SchemaValidate(updateTodoRequestSchema, r)
+}
+
+type DeleteTodoRequest struct {
+	ID int32 `param:"id"`
+}
+
+func (r *DeleteTodoRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
 }

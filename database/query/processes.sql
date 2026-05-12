@@ -21,6 +21,7 @@ SELECT
   p.name,
   p.description,
   p.project_id,
+  p.status_id,
   pr.name AS project_name,
   pr.remaining_days AS remaining_days
 FROM processes p
@@ -66,8 +67,8 @@ INSERT INTO processes (
   $2,
   $3,
   $4,
-  1,
   $5,
+  $6,
   m.val + 1
 FROM max_order m, project_lock pl;
 
@@ -91,9 +92,9 @@ INSERT INTO processes (
   $2,
   $3,
   $4,
-  1,
   $5,
-  $6
+  $6,
+  $7
 );
 
 -- 用于InsertProcessAt时,调整step_order
@@ -114,8 +115,8 @@ RETURNING project_id;
 -- name: DeleteProcesses :execrows
 DELETE FROM processes
 WHERE
-  project_id = $1
-  AND step_order = ANY($2::INT[]);
+  project_id = sqlc.arg('project_id')
+  AND step_order = ANY(sqlc.arg('step_orders')::INT[]);
 
 -- 用于DeleteProcess,调整step_order
 -- name: ReorderProcesses :exec
@@ -171,11 +172,11 @@ INSERT INTO processes (
   $2,
   $3,
   $4,
-  1,
   $5,
   $6,
   $7,
   $8,
+  $9,
   CURRENT_TIMESTAMP
 );
 
@@ -219,3 +220,14 @@ SET
 WHERE
   id = sqlc.arg('id')
   AND status_id = sqlc.arg('current_status');
+
+
+-- name: FinishProcess :execrows
+UPDATE processes
+SET
+  status_id = 6,
+  spend_hours = sqlc.arg('spend_hours'),
+  remark = COALESCE(sqlc.narg('remark'), remark)
+WHERE
+  id = sqlc.arg('id')
+  AND status_id = 3;

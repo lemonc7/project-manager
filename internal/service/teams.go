@@ -34,8 +34,8 @@ func (t *TeamService) UpdateTeam(ctx context.Context, req model.UpdateTeamReques
 	})
 }
 
-func (t *TeamService) DeleteTeam(ctx context.Context, id int32) error {
-	return t.querier.DeleteTeam(ctx, id)
+func (t *TeamService) DeleteTeam(ctx context.Context, req model.DeleteTeamRequest) error {
+	return t.querier.DeleteTeam(ctx, req.ID)
 }
 
 func (t *TeamService) ListTeams(ctx context.Context) ([]repo.ListTeamsRow, error) {

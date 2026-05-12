@@ -7,14 +7,13 @@ import (
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
-	"github.com/lemonc7/project-manager/pkg/util"
 	"github.com/lemonc7/zest"
 )
 
 type EmployeeService interface {
 	CreateEmployee(ctx context.Context, req model.CreateEmployeeRequest) error
 	UpdateEmployee(ctx context.Context, req model.UpdateEmployeeRequest) error
-	DeleteEmployee(ctx context.Context, id int32) error
+	DeleteEmployee(ctx context.Context, req model.DeleteEmployeeRequest) error
 	ListEmployees(ctx context.Context) ([]repo.ListEmployeesRow, error)
 	GetEmployee(ctx context.Context, username string) (string, error)
 }
@@ -72,14 +71,13 @@ func (e *EmployeeHandler) UpdateEmployee(c *zest.Context) error {
 
 // 删除员工
 func (e *EmployeeHandler) DeleteEmployee(c *zest.Context) error {
-	// 获取员工id
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.DeleteEmployeeRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
 	// 业务函数
-	if err := e.employeeService.DeleteEmployee(c.Context(), id); err != nil {
+	if err := e.employeeService.DeleteEmployee(c.Context(), req); err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "删除员工失败").Wrap(err)
 	}
 

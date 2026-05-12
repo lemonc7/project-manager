@@ -8,7 +8,7 @@ import (
 	"github.com/lemonc7/zest"
 )
 
-func RequireRoleAtLeast(role string) zest.MiddlewareFunc {
+func RequireRoleAtLeast(role model.Role) zest.MiddlewareFunc {
 	return func(next zest.HandlerFunc) zest.HandlerFunc {
 		return func(c *zest.Context) error {
 			roles := util.GetRoles(c)

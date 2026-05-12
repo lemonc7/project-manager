@@ -7,16 +7,15 @@ import (
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/internal/service"
-	"github.com/lemonc7/project-manager/pkg/util"
 	"github.com/lemonc7/zest"
 )
 
 type TodoService interface {
-	ListTodosByReporter(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosByReporterRow, error)
-	ListTodosByAssignee(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosByAssigneeRow, error)
+	ListTodosForCreator(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosForCreatorRow, error)
+	ListTodosForAssignee(ctx context.Context, req model.ListTodosRequest) ([]repo.ListTodosForAssigneeRow, error)
 	CreateTodo(ctx context.Context, req model.CreateTodoRequest) error
 	UpdateTodo(ctx context.Context, req model.UpdateTodoRequest) error
-	DeleteTodo(ctx context.Context, id int32) error
+	DeleteTodo(ctx context.Context, req model.DeleteTodoRequest) error
 }
 
 var _ TodoService = (*service.TodoService)(nil)
@@ -31,13 +30,13 @@ func NewTodoHandler(service TodoService) *TodoHandler {
 	}
 }
 
-func (t *TodoHandler) ListTodosByReporter(c *zest.Context) error {
+func (t *TodoHandler) ListTodosForCreator(c *zest.Context) error {
 	var req model.ListTodosRequest
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	todos, err := t.todoService.ListTodosByReporter(c.Context(), req)
+	todos, err := t.todoService.ListTodosForCreator(c.Context(), req)
 	if err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "获取todo失败").Wrap(err)
 	}
@@ -45,13 +44,13 @@ func (t *TodoHandler) ListTodosByReporter(c *zest.Context) error {
 	return c.JSON(http.StatusOK, todos)
 }
 
-func (t *TodoHandler) ListTodosByAssignee(c *zest.Context) error {
+func (t *TodoHandler) ListTodosForAssignee(c *zest.Context) error {
 	var req model.ListTodosRequest
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	todos, err := t.todoService.ListTodosByAssignee(c.Context(), req)
+	todos, err := t.todoService.ListTodosForAssignee(c.Context(), req)
 	if err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "获取分配todo失败").Wrap(err)
 	}
@@ -90,12 +89,12 @@ func (t *TodoHandler) UpdateTodo(c *zest.Context) error {
 }
 
 func (t *TodoHandler) DeleteTodo(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
+	var req model.DeleteTodoRequest
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	if err := t.todoService.DeleteTodo(c.Context(), id); err != nil {
+	if err := t.todoService.DeleteTodo(c.Context(), req); err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "更新todo失败").Wrap(err)
 	}
 

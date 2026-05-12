@@ -7,13 +7,12 @@ import (
 
 	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/service"
-	"github.com/lemonc7/project-manager/pkg/util"
 	"github.com/lemonc7/zest"
 )
 
 type AuthService interface {
 	Login(ctx context.Context, req model.LoginRequest) (*model.LoginResponse, error)
-	ResetPassword(ctx context.Context, userID int32, password string) error
+	ResetPassword(ctx context.Context, req model.ResetPasswordRequest) error
 	ChangePassword(ctx context.Context, username string, req model.ChangePasswordRequest) error
 	InitAdmin(ctx context.Context, req model.InitAdminRequest) error
 }
@@ -52,16 +51,12 @@ func (a *AuthHandler) Login(c *zest.Context) error {
 }
 
 func (a *AuthHandler) ResetPassword(c *zest.Context) error {
-	id, err := util.GetParamID(c)
-	if err != nil {
-		return err
-	}
 	var req model.ResetPasswordRequest
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	if err := a.authService.ResetPassword(c.Context(), id, req.Password); err != nil {
+	if err := a.authService.ResetPassword(c.Context(), req); err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError, "重置密码失败").Wrap(err)
 	}
 	return c.JSON(http.StatusOK, zest.Map{

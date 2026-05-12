@@ -1,11 +1,10 @@
 package model
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Oudwins/zog"
-	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type CreateProjectRequest struct {
@@ -27,7 +26,7 @@ var createProjectRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *CreateProjectRequest) Validate() error {
-	return util.SchemaValidate(createProjectRequestSchema, r)
+	return SchemaValidate(createProjectRequestSchema, r)
 }
 
 type UpdateProjectRequest struct {
@@ -57,7 +56,7 @@ var updateProjectRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *UpdateProjectRequest) Validate() error {
-	return util.SchemaValidate(updateProjectRequestSchema, r)
+	return SchemaValidate(updateProjectRequestSchema, r)
 }
 
 type ListProjectsRequest struct {
@@ -75,7 +74,7 @@ var listProjectRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *ListProjectsRequest) Validate() error {
-	return util.SchemaValidate(listProjectRequestSchema, r)
+	return SchemaValidate(listProjectRequestSchema, r)
 }
 
 type CopyProjectRequest struct {
@@ -91,7 +90,7 @@ var copyProjectRequestSchema = zog.Struct(zog.Shape{
 })
 
 func (r *CopyProjectRequest) Validate() error {
-	return util.SchemaValidate(copyProjectRequestSchema, r)
+	return SchemaValidate(copyProjectRequestSchema, r)
 }
 
 type IsProjectExistsRequest struct {
@@ -100,7 +99,39 @@ type IsProjectExistsRequest struct {
 
 func (r *IsProjectExistsRequest) Validate() error {
 	if r.NewName == "" {
-		return errors.New("newName is empty")
+		return fmt.Errorf("newName is empty")
 	}
 	return nil
+}
+
+type DeleteProjectRequest struct {
+	ID int32 `param:"id"`
+}
+
+func (r *DeleteProjectRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
+}
+
+type StartProjectRequest struct {
+	ID int32 `param:"id"`
+}
+
+func (r *StartProjectRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
+}
+
+type GetProjectRequest struct {
+	ID int32 `param:"id"`
+}
+
+func (r *GetProjectRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
+}
+
+type ResetStatusRequest struct {
+	ID int32 `param:"id"`
+}
+
+func (r *ResetStatusRequest) Validate() error {
+	return SchemaValidate(idSchema, r)
 }

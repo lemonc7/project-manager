@@ -1,36 +1,21 @@
 package util
 
 import (
+	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/zest"
 )
 
-// 角色等级，数字越大，权限越高
-var RoleLevel = map[string]int{
-	"employee": 1,
-	"manager":  2,
-	"admin":    3,
-}
-
-func GetRoles(c *zest.Context) []string {
-	roles, ok := c.Get("roles").([]string)
+func GetRoles(c *zest.Context) []int32 {
+	roles, ok := c.Get("roles").([]int32)
 	if !ok {
-		return []string{}
+		return []int32{}
 	}
 	return roles
 }
 
-func HasAtLeastRole(userRoles []string, required string) bool {
-	reqLevel, ok := RoleLevel[required]
-	if !ok {
-		return false
-	}
-	
+func HasAtLeastRole(userRoles []int32, required model.Role) bool {
 	for _, role := range userRoles {
-		level, ok := RoleLevel[role]
-		if !ok {
-			continue
-		}
-		if level >= reqLevel {
+		if role <= int32(required) {
 			return true
 		}
 	}

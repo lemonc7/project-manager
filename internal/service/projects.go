@@ -57,8 +57,8 @@ func (p *ProjectService) UpdateProject(ctx context.Context, req model.UpdateProj
 	return nil
 }
 
-func (p *ProjectService) DeleteProject(ctx context.Context, id int32) error {
-	return p.querier.DeleteProject(ctx, id)
+func (p *ProjectService) DeleteProject(ctx context.Context, req model.DeleteProjectRequest) error {
+	return p.querier.DeleteProject(ctx, req.ID)
 }
 
 func (p *ProjectService) ListProjects(ctx context.Context, req model.ListProjectsRequest) ([]repo.ListProjectsRow, error) {
@@ -70,7 +70,7 @@ func (p *ProjectService) ListProjects(ctx context.Context, req model.ListProject
 	})
 }
 
-func (p *ProjectService) StartProject(ctx context.Context, id int32) error {
+func (p *ProjectService) StartProject(ctx context.Context, req model.StartProjectRequest) error {
 	// 开启事务
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
@@ -83,7 +83,7 @@ func (p *ProjectService) StartProject(ctx context.Context, id int32) error {
 
 	// 获取项目前两个process
 	processes, err := qtx.GetNextTwoProcesses(ctx, repo.GetNextTwoProcessesParams{
-		ProjectID: id,
+		ProjectID: req.ID,
 		StepOrder: 0,
 	})
 	if err != nil {
@@ -97,7 +97,7 @@ func (p *ProjectService) StartProject(ctx context.Context, id int32) error {
 
 	// 先将项目设置为"进行"状态
 	rows, err := qtx.UpdateProjectStatus(ctx, repo.UpdateProjectStatusParams{
-		ID:            id,
+		ID:            req.ID,
 		TargetStatus:  int32(model.TodoStatusDoing),
 		CurrentStatus: int32(model.TodoStatusPending),
 	})
@@ -144,11 +144,11 @@ func (p *ProjectService) StartProject(ctx context.Context, id int32) error {
 	return tx.Commit(ctx)
 }
 
-func (p *ProjectService) GetProjectByID(ctx context.Context, id int32) (repo.GetProjectByIDRow, error) {
-	return p.querier.GetProjectByID(ctx, id)
+func (p *ProjectService) GetProjectByID(ctx context.Context, req model.GetProjectRequest) (repo.GetProjectByIDRow, error) {
+	return p.querier.GetProjectByID(ctx, req.ID)
 }
 
-func (p *ProjectService) ResetStatus(ctx context.Context, id int32) error {
+func (p *ProjectService) ResetStatus(ctx context.Context, req model.ResetStatusRequest) error {
 	// 开启事务
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
@@ -160,7 +160,7 @@ func (p *ProjectService) ResetStatus(ctx context.Context, id int32) error {
 	qtx := repo.New(p.db).WithTx(tx)
 
 	// 重置project的状态
-	rows, err := qtx.ResetProject(ctx, id)
+	rows, err := qtx.ResetProject(ctx, req.ID)
 
 	if err != nil {
 		return fmt.Errorf("重置项目状态: %w", err)
@@ -171,7 +171,7 @@ func (p *ProjectService) ResetStatus(ctx context.Context, id int32) error {
 	}
 
 	// 重置process的状态
-	rows, err = qtx.ResetProcessByProjectID(ctx, id)
+	rows, err = qtx.ResetProcessByProjectID(ctx, req.ID)
 	if err != nil {
 		return fmt.Errorf("重置流程状态: %w", err)
 	}
@@ -220,8 +220,8 @@ func (p *ProjectService) CopyProject(ctx context.Context, req model.CopyProjectR
 	return tx.Commit(ctx)
 }
 
-func (p *ProjectService) IsProjectExists(ctx context.Context, name string) (bool, error) {
-	exists, err := p.querier.IsProjectExists(ctx, name)
+func (p *ProjectService) IsProjectExists(ctx context.Context, req model.IsProjectExistsRequest) (bool, error) {
+	exists, err := p.querier.IsProjectExists(ctx, req.NewName)
 	if err != nil {
 		return false, err
 	}

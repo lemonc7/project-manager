@@ -28,11 +28,11 @@ func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.Insert
 		EmployeeID:  req.EmployeeID,
 		Description: req.Description,
 		Remark:      req.Remark,
+		StatusID:    int32(model.ProcessStatusWaiting),
 	})
 }
 
 func (p *ProcessService) InsertProcessAt(ctx context.Context, req model.InsertProcessRequest) error {
-
 	// 开启事务
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
@@ -72,6 +72,7 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, req model.InsertPr
 		EmployeeID:  req.EmployeeID,
 		Description: req.Description,
 		Remark:      req.Remark,
+		StatusID:    int32(model.ProcessStatusWaiting),
 	})
 	if err != nil {
 		return err
@@ -102,7 +103,7 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, req model.UpdateProc
 	return nil
 }
 
-func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
+func (p *ProcessService) DeleteProcess(ctx context.Context, req model.DeleteProcessRequest) error {
 	// 开启事务
 	tx, err := p.db.Begin(ctx)
 	if err != nil {
@@ -114,7 +115,7 @@ func (p *ProcessService) DeleteProcess(ctx context.Context, id int32) error {
 	qtx := repo.New(p.db).WithTx(tx)
 
 	// 先删除process
-	projectID, err := qtx.DeleteProcess(ctx, id)
+	projectID, err := qtx.DeleteProcess(ctx, req.ID)
 	if err != nil {
 		return fmt.Errorf("删除流程: %w", err)
 	}
@@ -140,8 +141,8 @@ func (p *ProcessService) DeleteProcesses(ctx context.Context, req model.DeletePr
 
 	// 先删除processes
 	rows, err := qtx.DeleteProcesses(ctx, repo.DeleteProcessesParams{
-		ProjectID: req.ProjectID,
-		Column2:   req.Sequences,
+		ProjectID:  req.ProjectID,
+		StepOrders: req.StepOrders,
 	})
 
 	if err != nil {
@@ -160,41 +161,15 @@ func (p *ProcessService) DeleteProcesses(ctx context.Context, req model.DeletePr
 	return tx.Commit(ctx)
 }
 
-func (p *ProcessService) ListProcesses(ctx context.Context, projectID int32) ([]repo.ListProcessesRow, error) {
-	processes, err := p.querier.ListProcesses(ctx, projectID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return processes, nil
+func (p *ProcessService) ListProcesses(ctx context.Context, req model.ListProcessesRequest) ([]repo.ListProcessesRow, error) {
+	return p.querier.ListProcesses(ctx, req.ID)
 }
 
-func (p *ProcessService) ListTasksTodo(ctx context.Context, employeeID int32) ([]repo.ListTasksTodoRow, error) {
-	tasks, err := p.querier.ListTasksTodo(ctx, employeeID)
-	if err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
-}
-
-func (p *ProcessService) ListTasksReady(ctx context.Context, employeeID int32) ([]repo.ListTasksReadyRow, error) {
-	tasks, err := p.querier.ListTasksReady(ctx, employeeID)
-	if err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
-}
-
-func (p *ProcessService) ListTasksDoing(ctx context.Context, employeeID int32) ([]repo.ListTasksDoingRow, error) {
-	tasks, err := p.querier.ListTasksDoing(ctx, employeeID)
-	if err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
+func (p *ProcessService) ListTasks(ctx context.Context, req model.ListTasksRequest) ([]repo.ListTasksRow, error) {
+	return p.querier.ListTasks(ctx, repo.ListTasksParams{
+		EmployeeID: req.EmployeeID,
+		Category:   req.Status,
+	})
 }
 
 func (p *ProcessService) FinishProcess(ctx context.Context, req model.FinishProcessRequest) error {
@@ -208,14 +183,13 @@ func (p *ProcessService) FinishProcess(ctx context.Context, req model.FinishProc
 	// 使用事务
 	qtx := repo.New(p.db).WithTx(tx)
 
-	// 现将process设置为"完成"状态
 	rows, err := qtx.FinishProcess(ctx, repo.FinishProcessParams{
-		ID:        req.ID,
-		SpendTime: &req.SpendTime,
-		Remark:    req.Remark,
+		ID:         req.ID,
+		SpendHours: &req.SpendHours,
+		Remark:     req.Remark,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("更新流程信息: %w", err)
 	}
 
 	if rows == 0 {
@@ -225,7 +199,7 @@ func (p *ProcessService) FinishProcess(ctx context.Context, req model.FinishProc
 	// 获取后两步process
 	processes, err := qtx.GetNextTwoProcesses(ctx, repo.GetNextTwoProcessesParams{
 		ProjectID: req.ProjectID,
-		Sequence:  req.Sequence,
+		StepOrder: req.StepOrder,
 	})
 
 	if err != nil {
@@ -236,8 +210,8 @@ func (p *ProcessService) FinishProcess(ctx context.Context, req model.FinishProc
 	if len(processes) > 0 {
 		rows, err := qtx.UpdateProcessStatus(ctx, repo.UpdateProcessStatusParams{
 			ID:            processes[0].ID,
-			TargetStatus:  "进行",
-			CurrentStatus: "准备",
+			TargetStatus:  int32(model.ProcessStatusDoing),
+			CurrentStatus: int32(model.ProcessStatusReady),
 		})
 
 		if err != nil {
@@ -253,8 +227,8 @@ func (p *ProcessService) FinishProcess(ctx context.Context, req model.FinishProc
 	if len(processes) > 1 {
 		rows, err := qtx.UpdateProcessStatus(ctx, repo.UpdateProcessStatusParams{
 			ID:            processes[1].ID,
-			TargetStatus:  "准备",
-			CurrentStatus: "等待",
+			TargetStatus:  int32(model.ProcessStatusReady),
+			CurrentStatus: int32(model.ProcessStatusWaiting),
 		})
 
 		if err != nil {
@@ -288,7 +262,7 @@ func (p *ProcessService) ReworkProcess(ctx context.Context, req model.ReworkProc
 	// 先将后续的sequence都加1
 	err = qtx.ShiftProcessesUp(ctx, repo.ShiftProcessesUpParams{
 		ProjectID: process.ProjectID,
-		Sequence:  process.Sequence,
+		StepOrder: process.StepOrder,
 	})
 
 	if err != nil {
@@ -301,10 +275,10 @@ func (p *ProcessService) ReworkProcess(ctx context.Context, req model.ReworkProc
 		Name:        process.Name + "(返工)",
 		Description: process.Description,
 		Remark:      req.Remark,
-		Status:      "返工",
+		StatusID:    int32(model.ProcessStatusRework),
 		EmployeeID:  process.EmployeeID,
-		Sequence:    process.Sequence,
-		SpendTime:   &req.SpendTime,
+		StepOrder:   process.StepOrder,
+		SpendHours:  &req.SpendHours,
 		StartedAt:   process.StartedAt,
 	})
 	if err != nil {
