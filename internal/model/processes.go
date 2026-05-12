@@ -2,12 +2,11 @@ package model
 
 import (
 	"github.com/Oudwins/zog"
-	"github.com/lemonc7/project-manager/internal/repo"
 	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type InsertProcessRequest struct {
-	Sequence    int32  `param:"sequence"`
+	StepOrder   int32  `param:"stepOrder"`
 	Name        string `json:"name"`
 	ProjectID   int32  `json:"projectID"`
 	EmployeeID  int32  `json:"employeeID"`
@@ -16,7 +15,7 @@ type InsertProcessRequest struct {
 }
 
 var insertProcessRequestSchema = zog.Struct(zog.Shape{
-	"sequence":    zog.Int32().Required().GTE(1),
+	"stepOrder":   zog.Int32().Required().GTE(1),
 	"name":        zog.String().Required(),
 	"projectID":   zog.Int32().Required(),
 	"employeeID":  zog.Int32(),
@@ -29,13 +28,13 @@ func (r *InsertProcessRequest) Validate() error {
 }
 
 type UpdateProcessRequest struct {
-	ID          int32               `param:"id"`
-	Name        *string             `json:"name"`
-	Description *string             `json:"description"`
-	Remark      *string             `json:"remark"`
-	Status      *repo.ProcessStatus `json:"status"`
-	EmployeeID  *int32              `json:"employeeID"`
-	SpendTime   *float64            `json:"spendTime"`
+	ID          int32    `param:"id"`
+	Name        *string  `json:"name"`
+	Description *string  `json:"description"`
+	Remark      *string  `json:"remark"`
+	StatusID    *int32   `json:"statusID"`
+	EmployeeID  *int32   `json:"employeeID"`
+	SpendHours  *float64 `json:"spendHours"`
 }
 
 var updateProcessRequestSchema = zog.Struct(zog.Shape{
@@ -43,10 +42,9 @@ var updateProcessRequestSchema = zog.Struct(zog.Shape{
 	"name":        zog.Ptr(zog.String()),
 	"description": zog.Ptr(zog.String()),
 	"remark":      zog.Ptr(zog.String()),
-	"status": zog.Ptr(zog.String().OneOf([]string{
-		"等待", "准备", "进行", "返工", "完成", "暂停", "取消"})),
-	"employeeID": zog.Ptr(zog.Int32()),
-	"spendTime":  zog.Ptr(zog.Float64()),
+	"statusID":    zog.Ptr(zog.Int32()),
+	"employeeID":  zog.Ptr(zog.Int32()),
+	"spendHours":  zog.Ptr(zog.Float64()),
 })
 
 func (r *UpdateProcessRequest) Validate() error {

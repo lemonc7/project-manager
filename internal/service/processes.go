@@ -32,16 +32,6 @@ func (p *ProcessService) InsertProcessLast(ctx context.Context, req model.Insert
 }
 
 func (p *ProcessService) InsertProcessAt(ctx context.Context, req model.InsertProcessRequest) error {
-	// 验证sequence
-	maxSeq, err := p.querier.GetMaxSequence(ctx, req.ProjectID)
-	if err != nil {
-		return fmt.Errorf("获取最大序号: %w", err)
-	}
-
-	sequence := req.Sequence
-	if sequence < 1 || sequence > maxSeq+1 {
-		return fmt.Errorf("序号无效: %d", sequence)
-	}
 
 	// 开启事务
 	tx, err := p.db.Begin(ctx)
@@ -54,10 +44,21 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, req model.InsertPr
 	// 使用事务
 	qtx := repo.New(p.db).WithTx(tx)
 
+	// 验证sequence
+	maxSeq, err := qtx.GetMaxOrder(ctx, req.ProjectID)
+	if err != nil {
+		return fmt.Errorf("获取最大序号: %w", err)
+	}
+
+	order := req.StepOrder
+	if order < 1 || order > maxSeq+1 {
+		return fmt.Errorf("序号无效: %d", order)
+	}
+
 	// 先将后续的process sequence加1
 	err = qtx.ShiftProcessesUp(ctx, repo.ShiftProcessesUpParams{
 		ProjectID: req.ProjectID,
-		Sequence:  sequence,
+		StepOrder: order,
 	})
 	if err != nil {
 		return fmt.Errorf("更改后续流程的序号: %w", err)
@@ -66,7 +67,7 @@ func (p *ProcessService) InsertProcessAt(ctx context.Context, req model.InsertPr
 	// 插入新的process
 	err = qtx.InsertProcessAt(ctx, repo.InsertProcessAtParams{
 		ProjectID:   req.ProjectID,
-		Sequence:    sequence,
+		StepOrder:   order,
 		Name:        req.Name,
 		EmployeeID:  req.EmployeeID,
 		Description: req.Description,
@@ -84,9 +85,9 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, req model.UpdateProc
 		Name:        req.Name,
 		Description: req.Description,
 		Remark:      req.Remark,
-		Status:      req.Status,
+		StatusID:    req.StatusID,
 		EmployeeID:  req.EmployeeID,
-		SpendTime:   req.SpendTime,
+		SpendHours:  req.SpendHours,
 		ID:          req.ID,
 	})
 
@@ -95,7 +96,7 @@ func (p *ProcessService) UpdateProcess(ctx context.Context, req model.UpdateProc
 	}
 
 	if rows == 0 {
-		return fmt.Errorf("没有找到被更新的流程")
+		return fmt.Errorf("未找到被更新的流程")
 	}
 
 	return nil

@@ -4,7 +4,7 @@ SELECT
   name,
   description,
   remark,
-  status,
+  status_id,
   manager_id,
   priority,
   started_at,
@@ -14,7 +14,7 @@ SELECT
   category
 FROM projects_view
 WHERE
-  status = ANY(sqlc.arg('status')::TEXT[])
+  status_id = ANY(sqlc.arg('status_ids')::INT[])
   AND (manager_id = sqlc.narg('manager_id') OR sqlc.narg('manager_id') IS NULL)
   AND (started_at >= sqlc.narg('start_at') OR sqlc.narg('start_at') IS NULL)
   AND (started_at <= sqlc.narg('end_at') OR sqlc.narg('end_at') IS NULL)
@@ -36,10 +36,10 @@ INSERT INTO projects (
   $1,
   $2,
   $3,
-  1,
   $4,
   $5,
   $6,
+  $7
 );
 
 -- name: UpdateProject :execrows
@@ -48,11 +48,11 @@ SET
   name = COALESCE(sqlc.narg('name'), name),
   description = COALESCE(sqlc.narg('description'), description),
   remark = COALESCE(sqlc.narg('remark'), remark),
-  status_id = COALESCE(sqlc.narg('status'), status_id),
+  status_id = COALESCE(sqlc.narg('status_id'), status_id),
   manager_id = COALESCE(sqlc.narg('manager_id'), manager_id),
   priority = COALESCE(sqlc.narg('priority'), priority),
   started_at = COALESCE(sqlc.narg('started_at'), started_at),
-  duration_days = COALESCE(sqlc.narg('duration'), duration_days),
+  duration_days = COALESCE(sqlc.narg('duration_days'), duration_days),
   finished_at = COALESCE(sqlc.narg('finished_at'), finished_at)
 WHERE id = sqlc.arg('id');
 
@@ -101,3 +101,11 @@ SELECT EXISTS (
   FROM projects
   WHERE name = $1
 ) AS is_project_exists;
+
+-- name: UpdateProjectStatus :execrows
+UPDATE projects
+SET
+  status_id = sqlc.arg('target_status')
+WHERE
+  id = sqlc.arg('id')
+  AND status_id = sqlc.arg('current_status');

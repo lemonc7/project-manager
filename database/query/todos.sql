@@ -15,9 +15,9 @@ INNER JOIN employees e ON t.assignee_id = e.id
 INNER JOIN todo_status s ON t.status_id = s.id
 WHERE
   t.creator_id = sqlc.arg('creator_id')
-  AND s.category != 'finished'
 ORDER BY
   t.priority ASC,
+  s.sort_order ASC,
   t.updated_at DESC;
 
 -- name: ListTodosForAssignee :many
@@ -37,9 +37,9 @@ INNER JOIN employees e ON t.creator_id = e.id
 INNER JOIN todo_status s ON t.status_id = s.id
 WHERE
   t.assignee_id = sqlc.arg('assignee_id')
-  AND s.category != 'finished'
 ORDER BY
   t.priority ASC,
+  s.sort_order ASC,
   t.updated_at DESC;
 
 

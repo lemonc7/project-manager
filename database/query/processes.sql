@@ -175,7 +175,7 @@ INSERT INTO processes (
   $5,
   $6,
   $7,
-  $9,
+  $8,
   CURRENT_TIMESTAMP
 );
 
@@ -210,3 +210,12 @@ SELECT
   p.step_order
 FROM processes p
 WHERE p.project_id = sqlc.arg('original_project');
+
+
+-- name: UpdateProcessStatus :execrows
+UPDATE processes
+SET
+  status_id = sqlc.arg('target_status')
+WHERE
+  id = sqlc.arg('id')
+  AND status_id = sqlc.arg('current_status');

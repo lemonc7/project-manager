@@ -25,16 +25,6 @@ sql:
               import: "time"
               type: "Time"
               pointer: true
-          - db_type: "process_status"
-            nullable: true
-            go_type:
-              type: "ProcessStatus"
-              pointer: true
-          - db_type: "project_status"
-            nullable: true
-            go_type:
-              type: "ProjectStatus"
-              pointer: true
 
           - column: "projects_view.remaining_days"
             go_struct_tag: 'json:"remainingDays,omitempty"'
@@ -54,6 +44,10 @@ sql:
 
           - column: "processes.spend_hours"
             go_struct_tag: 'json:"spendHours,omitempty"'
+            nullable: true
+            go_type:
+              type: "float64"
+              pointer: true
           - column: "processes.started_at"
             go_struct_tag: 'json:"startedAt,omitempty"'
           - column: "processes.finished_at"

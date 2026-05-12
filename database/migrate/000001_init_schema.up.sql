@@ -183,7 +183,7 @@ SELECT
   p.name,
   p.description,
   p.remark,
-  ps.name AS status,
+  p.status_id,
   p.manager_id,
   e.name AS manager_name,
   p.priority,

@@ -138,14 +138,21 @@ func (a *AuthService) InitAdmin(ctx context.Context, req model.InitAdminRequest)
 	qtx := repo.New(a.db).WithTx(tx)
 
 	// 注册管理员
-	err = qtx.CreateEmployee(ctx, repo.CreateEmployeeParams{
+	id, err := qtx.CreateEmployee(ctx, repo.CreateEmployeeParams{
 		Name:         req.Name,
 		Username:     req.Username,
 		PasswordHash: passwordHash,
-		Roles:        []string{"admin"},
 	})
 	if err != nil {
-		return fmt.Errorf("创建管理员: %w", err)
+		return fmt.Errorf("创建employee: %w", err)
+	}
+
+	// 添加管理员权限
+	if err := qtx.AddEmployeeRoles(ctx, repo.AddEmployeeRolesParams{
+		EmployeeID: id,
+		RoleIds:    []int32{int32(model.RoleAdmin)},
+	}); err != nil {
+		return fmt.Errorf("添加管理员权限: %w", err)
 	}
 
 	// 添加admin_initialized设置为true

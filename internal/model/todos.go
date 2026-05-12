@@ -1,18 +1,18 @@
 package model
 
 import (
+	"time"
+
 	"github.com/Oudwins/zog"
 	"github.com/lemonc7/project-manager/pkg/util"
 )
 
 type ListTodosRequest struct {
-	ID     int32    `param:"id"`
-	Status []string `json:"status"`
+	ID int32 `param:"id"`
 }
 
 var listTodosRequestSchema = zog.Struct(zog.Shape{
-	"id":     zog.Int32().Required(),
-	"status": zog.Slice(zog.String()).Default([]string{}),
+	"id": zog.Int32().Required(),
 })
 
 func (r *ListTodosRequest) Validate() error {
@@ -24,7 +24,7 @@ type CreateTodoRequest struct {
 	Description string `json:"description"`
 	Remark      string `json:"remark"`
 	Priority    int32  `json:"priority"`
-	ReporterID  int32  `json:"reporterID"`
+	CreatorID   int32  `json:"creatorID"`
 	AssigneeID  int32  `json:"assigneeID"`
 }
 
@@ -33,7 +33,7 @@ var createTodoRequestSchema = zog.Struct(zog.Shape{
 	"description": zog.String(),
 	"remark":      zog.String(),
 	"priority":    zog.Int32().Required().GTE(1).LTE(5),
-	"reporterID":  zog.Int32().Required(),
+	"creatorID":   zog.Int32().Required(),
 	"assigneeID":  zog.Int32().Required(),
 })
 
@@ -42,14 +42,16 @@ func (r *CreateTodoRequest) Validate() error {
 }
 
 type UpdateTodoRequest struct {
-	ID          int32   `param:"id"`
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	Remark      *string `json:"remark"`
-	Priority    *int32  `json:"priority"`
-	Status      *string `json:"status"`
-	ReporterID  *int32  `json:"reporterID"`
-	AssigneeID  *int32  `json:"assigneeID"`
+	ID          int32      `param:"id"`
+	Name        *string    `json:"name"`
+	Description *string    `json:"description"`
+	Remark      *string    `json:"remark"`
+	Priority    *int32     `json:"priority"`
+	StatusID    *int32     `json:"statusID"`
+	CreatorID   *int32     `json:"creatorID"`
+	AssigneeID  *int32     `json:"assigneeID"`
+	StartedAt   *time.Time `json:"startedAt"`
+	FinishedAt  *time.Time `json:"finishedAt"`
 }
 
 var updateTodoRequestSchema = zog.Struct(zog.Shape{
@@ -58,9 +60,11 @@ var updateTodoRequestSchema = zog.Struct(zog.Shape{
 	"description": zog.Ptr(zog.String()),
 	"remark":      zog.Ptr(zog.String()),
 	"priority":    zog.Ptr(zog.Int32().GTE(1).LTE(5)),
-	"status":      zog.Ptr(zog.String()),
-	"reporterID":  zog.Ptr(zog.Int32()),
+	"statusID":    zog.Ptr(zog.Int32()),
+	"creatorID":   zog.Ptr(zog.Int32()),
 	"assigneeID":  zog.Ptr(zog.Int32()),
+	"startedAt":   zog.Ptr(zog.Time()),
+	"finishedAt":  zog.Ptr(zog.Time()),
 })
 
 func (r *UpdateTodoRequest) Validate() error {
