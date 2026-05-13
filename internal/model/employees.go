@@ -8,16 +8,16 @@ type CreateEmployeeRequest struct {
 	Name     string  `json:"name"`
 	Username string  `json:"username"`
 	Password string  `json:"password"`
-	Roles    []int32 `json:"roles"`
+	RoleIDs  []int32 `json:"roleIDs"`
 	TeamID   *int32  `json:"teamID"`
 }
 
 var createEmployeeSchema = zog.Struct(zog.Shape{
-	"name":     zog.String().Required(),
-	"username": zog.String().Required().Min(2).Max(20),
-	"password": zog.String().Required().Min(6).Max(20),
-	"roles":    zog.Slice(zog.Int32()).Default([]int32{}),
-	"teamID":   zog.Ptr(zog.Int32()),
+	"Name":     zog.String().Required(),
+	"Username": zog.String().Required().Min(2).Max(20),
+	"Password": zog.String().Required().Min(6).Max(20),
+	"RoleIDs":  zog.Slice(zog.Int32()),
+	"TeamID":   zog.Ptr(zog.Int32()),
 })
 
 func (r *CreateEmployeeRequest) Validate() error {
@@ -28,18 +28,18 @@ type UpdateEmployeeRequest struct {
 	ID       int32   `param:"id"`
 	Name     *string `json:"name"`
 	Username *string `json:"username"`
-	Roles    []int32 `json:"roles"`
+	RoleIDs  []int32 `json:"roleIDs"`
 	TeamID   *int32  `json:"teamID"`
 	IsActive *bool   `json:"isActive"`
 }
 
 var updateEmployeeSchema = zog.Struct(zog.Shape{
-	"id":       zog.Int32().Required(),
-	"name":     zog.Ptr(zog.String()),
-	"username": zog.Ptr(zog.String()),
-	"roles":    zog.Slice(zog.Int32()),
-	"teamID":   zog.Ptr(zog.Int32()),
-	"isActive": zog.Ptr(zog.Bool()),
+	"ID":       zog.Int32().Required(),
+	"Name":     zog.Ptr(zog.String()),
+	"Username": zog.Ptr(zog.String()),
+	"RoleIDs":  zog.Slice(zog.Int32()),
+	"TeamID":   zog.Ptr(zog.Int32()),
+	"IsActive": zog.Ptr(zog.Bool()),
 })
 
 func (r *UpdateEmployeeRequest) Validate() error {
@@ -47,11 +47,11 @@ func (r *UpdateEmployeeRequest) Validate() error {
 }
 
 type DeleteEmployeeRequest struct {
-	ID int32 `json:"id"`
+	ID int32 `param:"id"`
 }
 
 var idSchema = zog.Struct(zog.Shape{
-	"id": zog.Int32().Required(),
+	"ID": zog.Int32().Required(),
 })
 
 func (r *DeleteEmployeeRequest) Validate() error {

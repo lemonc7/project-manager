@@ -10,8 +10,8 @@ type LoginRequest struct {
 }
 
 var loginRequestSchema = zog.Struct(zog.Shape{
-	"username": zog.String().Required(),
-	"password": zog.String().Required(),
+	"Username": zog.String().Required(),
+	"Password": zog.String().Required(),
 })
 
 func (r *LoginRequest) Validate() error {
@@ -19,10 +19,10 @@ func (r *LoginRequest) Validate() error {
 }
 
 type LoginResponse struct {
-	AccessToken string   `json:"accessToken"`
-	UserID      int32    `json:"userID"`
-	Username    string   `json:"username"`
-	Roles       []string `json:"roles,omitempty"`
+	AccessToken string  `json:"accessToken"`
+	UserID      int32   `json:"userID"`
+	Username    string  `json:"username"`
+	RoleIDs     []int32 `json:"roleIDs,omitempty"`
 }
 
 type InitAdminRequest struct {
@@ -32,9 +32,9 @@ type InitAdminRequest struct {
 }
 
 var initAdminRequestSchema = zog.Struct(zog.Shape{
-	"name":     zog.String().Required(),
-	"username": zog.String().Required().Min(2).Max(20),
-	"password": zog.String().Required().Min(6).Max(20),
+	"Name":     zog.String().Required(),
+	"Username": zog.String().Required().Min(2).Max(20),
+	"Password": zog.String().Required().Min(6).Max(20),
 })
 
 func (r *InitAdminRequest) Validate() error {
@@ -47,8 +47,8 @@ type ResetPasswordRequest struct {
 }
 
 var resetPasswordRequestSchema = zog.Struct(zog.Shape{
-	"id":       zog.Int32().Required(),
-	"password": zog.String().Required().Min(6).Max(20),
+	"ID":       zog.Int32().Required(),
+	"Password": zog.String().Required().Min(6).Max(20),
 })
 
 func (r *ResetPasswordRequest) Validate() error {
@@ -61,8 +61,8 @@ type ChangePasswordRequest struct {
 }
 
 var changePasswordRequestSchema = zog.Struct(zog.Shape{
-	"oldPassword": zog.String().Required(),
-	"newPassword": zog.String().Required().Min(6).Max(20),
+	"OldPassword": zog.String().Required(),
+	"NewPassword": zog.String().Required().Min(6).Max(20),
 })
 
 func (r *ChangePasswordRequest) Validate() error {

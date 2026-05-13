@@ -21,13 +21,13 @@ func NewJWT(cfg config.JWTConfig) *JWT {
 }
 
 type UserClaims struct {
-	Username string   `json:"username"`
-	UserID   int32    `json:"userID"`
-	Roles    []string `json:"roles"`
+	Username string  `json:"username"`
+	UserID   int32   `json:"userID"`
+	Roles    []int32 `json:"roles"`
 	jwt.RegisteredClaims
 }
 
-func (j *JWT) Generate(username string, id int32, roles []string) (string, error) {
+func (j *JWT) Generate(username string, id int32, roles []int32) (string, error) {
 	claims := UserClaims{
 		Username: username,
 		UserID:   id,

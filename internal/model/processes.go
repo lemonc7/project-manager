@@ -15,12 +15,12 @@ type InsertProcessRequest struct {
 }
 
 var insertProcessRequestSchema = zog.Struct(zog.Shape{
-	"stepOrder":   zog.Int32().Required().GTE(1),
-	"name":        zog.String().Required(),
-	"projectID":   zog.Int32().Required(),
-	"employeeID":  zog.Int32(),
-	"description": zog.String(),
-	"remark":      zog.String(),
+	"StepOrder":   zog.Int32().Required().GTE(1),
+	"Name":        zog.String().Required(),
+	"ProjectID":   zog.Int32().Required(),
+	"EmployeeID":  zog.Int32().Required(),
+	"Description": zog.String(),
+	"Remark":      zog.String(),
 })
 
 func (r *InsertProcessRequest) Validate() error {
@@ -38,13 +38,13 @@ type UpdateProcessRequest struct {
 }
 
 var updateProcessRequestSchema = zog.Struct(zog.Shape{
-	"id":          zog.Int32().Required(),
-	"name":        zog.Ptr(zog.String()),
-	"description": zog.Ptr(zog.String()),
-	"remark":      zog.Ptr(zog.String()),
-	"statusID":    zog.Ptr(zog.Int32()),
-	"employeeID":  zog.Ptr(zog.Int32()),
-	"spendHours":  zog.Ptr(zog.Float64()),
+	"ID":          zog.Int32().Required(),
+	"Name":        zog.Ptr(zog.String()),
+	"Description": zog.Ptr(zog.String()),
+	"Remark":      zog.Ptr(zog.String()),
+	"StatusID":    zog.Ptr(zog.Int32()),
+	"EmployeeID":  zog.Ptr(zog.Int32()),
+	"SpendHours":  zog.Ptr(zog.Float64()),
 })
 
 func (r *UpdateProcessRequest) Validate() error {
@@ -60,11 +60,11 @@ type FinishProcessRequest struct {
 }
 
 var finishProcessRequestSchema = zog.Struct(zog.Shape{
-	"id":         zog.Int32().Required(),
-	"projectID":  zog.Int32().Required(),
-	"stepOrder":  zog.Int32().Required(),
-	"spendHours": zog.Float64().GTE(0),
-	"remark":     zog.Ptr(zog.String()),
+	"ID":         zog.Int32().Required(),
+	"ProjectID":  zog.Int32().Required(),
+	"StepOrder":  zog.Int32().Required(),
+	"SpendHours": zog.Float64().GTE(0),
+	"Remark":     zog.Ptr(zog.String()),
 })
 
 func (r *FinishProcessRequest) Validate() error {
@@ -78,9 +78,9 @@ type ReworkProcessRequest struct {
 }
 
 var reworkProcessRequestSchema = zog.Struct(zog.Shape{
-	"id":         zog.Int32().Required(),
-	"spendHours": zog.Float64().GTE(0),
-	"remark":     zog.String(),
+	"ID":         zog.Int32().Required(),
+	"SpendHours": zog.Float64().GTE(0),
+	"Remark":     zog.String(),
 })
 
 func (r *ReworkProcessRequest) Validate() error {
@@ -101,8 +101,8 @@ type DeleteProcessesRequest struct {
 }
 
 var deleteProcessesRequestSchema = zog.Struct(zog.Shape{
-	"projectID":  zog.Int32().Required(),
-	"stepOrders": zog.Slice(zog.Int32().Required().GTE(1)).Required(),
+	"ProjectID":  zog.Int32().Required(),
+	"StepOrders": zog.Slice(zog.Int32().Required().GTE(1)).Required(),
 })
 
 func (r *DeleteProcessesRequest) Validate() error {
@@ -118,7 +118,7 @@ func (r *ListProcessesRequest) Validate() error {
 }
 
 type ListTasksRequest struct {
-	EmployeeID int32               `param:"employeeID"`
+	EmployeeID int32               `param:"id"`
 	Status     repo.StatusCategory `query:"status"`
 }
 
@@ -131,8 +131,8 @@ var SchemaStatusCategory = zog.StringLike[repo.StatusCategory]().
 	})
 
 var listTasksRequestSchema = zog.Struct(zog.Shape{
-	"employeeID": zog.Int32().Required(),
-	"status":     SchemaStatusCategory.Required(),
+	"EmployeeID": zog.Int32().Required(),
+	"Status":     SchemaStatusCategory.Required(),
 })
 
 func (r *ListTasksRequest) Validate() error {

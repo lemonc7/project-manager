@@ -17,12 +17,12 @@ type CreateProjectRequest struct {
 }
 
 var createProjectRequestSchema = zog.Struct(zog.Shape{
-	"name":         zog.String().Required(),
-	"description":  zog.String(),
-	"managerID":    zog.Int32().Required(),
-	"remark":       zog.String(),
-	"priority":     zog.Int32().Required().GTE(1).LTE(5),
-	"durationDays": zog.Ptr(zog.Int32()),
+	"Name":         zog.String().Required(),
+	"Description":  zog.String(),
+	"ManagerID":    zog.Int32().Required(),
+	"Remark":       zog.String(),
+	"Priority":     zog.Int32().Required().GTE(1).LTE(5),
+	"DurationDays": zog.Ptr(zog.Int32()),
 })
 
 func (r *CreateProjectRequest) Validate() error {
@@ -43,16 +43,16 @@ type UpdateProjectRequest struct {
 }
 
 var updateProjectRequestSchema = zog.Struct(zog.Shape{
-	"id":           zog.Int32().Required(),
-	"name":         zog.Ptr(zog.String()),
-	"description":  zog.Ptr(zog.String()),
-	"remark":       zog.Ptr(zog.String()),
-	"statusID":     zog.Ptr(zog.Int32()),
-	"managerID":    zog.Ptr(zog.Int32()),
-	"priority":     zog.Ptr(zog.Int32().GTE(1).LTE(5)),
-	"startedAt":    zog.Ptr(zog.Time()),
-	"durationDays": zog.Ptr(zog.Int32()),
-	"finishedAt":   zog.Ptr(zog.Time()),
+	"ID":           zog.Int32().Required(),
+	"Name":         zog.Ptr(zog.String()),
+	"Description":  zog.Ptr(zog.String()),
+	"Remark":       zog.Ptr(zog.String()),
+	"StatusID":     zog.Ptr(zog.Int32()),
+	"ManagerID":    zog.Ptr(zog.Int32()),
+	"Priority":     zog.Ptr(zog.Int32().GTE(1).LTE(5)),
+	"StartedAt":    zog.Ptr(zog.Time()),
+	"DurationDays": zog.Ptr(zog.Int32()),
+	"FinishedAt":   zog.Ptr(zog.Time()),
 })
 
 func (r *UpdateProjectRequest) Validate() error {
@@ -67,10 +67,10 @@ type ListProjectsRequest struct {
 }
 
 var listProjectRequestSchema = zog.Struct(zog.Shape{
-	"statusIDs": zog.Slice(zog.Int32()),
-	"managerID": zog.Ptr(zog.Int32()),
-	"startAt":   zog.Ptr(zog.Time()),
-	"endAt":     zog.Ptr(zog.Time()),
+	"StatusIDs": zog.Slice(zog.Int32()),
+	"ManagerID": zog.Ptr(zog.Int32()),
+	"StartAt":   zog.Ptr(zog.Time()),
+	"EndAt":     zog.Ptr(zog.Time()),
 })
 
 func (r *ListProjectsRequest) Validate() error {
@@ -84,9 +84,9 @@ type CopyProjectRequest struct {
 }
 
 var copyProjectRequestSchema = zog.Struct(zog.Shape{
-	"id":       zog.Int32().Required(),
-	"newName":  zog.String().Required(),
-	"mangerID": zog.Int32().Required(),
+	"ID":        zog.Int32().Required(),
+	"NewName":   zog.String().Required(),
+	"ManagerID": zog.Int32().Required(),
 })
 
 func (r *CopyProjectRequest) Validate() error {

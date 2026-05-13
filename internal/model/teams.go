@@ -10,8 +10,8 @@ type CreateTeamRequest struct {
 }
 
 var createTeamRequestSchema = zog.Struct(zog.Shape{
-	"name":        zog.String().Required(),
-	"description": zog.String(),
+	"Name":        zog.String().Required(),
+	"Description": zog.String(),
 })
 
 func (r *CreateTeamRequest) Validate() error {
@@ -25,9 +25,9 @@ type UpdateTeamRequest struct {
 }
 
 var updateTeamRequestSchema = zog.Struct(zog.Shape{
-	"id":          zog.Int32().Required(),
-	"name":        zog.Ptr(zog.String()),
-	"description": zog.Ptr(zog.String()),
+	"ID":          zog.Int32().Required(),
+	"Name":        zog.Ptr(zog.String()),
+	"Description": zog.Ptr(zog.String()),
 })
 
 func (r *UpdateTeamRequest) Validate() error {

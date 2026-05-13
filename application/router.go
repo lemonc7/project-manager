@@ -53,7 +53,7 @@ func (a *Application) initRouter() {
 	processRouter.GET("/{id}", a.processHandler.ListProcesses)
 	processRouter.GET("/task/{id}", a.processHandler.ListTasks)
 	processRouter.POST("", a.processHandler.InsertProcessLast)
-	processRouter.POST("/{id}", a.processHandler.InsertProcessAt)
+	processRouter.POST("/{stepOrder}", a.processHandler.InsertProcessAt)
 	processRouter.POST("/rework/{id}", a.processHandler.ReworkProcess)
 	processRouter.POST("/finish/{id}", a.processHandler.FinishProcess)
 	processRouter.PATCH("/{id}", a.processHandler.UpdateProcess)

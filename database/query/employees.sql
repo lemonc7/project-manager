@@ -38,16 +38,14 @@ WHERE id = sqlc.arg('id');
 SELECT
   e.id,
   e.name,
-  e.username,
   e.password_hash,
-  array_remove(array_agg(r.name), NULL)::TEXT[] AS roles
+  array_remove(array_agg(er.role_id), NULL)::INT[] AS role_ids
 FROM employees e
 LEFT JOIN employee_roles er ON e.id = er.employee_id
-LEFT JOIN roles r ON er.role_id = r.id
 WHERE
   e.username = $1
   AND e.is_active = true
-GROUP BY e.id, e.name, e.username, e.password_hash;
+GROUP BY e.id, e.name, e.password_hash;
 
 -- name: UpdatePassword :exec
 UPDATE employees

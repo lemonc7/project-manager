@@ -55,7 +55,7 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 	// 添加employee权限
 	if err := qtx.AddEmployeeRoles(ctx, repo.AddEmployeeRolesParams{
 		EmployeeID: id,
-		RoleIds:    req.Roles,
+		RoleIds:    req.RoleIDs,
 	}); err != nil {
 		return fmt.Errorf("添加employee权限: %w", err)
 	}
@@ -64,7 +64,7 @@ func (e *EmployeeService) CreateEmployee(ctx context.Context, req model.CreateEm
 }
 
 func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEmployeeRequest) error {
-	if len(req.Roles) == 0 {
+	if len(req.RoleIDs) == 0 {
 		return e.querier.UpdateEmployee(ctx, repo.UpdateEmployeeParams{
 			ID:       req.ID,
 			Name:     req.Name,
@@ -98,7 +98,7 @@ func (e *EmployeeService) UpdateEmployee(ctx context.Context, req model.UpdateEm
 
 	if err := qtx.AddEmployeeRoles(ctx, repo.AddEmployeeRolesParams{
 		EmployeeID: req.ID,
-		RoleIds:    req.Roles,
+		RoleIds:    req.RoleIDs,
 	}); err != nil {
 		return fmt.Errorf("添加employee权限: %w", err)
 	}

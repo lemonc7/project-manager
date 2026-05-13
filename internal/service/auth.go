@@ -16,7 +16,7 @@ type PasswordHasher interface {
 }
 
 type JWTer interface {
-	Generate(username string, id int32, roles []string) (string, error)
+	Generate(username string, id int32, roles []int32) (string, error)
 }
 
 type AuthService struct {
@@ -50,14 +50,14 @@ func (a *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 	}
 
 	// 验证权限
-	if !slices.Contains(user.Roles, "admin") &&
-		!slices.Contains(user.Roles, "manager") &&
-		!slices.Contains(user.Roles, "employee") {
+	if !slices.Contains(user.RoleIds, int32(model.RoleAdmin)) &&
+		!slices.Contains(user.RoleIds, int32(model.RoleManager)) &&
+		!slices.Contains(user.RoleIds, int32(model.RoleEmployee)) {
 		return nil, model.ErrNoPermission
 	}
 
 	// 生成token
-	accessToken, err := a.jwter.Generate(req.Username, user.ID, user.Roles)
+	accessToken, err := a.jwter.Generate(req.Username, user.ID, user.RoleIds)
 	if err != nil {
 		return nil, fmt.Errorf("生成access token: %w", err)
 	}
@@ -65,8 +65,8 @@ func (a *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 	return &model.LoginResponse{
 		AccessToken: accessToken,
 		UserID:      user.ID,
-		Username:    user.Username,
-		Roles:       user.Roles,
+		Username:    req.Username,
+		RoleIDs:     user.RoleIds,
 	}, nil
 }
 
