@@ -2,46 +2,27 @@ package model
 
 import (
 	"time"
-
-	"github.com/Oudwins/zog"
 )
 
 type ListTodosRequest struct {
-	ID int32 `param:"id"`
-}
-
-func (r *ListTodosRequest) Validate() error {
-	return SchemaValidate(idSchema, r)
+	ID int32 `param:"id" validate:"required"`
 }
 
 type CreateTodoRequest struct {
-	Name        string `json:"name"`
+	Name        string `json:"name" validate:"required"`
 	Description string `json:"description"`
 	Remark      string `json:"remark"`
-	Priority    int32  `json:"priority"`
-	CreatorID   int32  `json:"creatorID"`
-	AssigneeID  int32  `json:"assigneeID"`
-}
-
-var createTodoRequestSchema = zog.Struct(zog.Shape{
-	"Name":        zog.String().Required(),
-	"Description": zog.String(),
-	"Remark":      zog.String(),
-	"priority":    zog.Int32().Required().GTE(1).LTE(5),
-	"CreatorID":   zog.Int32().Required(),
-	"AssigneeID":  zog.Int32().Required(),
-})
-
-func (r *CreateTodoRequest) Validate() error {
-	return SchemaValidate(createTodoRequestSchema, r)
+	Priority    int32  `json:"priority" validate:"required,gte=1,lte=5"`
+	CreatorID   int32  `json:"creatorID" validate:"required"`
+	AssigneeID  int32  `json:"assigneeID" validate:"required"`
 }
 
 type UpdateTodoRequest struct {
-	ID          int32      `param:"id"`
+	ID          int32      `param:"id" validate:"required"`
 	Name        *string    `json:"name"`
 	Description *string    `json:"description"`
 	Remark      *string    `json:"remark"`
-	Priority    *int32     `json:"priority"`
+	Priority    *int32     `json:"priority" validate:"gte=1,lte=5"`
 	StatusID    *int32     `json:"statusID"`
 	CreatorID   *int32     `json:"creatorID"`
 	AssigneeID  *int32     `json:"assigneeID"`
@@ -49,27 +30,6 @@ type UpdateTodoRequest struct {
 	FinishedAt  *time.Time `json:"finishedAt"`
 }
 
-var updateTodoRequestSchema = zog.Struct(zog.Shape{
-	"ID":          zog.Int32().Required(),
-	"Name":        zog.Ptr(zog.String()),
-	"Description": zog.Ptr(zog.String()),
-	"Remark":      zog.Ptr(zog.String()),
-	"Priority":    zog.Ptr(zog.Int32().GTE(1).LTE(5)),
-	"StatusID":    zog.Ptr(zog.Int32()),
-	"CreatorID":   zog.Ptr(zog.Int32()),
-	"AssigneeID":  zog.Ptr(zog.Int32()),
-	"StartedAt":   zog.Ptr(zog.Time()),
-	"FinishedAt":  zog.Ptr(zog.Time()),
-})
-
-func (r *UpdateTodoRequest) Validate() error {
-	return SchemaValidate(updateTodoRequestSchema, r)
-}
-
 type DeleteTodoRequest struct {
-	ID int32 `param:"id"`
-}
-
-func (r *DeleteTodoRequest) Validate() error {
-	return SchemaValidate(idSchema, r)
+	ID int32 `param:"id" validate:"required"`
 }

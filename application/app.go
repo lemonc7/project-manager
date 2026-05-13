@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -19,6 +20,7 @@ import (
 	"github.com/lemonc7/project-manager/config"
 	"github.com/lemonc7/project-manager/database"
 	"github.com/lemonc7/project-manager/internal/api"
+	"github.com/lemonc7/project-manager/internal/model"
 	"github.com/lemonc7/project-manager/internal/service"
 	"github.com/lemonc7/project-manager/pkg/hasher"
 	"github.com/lemonc7/project-manager/pkg/jwt"
@@ -73,6 +75,7 @@ func InitApp(filePath string) (*Application, error) {
 
 	// 注册Zest Handler
 	z := zest.New()
+	z.StructValidator = &model.ValidateAdapter{Validate: validator.New()}
 	z.Use(middleware.RequestID())
 	z.Use(middleware.Logger(middleware.LoggerConfig{
 		TZ: cfg.Logger.TZ,

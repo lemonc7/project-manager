@@ -1,21 +1,8 @@
 package model
 
-import (
-	"github.com/Oudwins/zog"
-)
-
 type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-var loginRequestSchema = zog.Struct(zog.Shape{
-	"Username": zog.String().Required(),
-	"Password": zog.String().Required(),
-})
-
-func (r *LoginRequest) Validate() error {
-	return SchemaValidate(loginRequestSchema, r)
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 type LoginResponse struct {
@@ -26,45 +13,17 @@ type LoginResponse struct {
 }
 
 type InitAdminRequest struct {
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-var initAdminRequestSchema = zog.Struct(zog.Shape{
-	"Name":     zog.String().Required(),
-	"Username": zog.String().Required().Min(2).Max(20),
-	"Password": zog.String().Required().Min(6).Max(20),
-})
-
-func (r *InitAdminRequest) Validate() error {
-	return SchemaValidate(initAdminRequestSchema, r)
+	Name     string `json:"name" validate:"required"`
+	Username string `json:"username" validate:"required,min=2,max=20"`
+	Password string `json:"password" validate:"required,min=6,max=20"`
 }
 
 type ResetPasswordRequest struct {
-	ID       int32  `param:"id"`
-	Password string `json:"password"`
-}
-
-var resetPasswordRequestSchema = zog.Struct(zog.Shape{
-	"ID":       zog.Int32().Required(),
-	"Password": zog.String().Required().Min(6).Max(20),
-})
-
-func (r *ResetPasswordRequest) Validate() error {
-	return SchemaValidate(resetPasswordRequestSchema, r)
+	ID       int32  `param:"id" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 type ChangePasswordRequest struct {
-	OldPassword string `json:"oldPassword"`
-	NewPassword string `json:"newPassword"`
-}
-
-var changePasswordRequestSchema = zog.Struct(zog.Shape{
-	"OldPassword": zog.String().Required(),
-	"NewPassword": zog.String().Required().Min(6).Max(20),
-})
-
-func (r *ChangePasswordRequest) Validate() error {
-	return SchemaValidate(changePasswordRequestSchema, r)
+	OldPassword string `json:"oldPassword" validate:"required"`
+	NewPassword string `json:"newPassword" validate:"required,min=6,max=20,nefield=OldPassword"`
 }

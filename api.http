@@ -45,13 +45,3 @@ Authorization: Bearer {{TOKEN}}
 ### 查询employees
 GET {{HOST}}/api/employee HTTP/1.1
 Authorization: Bearer {{TOKEN}}
-
-### 更新employee
-PATCH {{HOST}}/api/employee/1 HTTP/1.1
-Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
-
-{
-    "id": 1,
-    "name": "lemonc"
-}
