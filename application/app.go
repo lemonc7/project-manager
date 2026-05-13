@@ -63,8 +63,9 @@ func InitApp(filePath string) (*Application, error) {
 	if err != nil {
 		return nil, fmt.Errorf("schema migration connect: %w", err)
 	}
+	defer m.Close()
 
-	if err := m.Up(); err != nil {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return nil, fmt.Errorf("schema migration up: %w", err)
 	}
 
@@ -144,6 +145,7 @@ func (a *Application) Start() {
 	}()
 
 	// 启动HTTP服务
+	log.Printf("HTTP服务已启动，监听端口 :%d", a.cfg.Server.Port)
 	go func() {
 		if err := a.server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {

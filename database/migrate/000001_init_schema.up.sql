@@ -170,8 +170,8 @@ CREATE INDEX IF NOT EXISTS idx_processes_employee_status
 CREATE INDEX IF NOT EXISTS idx_processes_status_id ON processes(status_id);
 
 -- todos
-CREATE INDEX IF NOT EXISTS todos_reporter_id_status
-  ON todos(reporter_id, status_id);
+CREATE INDEX IF NOT EXISTS todos_creator_id_status
+  ON todos(creator_id, status_id);
 CREATE INDEX IF NOT EXISTS todos_assignee_id_status
   ON todos(assignee_id, status_id);
 CREATE INDEX IF NOT EXISTS todos_status_id ON todos(status_id);
