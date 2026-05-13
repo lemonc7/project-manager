@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lemonc7/project-manager/config"
 	"github.com/lemonc7/project-manager/database"
@@ -48,7 +52,20 @@ func InitApp(filePath string) (*Application, error) {
 	// 连接数据库
 	dbPool, err := database.NewDB(cfg.Database)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect to database: %w", err)
+	}
+
+	// 迁移schema
+	m, err := migrate.New(
+		"file://database/migrate",
+		cfg.Database.DSN(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("schema migration connect: %w", err)
+	}
+
+	if err := m.Up(); err != nil {
+		return nil, fmt.Errorf("schema migration up: %w", err)
 	}
 
 	jwt := jwt.NewJWT(cfg.JWT)
@@ -56,10 +73,12 @@ func InitApp(filePath string) (*Application, error) {
 	// 注册Zest Handler
 	z := zest.New()
 	z.Use(middleware.RequestID())
-	z.Use(middleware.Logger())
+	z.Use(middleware.Logger(middleware.LoggerConfig{
+		TZ: cfg.Logger.TZ,
+	}))
 	z.Use(middleware.Recovery())
 	z.Use(middleware.CORS())
-	z.Use(middleware.JWT(jwt,func(c *zest.Context) bool {
+	z.Use(middleware.JWT(jwt, func(c *zest.Context) bool {
 		return c.Path == "/login" || c.Path == "/init_admin" || c.Path == "/ping"
 	}))
 

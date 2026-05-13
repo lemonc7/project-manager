@@ -2,10 +2,9 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -16,14 +15,14 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	Host         string `yaml:"host"`
-	Port         int    `yaml:"port"`
-	User         string `yaml:"user"`
-	Password     string `yaml:"password"`
-	DBname       string `yaml:"dbname"`
-	SSLMode      string `yaml:"ssl_mode"`
-	MaxIdleConns int    `yaml:"max_idle_conns"`
-	MaxOpenConns int    `yaml:"max_open_conns"`
+	Host         string `yaml:"host" env:"DB_HOST" env-default:"localhost"`
+	Port         int    `yaml:"port" env:"DB_PORT" env-default:"5432"`
+	User         string `yaml:"user" env:"DB_USER"`
+	Password     string `yaml:"password" env:"DB_PASSWORD"`
+	DBname       string `yaml:"dbname" env:"DB_NAME"`
+	SSLMode      string `yaml:"ssl_mode" env:"DB_SSL_MODE" env-default:"disable"`
+	MaxIdleConns int    `yaml:"max_idle_conns" env:"DB_MAX_IDLE_CONNS" env-default:"10"`
+	MaxOpenConns int    `yaml:"max_open_conns" env:"DB_MAX_OPEN_CONNS" env-default:"20"`
 }
 
 func (d *DatabaseConfig) DSN() string {
@@ -32,32 +31,24 @@ func (d *DatabaseConfig) DSN() string {
 }
 
 type ServerConfig struct {
-	Port         int           `yaml:"port"`
-	ReadTimeout  time.Duration `yaml:"read_timeout"`
-	WriteTimeout time.Duration `yaml:"write_timeout"`
+	Port         int           `yaml:"port" env:"SERVER_PORT" env-default:"8080"`
+	ReadTimeout  time.Duration `yaml:"read_timeout" env:"SERVER_READ_TIMEOUT" env-default:"5s"`
+	WriteTimeout time.Duration `yaml:"write_timeout" env:"SERVER_WRITE_TIMEOUT" env-default:"10s"`
 }
 
 type JWTConfig struct {
-	Secret   string        `yaml:"secret"`
-	Duration time.Duration `yaml:"duration"`
+	Secret   string        `yaml:"secret" env:"JWT_SECRET"`
+	Duration time.Duration `yaml:"duration" env:"JWT_DURATION" env-default:"24h"`
 }
 
 type LoggerConfig struct {
-	Level string `yaml:"level"`
-	TZ    string `yaml:"tz"`
+	TZ string `yaml:"tz" env:"TZ" env-default:"Asia/Shanghai"`
 }
 
 func NewConfig(filePath string) (*Config, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("open file: %w", err)
-	}
-	defer file.Close()
-
-	decoder := yaml.NewDecoder(file)
-
 	var config Config
-	if err := decoder.Decode(&config); err != nil {
+
+	if err := cleanenv.ReadConfig(filePath, &config); err != nil {
 		return nil, fmt.Errorf("read config: %w", err)
 	}
 

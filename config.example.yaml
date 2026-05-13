@@ -9,12 +9,12 @@ database:
   max_open_conns: 20
 
 server:
-  port: 5001
+  port: 8080
   read_timeout: 5s
-  write_timeout: 5s
+  write_timeout: 10s
 
 logger:
-  level: info
+  tz: Asia/Shanghai
 
 jwt:
   secret: secret
