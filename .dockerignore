@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+api.http
+config.yaml
+Dockerfile
+docker-compose.yaml
+Makefile
+sqlc.yaml
+
+.vscode/
+dist/
+node_modules/

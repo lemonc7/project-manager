@@ -3,12 +3,11 @@ package application
 import (
 	mw "github.com/lemonc7/project-manager/internal/middleware"
 	"github.com/lemonc7/project-manager/internal/model"
-	"github.com/lemonc7/zest/middleware"
 )
 
 func (a *Application) initRouter() {
 	// 检查服务器
-	a.zest.GET("/ping", a.serverHandler.Ping)
+	a.zest.GET("/health", a.serverHandler.Health)
 
 	// 用户登录
 	a.zest.POST("/login", a.authHandler.Login)
@@ -69,9 +68,9 @@ func (a *Application) initRouter() {
 	todoRouter.DELETE("/{id}", a.todoHandler.DeleteTodo)
 
 	// // 挂载静态文件
-	a.zest.Use(middleware.Static(middleware.StaticConfig{
-		Root:   "./dist",
-		HTML5:  true,
-		Browse: false,
-	}))
+	// a.zest.Use(middleware.Static(middleware.StaticConfig{
+	// 	Root:   "./dist",
+	// 	HTML5:  true,
+	// 	Browse: false,
+	// }))
 }

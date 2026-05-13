@@ -8,7 +8,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.9.2
-	github.com/lemonc7/zest v0.5.5
+	github.com/lemonc7/zest v0.5.6
 	golang.org/x/crypto v0.51.0
 )
 

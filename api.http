@@ -1,0 +1,28 @@
+@HOST = {{$dotenv HOST}}
+@TOKEN = {{$dotenv TOKEN}}
+
+### 检查服务器状态
+GET {{HOST}}/health HTTP/1.1
+
+### 初始化管理员
+POST {{HOST}}/init_admin HTTP/1.1
+content-type: application/json
+
+{
+    "name": "lemonc7",
+    "username": "lemonc7",
+    "password": "lemonc7"
+}
+
+### 登录
+POST {{HOST}}/login HTTP/1.1
+content-type: application/json
+
+{
+    "username": "lemonc",
+    "password": "lemonc"
+}
+
+### 查询employees
+GET {{HOST}}/api/employee HTTP/1.1
+Authorization: Bearer {{TOKEN}}

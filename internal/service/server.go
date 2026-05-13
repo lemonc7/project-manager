@@ -17,7 +17,7 @@ func NewServerService(db *pgxpool.Pool) *ServerService {
 	}
 }
 
-func (s *ServerService) Ping(ctx context.Context) error {
+func (s *ServerService) Health(ctx context.Context) error {
 	if err := s.db.Ping(ctx); err != nil {
 		return fmt.Errorf("数据库不可用: %w", err)
 	}

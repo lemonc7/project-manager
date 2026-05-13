@@ -8,7 +8,7 @@ import (
 )
 
 type ServerService interface {
-	Ping(ctx context.Context) error
+	Health(ctx context.Context) error
 }
 
 type ServerHandler struct {
@@ -21,11 +21,9 @@ func NewServerService(service ServerService) *ServerHandler {
 	}
 }
 
-func (s *ServerHandler) Ping(c *zest.Context) error {
-	if err := s.serverService.Ping(c.Context()); err != nil {
+func (s *ServerHandler) Health(c *zest.Context) error {
+	if err := s.serverService.Health(c.Context()); err != nil {
 		return zest.NewHTTPError(http.StatusInternalServerError).Wrap(err)
 	}
-	return c.JSON(http.StatusOK, zest.Map{
-		"message": "pong",
-	})
+	return c.String(http.StatusOK, "Welcome to the Project-Manager!")
 }

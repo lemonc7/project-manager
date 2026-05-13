@@ -80,7 +80,7 @@ func InitApp(filePath string) (*Application, error) {
 	z.Use(middleware.Recovery())
 	z.Use(middleware.CORS())
 	z.Use(middleware.JWT(jwt, func(c *zest.Context) bool {
-		return c.Path == "/login" || c.Path == "/init_admin" || c.Path == "/ping"
+		return c.Path == "/login" || c.Path == "/init_admin" || c.Path == "/health"
 	}))
 
 	// 注册Http Server
